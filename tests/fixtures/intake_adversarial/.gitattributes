@@ -1,0 +1,11 @@
+# These fixtures exist to test BYTES. Half of them carry a BOM, a bare CR, a
+# CRLF pair, a cp1252 high byte, or an embedded NUL — every one of which git
+# would be entitled to "helpfully" normalise on checkout or commit under
+# core.autocrlf / text=auto. `-text` turns all of that off: what is committed is
+# what lands on disk, on every platform.
+#
+# Without this line the corpus silently degrades into a set of ordinary LF text
+# files on someone else's machine and the encoding tests pass for the wrong
+# reason. tests/test_intake_adversarial.py asserts the committed bytes still
+# match the generator, so a normalising checkout fails loudly instead.
+* -text

@@ -1,0 +1,76 @@
+# CI for the public repository.
+#
+# This replaces the private repo's 8-job workflow, which cannot run here: it
+# fetched a ~1 GB dataset bundle from a private release, enforced a per-branch
+# path allowlist, and asserted that HEAD was a two-parent merge commit (which
+# goes red on any fork PR). What it proved that mattered is kept: the suite runs
+# in shards, every capture takes pytest's exit code DIRECTLY rather than through
+# a pipe, and a missing EXIT= line is a failure rather than a zero.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Deliberately empty: a test that reaches for a real key should fail loudly
+  # rather than quietly bill someone. The suite injects a fake Anthropic client.
+  ANTHROPIC_API_KEY: ""
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Native libraries for the PDF renderer
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libpango-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 libcairo2
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[web,pdf,dev]" "pypdf==6.16.1"
+
+      - name: pytest (shard ${{ matrix.shard }}/4)
+        run: |
+          set +e
+          python -m pytest --shard=${{ matrix.shard }}/4 -rs > pytest.out 2>&1
+          echo "EXIT=$?" >> pytest.out
+          tail -40 pytest.out
+          # LAST, so it is this step's verdict. Never `|| true`, which would
+          # substitute true's status and write EXIT=0 on every failure.
+          grep -q "^EXIT=0$" pytest.out
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-shard-${{ matrix.shard }}
+          path: pytest.out
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Front-end harness
+        run: node tests/js/poll_tests.js

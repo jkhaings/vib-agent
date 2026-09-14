@@ -1,0 +1,12 @@
+MONTHLY CONDITION REPORT
+Machine 12-P-101 was surveyed on 14 March. Overall vibration has risen
+since the previous route, from 2.1 mm/s to 3.4 mm/s. The analyst notes
+an increase at running speed and recommends a repeat reading in 30 days.
+Bearing temperatures were normal throughout.
+
+Readings taken:
+1 2.1
+2 3.4
+3 2.9
+
+No further action at this time. Report ends.

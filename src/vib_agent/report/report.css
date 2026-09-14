@@ -1,0 +1,445 @@
+/* report.css — the v2 survey-report stylesheet.
+ *
+ * Ported from design/report_v2_proto/lib/v2_theme.py (Sessions D2 and V21),
+ * which is the record of what this design is and why each value is what it is.
+ * Two rules govern every value here.
+ *
+ * COLOUR COMES FROM THE PRODUCT, NOT FROM A SCREENSHOT. The zone colours, the
+ * trace blue, the ink and the hairline are the tokens webapp/static/style.css
+ * already paints the site with, so the report and the shell it is served from
+ * cannot drift apart. The ONE value with no counterpart in the live token set
+ * was Zone B — style.css defined --zoneA, --zoneC and --zoneD and simply had no
+ * B. It is an olive sitting between A's green and C's amber, and this session
+ * adds it to style.css too rather than leaving the two files disagreeing.
+ *
+ * TYPE COMES FROM THE PRODUCT TOO. The site self-hosts IBM Plex specifically so
+ * that no visitor IP reaches a font CDN. This stylesheet has NO @font-face
+ * block of its own: generate.py::_font_faces() prepends one built from absolute
+ * paths to those same .woff2 files at render time, because the PDF renderer
+ * resolves relative URLs against the report directory, not the package. Nothing
+ * is copied and nothing is fetched. The fallback stack is real, so a missing
+ * face degrades to a legible page rather than to a broken one.
+ *
+ * The document is rendered to PDF by weasyprint, i.e. in PRINT media — so the
+ * @media print block below is the one that actually governs the artifact an
+ * analyst downloads. The screen rules are what a browser would show if the HTML
+ * were ever opened directly.
+ */
+
+:root {
+  --ink: #101816;
+  --ink-soft: #25302C;
+  --mut: #5A6662;
+  --mut2: #7C8783;
+  --line: #D8DCD7;
+  --heavy: #101816;
+  --paper: #FFFFFF;
+  --panel: #F6F7F5;
+  --trace: #0B63C5;
+  --brand: #1B4640;
+  --zA: #2E7D46;
+  --zB: #7C8A34;
+  --zC: #8A5A12;
+  --zD: #B3372B;
+  --amber-line: #B5893F;
+  --amber-bg: #FBF7EF;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cond: "IBM Plex Sans Condensed", "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+* { box-sizing: border-box; margin: 0 }
+
+body {
+  background: #E9EBE9;
+  color: var(--ink-soft);
+  font: 400 16px/1.62 var(--sans);
+  padding: 28px 16px 64px;
+}
+
+.doc {
+  max-width: 940px;
+  margin: 0 auto;
+  background: var(--paper);
+  color: var(--ink-soft);
+  padding: 46px 52px 40px;
+  border: 1px solid var(--line);
+}
+
+/* ── masthead ─────────────────────────────────────────────────────────── */
+.mast { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; flex-wrap: wrap }
+.mark { font: 600 22px/1 var(--cond); letter-spacing: .14em; color: var(--ink) }
+.mark em {
+  font: 500 12.5px/1 var(--mono); letter-spacing: .16em; color: var(--mut2);
+  font-style: normal; margin-left: 14px; text-transform: uppercase;
+}
+.mast-right { display: flex; align-items: center; gap: 14px; font: 500 12.5px/1 var(--mono); color: var(--mut2) }
+.draftbadge {
+  border: 1px solid var(--amber-line); color: var(--zC);
+  font: 500 11.5px/1 var(--mono); letter-spacing: .12em; padding: 7px 10px; white-space: nowrap;
+}
+.rule { height: 2.5px; background: var(--heavy); margin: 14px 0 0 }
+
+/* ── status line — the verdict in words, never colour alone ───────────── */
+.statusline {
+  border-left: 4px solid var(--mut); background: var(--panel);
+  font: 500 13px/1.45 var(--mono); letter-spacing: .09em; text-transform: uppercase;
+  color: var(--ink); padding: 12px 14px; margin: 18px 0 0;
+}
+
+/* ── the gate ribbon ──────────────────────────────────────────────────────
+   Doctrine is that the quality gate runs first and nothing downstream is valid
+   without it, so a non-PASS verdict is hoisted here, above the diagnosis,
+   carrying every attention line verbatim. The full roster keeps its own
+   numbered section further down: the gate's SUMMARY moves up, its DETAIL stays
+   where a document would put it. */
+.ribbon {
+  display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap;
+  border-left: 3px solid var(--zC); background: var(--amber-bg);
+  padding: 11px 14px; margin: 18px 0 0;
+}
+.ribbon.fail { border-left-color: var(--zD); background: #FBF1F0 }
+.ribbon b { font: 500 11.5px/1.4 var(--mono); letter-spacing: .11em; color: var(--zC); text-transform: uppercase }
+.ribbon.fail b { color: var(--zD) }
+.ribbon span { font: 400 14.5px/1.5 var(--sans); color: var(--ink-soft) }
+
+/* ── meta strip ───────────────────────────────────────────────────────── */
+.meta {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px 34px; padding: 20px 0 20px; border-bottom: 1px solid var(--line);
+}
+.meta h4, .lbl {
+  font: 500 11px/1.3 var(--mono); letter-spacing: .15em; color: var(--mut2);
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.meta p { font: 400 14px/1.55 var(--mono); color: var(--ink) }
+
+/* ── the card pair ────────────────────────────────────────────────────── */
+.cards { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(300px, 1.45fr); gap: 16px; margin: 22px 0 0 }
+.card { border: 1px solid var(--line); padding: 18px 20px 19px }
+.card.sev { border: 1.5px solid var(--amber-line); background: var(--amber-bg) }
+.card.sev.zA { border-color: var(--zA); background: #F1F7F2 }
+.card.sev.zB { border-color: var(--zB); background: #F6F8EE }
+.card.sev.zD { border-color: var(--zD); background: #FBF1F0 }
+.card.sev.unrated { border-color: var(--mut); background: var(--panel) }
+.card h3 { font: 600 24px/1.22 var(--sans); color: var(--ink); letter-spacing: -.005em; margin: 8px 0 8px }
+.card .sub { font: 400 13.5px/1.55 var(--mono); color: var(--mut) }
+
+/* ── sections ─────────────────────────────────────────────────────────── */
+section { margin: 34px 0 0 }
+h2 {
+  font: 500 12px/1.3 var(--mono); letter-spacing: .15em; color: var(--mut2);
+  text-transform: uppercase; margin: 0 0 12px;
+}
+h2 b { color: var(--mut); font-weight: 500 }
+p { margin: 0 0 12px; max-width: 80ch }
+p.lead { font-size: 16.5px }
+.sub-h { font: 600 16px/1.4 var(--sans); color: var(--ink); margin: 20px 0 6px }
+ul { margin: 0 0 12px; padding-left: 20px }
+ol { margin: 0 0 12px; padding-left: 22px }
+li { margin: 0 0 6px }
+.mono { font-family: var(--mono) }
+.muted { color: var(--mut) }
+
+/* An absent thing gets a slot, never silence: silence reads as "not
+   applicable" when it means "not measured". */
+.absent {
+  border: 1px dashed var(--line); color: var(--mut); background: var(--panel);
+  font: 400 14px/1.55 var(--sans); padding: 13px 16px;
+}
+.absent b {
+  display: block; font: 500 11px/1.3 var(--mono); letter-spacing: .13em;
+  text-transform: uppercase; color: var(--mut2); margin-bottom: 5px;
+}
+
+/* ── zone strip ───────────────────────────────────────────────────────── */
+/* 34px of head-room: the measured-value flag sits above the bands and
+   collided with the section heading at 6px. */
+.zonestrip { position: relative; margin: 34px 0 10px }
+.zonestrip .bands { display: flex; height: 46px; overflow: hidden }
+.zonestrip .band {
+  position: relative; display: flex; align-items: center; padding: 0 12px;
+  font: 500 12px/1 var(--mono); letter-spacing: .06em; color: #fff; white-space: nowrap;
+}
+.zonestrip .mark { position: absolute; top: -8px; bottom: -8px; width: 3px; background: var(--ink) }
+.zonestrip .val {
+  position: absolute; top: -30px; transform: translateX(-50%);
+  font: 500 12.5px/1 var(--mono); color: var(--ink); background: var(--paper);
+  padding: 3px 6px; border: 1px solid var(--heavy); white-space: nowrap;
+}
+.axes { display: flex; gap: 26px; flex-wrap: wrap; font: 400 13.5px/1.5 var(--mono); color: var(--mut); margin-top: 14px }
+.axes b { color: var(--ink); font-weight: 500 }
+
+/* ── finding + confidence ─────────────────────────────────────────────── */
+.finding { border: 1px solid var(--line); padding: 18px 20px; margin: 0 0 14px }
+.finding header {
+  display: flex; justify-content: space-between; gap: 18px; align-items: baseline;
+  flex-wrap: wrap; margin-bottom: 10px;
+}
+.finding h3 { font: 600 18px/1.35 var(--sans); color: var(--ink) }
+.conf { font: 500 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap }
+.conf.high { color: var(--zA) } .conf.medium { color: var(--zC) } .conf.low { color: var(--mut) }
+.sev-tag { font: 500 12px/1 var(--mono); letter-spacing: .08em; color: var(--mut) }
+.factors { list-style: none; padding: 0; margin: 14px 0 0; border-top: 1px solid var(--line) }
+.factors li {
+  display: flex; gap: 12px; padding: 8px 0 0; margin: 0;
+  font: 400 14px/1.5 var(--sans); color: var(--ink-soft);
+}
+.factors li::before { content: "·"; font-family: var(--mono); color: var(--mut2); flex: 0 0 auto }
+
+/* ── tables ───────────────────────────────────────────────────────────── */
+table { border-collapse: collapse; width: 100%; font: 400 14px/1.5 var(--sans) }
+thead th {
+  background: var(--panel); text-align: left; padding: 9px 12px;
+  font: 500 11px/1.3 var(--mono); letter-spacing: .13em; text-transform: uppercase; color: var(--mut2);
+  border-bottom: 1px solid var(--line);
+}
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top }
+td.num, td.mono { font-family: var(--mono); font-size: 13.5px }
+tr:last-child td { border-bottom: none }
+.scroll { overflow-x: auto }
+table.kv td:first-child { width: 34%; color: var(--mut) }
+table.kv td:last-child { font-family: var(--mono); font-size: 13.5px; color: var(--ink) }
+
+/* ── differential ─────────────────────────────────────────────────────── */
+.diff { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; align-items: baseline }
+.diff .tag {
+  font: 500 11px/1.5 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--mut2); white-space: nowrap;
+}
+.diff .body b { font-weight: 600; color: var(--ink) }
+
+/* ── chips ────────────────────────────────────────────────────────────── */
+.chip {
+  display: inline-block; font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+  color: #fff; background: var(--mut); padding: 5px 8px; white-space: nowrap;
+}
+.chip.high { background: var(--zD) } .chip.medium { background: var(--zC) } .chip.low { background: var(--mut) }
+.rec {
+  display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: baseline;
+  border: 1px solid var(--line); padding: 14px 16px; margin: 0 0 10px;
+}
+.rec .trigger { display: block; color: var(--mut); font-size: 14px; margin-top: 5px }
+
+/* ── figures ──────────────────────────────────────────────────────────── */
+figure { margin: 0 0 26px; border: 1px solid var(--line) }
+figure .fhead {
+  display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--line); background: var(--panel);
+}
+figure .fhead div {
+  padding: 8px 12px; border-right: 1px solid var(--line);
+  font: 400 12.5px/1.35 var(--mono); color: var(--ink); flex: 1 1 auto; min-width: 110px;
+}
+figure .fhead div:last-child { border-right: none }
+figure .fhead span { display: block; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mut2) }
+figure .plot { padding: 14px 12px 4px }
+figure figcaption { padding: 0 14px 14px; font: 400 13.5px/1.5 var(--sans); color: var(--mut) }
+figure img { max-width: 100%; height: auto; display: block }
+
+/* ── evidence graphics ────────────────────────────────────────────────────
+   A .gfx figure is a graphic ABOUT a number the page already states, so it is
+   set quieter than a channel figure: no header strip, a lighter rule, and a
+   caption that leads with the finding it depicts. The caption is not optional —
+   a graphic whose computed fact is not named is a picture of an unnamed
+   number, and there is then no way to audit it. */
+figure.gfx { margin: 18px 0 22px; border: 1px solid var(--line); background: var(--paper) }
+figure.gfx .plot { padding: 10px 12px 2px }
+figure.gfx figcaption { padding: 2px 14px 13px; font: 400 13px/1.55 var(--sans); color: var(--mut); max-width: 84ch }
+figure.gfx figcaption b { color: var(--ink); font-weight: 600 }
+figure.gfx figcaption code { font: 400 12px/1.5 var(--mono); color: var(--ink) }
+p.gfx-cap { font: 400 13px/1.55 var(--sans); color: var(--mut); margin: 10px 0 0; max-width: 84ch }
+p.gfx-cap b { color: var(--ink); font-weight: 600 }
+
+/* ── data-quality panel ───────────────────────────────────────────────────
+   The verdict and the attention items carry the section's whole weight; the
+   passes are one quiet line; the roster is a plain appendix section below.
+   What may be summarised is ONLY pass and not_applicable — every other status
+   appears here in full, with its name, its status and its reason. */
+p.verdict { font: 500 15px/1.5 var(--sans); margin: 0 0 10px }
+p.verdict.warn b { color: var(--zC) }
+p.verdict.fail b { color: var(--zD) }
+p.verdict.pass b { color: var(--zA) }
+.attn-list { display: grid; gap: 8px; margin: 0 0 14px }
+.attn {
+  display: flex; gap: 12px; align-items: baseline; padding: 11px 14px;
+  border-left: 3px solid var(--zC); background: var(--amber-bg);
+}
+.attn.fail { border-left-color: var(--zD); background: #FBF1F0 }
+.attn .st { font: 600 11px/1.4 var(--mono); letter-spacing: .11em; color: var(--zC); flex: 0 0 auto; min-width: 38px }
+.attn.fail .st { color: var(--zD) }
+.attn b.mono { font: 500 13.5px/1.5 var(--mono); color: var(--ink); display: block }
+.attn span { font: 400 14.5px/1.55 var(--sans); color: var(--ink-soft) }
+p.quiet { font: 400 13.5px/1.55 var(--sans); margin: 0 0 14px }
+p.xref {
+  font: 400 13px/1.55 var(--sans); color: var(--mut); margin: 12px 0 0;
+  padding: 8px 12px; border-left: 3px solid var(--zC); background: var(--panel);
+}
+p.xref.not_applicable { border-left-color: var(--mut) }
+p.xref .mono { font: 500 12.5px/1.5 var(--mono); color: var(--ink) }
+.roster { border: 1px solid var(--line); background: var(--panel); margin: 4px 0 0 }
+.roster > .roster-head {
+  font: 500 11.5px/1.4 var(--mono); letter-spacing: .09em; text-transform: uppercase;
+  color: var(--mut2); padding: 11px 14px;
+}
+.roster table { background: var(--paper) }
+.roster tr.warn td, .roster tr.fail td { font-weight: 600 }
+.roster tr.not_applicable td { color: var(--mut2) }
+
+/* ── cause illustrations ──────────────────────────────────────────────────
+   Deliberately SMALL and set to one side: a schematic of a mechanism must not
+   compete with the measured figures above it for the reader's belief. The
+   caption is part of the figure, not an option. */
+figure.cause-art {
+  float: right; width: 310px; margin: 2px 0 10px 20px; border: 1px solid var(--line);
+  background: var(--paper);
+}
+figure.cause-art .plot { padding: 6px 6px 0 }
+figure.cause-art figcaption {
+  padding: 2px 8px 8px; font: 400 10.5px/1.4 var(--mono); color: var(--mut2); text-align: center;
+}
+figure.cause-art svg { width: 100%; height: auto; display: block }
+
+/* ── causes ───────────────────────────────────────────────────────────── */
+.cause { border-top: 1px solid var(--line); padding: 20px 0 4px; overflow: hidden }
+.cause h3 { font: 600 17px/1.4 var(--sans); color: var(--ink); margin: 0 0 8px }
+.cause h3 .n { font: 500 13px/1 var(--mono); color: var(--mut2); margin-right: 10px }
+.cause .consider {
+  border-left: 2px solid var(--amber-line); background: var(--amber-bg);
+  padding: 10px 14px; margin: 0 0 12px; font-size: 15px;
+}
+.split { margin: 14px 0 0; border: 1px solid var(--line) }
+.split > div { padding: 13px 16px }
+.split > div + div { border-top: 1px solid var(--line) }
+.split .checked { background: #F1F7F2 }
+.split .collect { background: #F2F6FB }
+.split h4 { font: 600 13.5px/1.4 var(--sans); color: var(--ink); margin: 0 0 8px }
+.split ul { margin: 0; padding-left: 18px }
+.split li { font-size: 14.5px; line-height: 1.55 }
+.how { color: var(--mut); font-style: italic }
+.cite { font: 400 12.5px/1.5 var(--mono); color: var(--mut2); word-break: break-word }
+.cite.inferred { color: var(--zC) }
+
+/* ── provenance panel ─────────────────────────────────────────────────── */
+.panel {
+  background: var(--panel); border: 1px solid var(--line); padding: 16px 18px;
+  font: 400 13.5px/1.6 var(--mono); color: var(--mut);
+}
+.panel b { color: var(--ink); font-weight: 500 }
+.panel div + div { margin-top: 8px }
+
+/* ── signature + footers ──────────────────────────────────────────────── */
+.sign { border-top: 2.5px solid var(--heavy); margin: 38px 0 0; padding: 20px 0 0 }
+.sign p { margin: 0 0 14px }
+.sign .rule-line { font-family: var(--mono); font-size: 14px; color: var(--ink); white-space: pre-wrap }
+footer {
+  margin: 30px 0 0; padding: 16px 0 0; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  font: 400 12.5px/1.6 var(--mono); color: var(--mut);
+}
+footer b { color: var(--ink); font-weight: 500 }
+
+/* ── page 1 · the fault sheet (Session REPORT-3) ───────────────────────────
+   The report an analyst would sign: machine and point, date of collection, a
+   signature line, the health line, the fault and its evidence, the decision,
+   the recommendation in its three named parts, the escalation trigger, one
+   spectrum figure, and a blank work-order field — then a page break, so the
+   Evidence appendix starts on page 2 and a reader may stop after page 1.
+
+   The typography is the page's own (REPORT-2's, plus CHARTS-2's figures) and
+   nothing here changes a face, a size or a colour. What is tighter is SPACING,
+   and it is tighter for a measured reason: all of the above has to share one
+   A4 page with a full-height two-panel spectrum figure, which prints ~169 mm
+   of the 269 mm a 14 mm-margined A4 page has. Shrinking the FIGURE instead was
+   rejected — CHARTS-2 measured every label against the printed size and a
+   scaled-down figure would print below its 8 pt floor, which is the one
+   guarantee that module exists to make. */
+.sheet { margin: 10px 0 0 }
+.sheet .sheet-id { font-size: 14px; color: var(--ink-soft); margin: 0 0 8px; max-width: none }
+.sheet .lead { margin: 0 0 6px; max-width: none }
+.sheet .absent { margin: 0 0 6px; padding: 7px 12px }
+.sheet-rec { border: 1px solid var(--line); padding: 8px 12px; margin: 0 0 6px }
+.sheet-rec p { margin: 0 0 2px }
+.sheet-rec p:last-child { margin: 0 }
+.sheet .sub-h { margin: 8px 0 4px }
+.sheet .sheet-rule { margin: 0 0 6px }
+.sheet figure { margin: 6px 0 4px }
+.sheet figure .plot { padding: 6px 8px 2px }
+.sheet figure figcaption { padding: 0 10px 6px }
+.sheet-rec { padding: 6px 10px }
+/* A rule to sign on, not an input: the PDF is a document. */
+.sheet .blank {
+  display: inline-block; min-width: 170px;
+  border-bottom: 1px solid var(--line); vertical-align: baseline;
+}
+
+/* ── print — the media the PDF is actually rendered in ────────────────── */
+@page { size: A4 portrait; margin: 14mm 13mm }
+@media print {
+  body { background: #fff; padding: 0 }
+  .doc { border: none; padding: 0; max-width: none }
+  /* Rows, findings and figures stay atomic; long PANELS split.
+     `.split` was atomic too at first, and on the bearing report that left a
+     half-empty page before most of the eleven causes: a collectibility panel
+     that would not fit in what was left of a page was pushed whole onto the
+     next one. It is a list of observations, and a list is exactly the thing
+     that can be broken safely — as long as each observation stays whole and a
+     heading never ends a page on its own. Took the bearing report from
+     24 pages to 20. */
+  .finding, .rec, figure { break-inside: avoid }
+  tr, li { break-inside: avoid }
+  .split > div { break-inside: auto }
+  .split h4 { break-after: avoid }
+  .cause { break-inside: auto }
+  .cause h3, .sub-h { break-after: avoid }
+  h2 { break-after: avoid }
+  /* Session REPORT-3 — page 1 IS the fault sheet, so everything after it starts
+     on page 2. This is the only forced break in the document. */
+  .sheet { break-after: page }
+  .sheet figure { break-inside: avoid }
+  /* The chrome above the sheet gives back the millimetres the page-1 figure
+     needs. PRINT ONLY: the document's on-screen spacing is untouched, and
+     these four elements occur once each, at the top, so nothing below page 1
+     moves. */
+  .rule { margin-top: 8px }
+  .statusline { margin-top: 10px }
+  .ribbon { margin-top: 10px }
+  .sheet { margin-top: 8px }
+
+  /* Session REPORT-3 (item 2) — the Evidence appendix, at printing density.
+     The operator's ruling: keep every cause and every citation, compact how
+     they are laid out. Measured before: the eleven cause hypotheses were
+     TWELVE of the drafted sample's 23 pages, roughly a page each, and the
+     coverage roster two more — so "a single-location report renders in at most
+     10 pages" is unreachable at the old density no matter what page 1 does.
+
+     PRINT ONLY, and nothing is removed: every cause keeps its schematic, its
+     mechanism, its citations and both evidence lists, and the on-screen
+     document is byte-identical to what it was. What changes is the size of
+     the float, the padding around the two evidence panels, and the leading of
+     their lists. `tests/test_cause_art.py`'s "one illustration per cause" and
+     `tests/test_report_html.py`'s roster rules are untouched and still pass —
+     which is the point of doing this in the stylesheet rather than the
+     template. */
+  figure.cause-art { width: 205px; margin: 2px 0 6px 14px }
+  figure.cause-art .plot { padding: 4px 4px 0 }
+  figure.cause-art figcaption { padding: 2px 6px 5px }
+  .cause { padding: 11px 0 2px }
+  .cause h3 { font-size: 15.5px; margin: 0 0 5px }
+  .cause .consider { padding: 7px 11px; margin: 0 0 8px }
+  .cause p { margin: 0 0 7px }
+  .split { margin: 8px 0 0 }
+  .split > div { padding: 8px 12px }
+  .split h4 { margin: 0 0 5px }
+  .split li { font-size: 13.5px; line-height: 1.42 }
+  /* The tables and the coverage list. `td` is 10px/12px on screen, which is
+     right for a page you scroll and generous for one you print. */
+  td { padding: 6px 10px }
+  thead th { padding: 6px 10px }
+  section > ul > li { line-height: 1.45; margin-bottom: 2px }
+  .scroll { overflow: visible }
+}
+@media (max-width: 720px) {
+  .doc { padding: 26px 18px }
+  .cards { grid-template-columns: 1fr }
+  figure.cause-art { float: none; width: 100%; margin: 10px 0 14px }
+}

@@ -1,0 +1,22 @@
+{
+  "_comment": "Bearing geometry lookup. n_balls = rolling element count, ball_dia_mm = ball/roller diameter, pitch_dia_mm = pitch diameter, contact_angle_deg = contact angle. Field names match reference/flows.json 'Compute RCA' node. 6206 confirmed against reference test fixture T12 (BPFO Bearing Fault): computed BPFO = 107.03 Hz vs fixture peak 107.16 Hz (0.12% delta, well inside ±5% tolerance). Others carried over from spec seed — verify against manufacturer datasheets.",
+  "bearings": {
+    "6205":     { "n_balls": 9,  "ball_dia_mm": 7.94,  "pitch_dia_mm": 39.04, "contact_angle_deg": 0.0, "_verify": true },
+    "6206":     { "n_balls": 9,  "ball_dia_mm": 9.53,  "pitch_dia_mm": 46.0,  "contact_angle_deg": 0.0 },
+    "6309":     { "n_balls": 8,  "ball_dia_mm": 17.46, "pitch_dia_mm": 72.5,  "contact_angle_deg": 0.0, "_verify": true },
+    "22220 EK": { "n_balls": 19, "ball_dia_mm": 24.0,  "pitch_dia_mm": 141.0, "contact_angle_deg": 10.0, "_verify": true },
+    "NU216":    { "n_balls": 18, "ball_dia_mm": 17.0,  "pitch_dia_mm": 110.0, "contact_angle_deg": 0.0, "_verify": true },
+    "SKF_6205": {
+      "n_balls": 9, "ball_dia_mm": 7.94, "pitch_dia_mm": 39.04, "contact_angle_deg": 0.0,
+      "_comment": "Drive-end bearing on the CWRU Bearing Data Center rig (SKF 6205-2RS JEM). Same geometry as the '6205' entry above — kept as a separate key so CWRU cases reference an explicitly-sourced entry. Independently verified (Phase 3.5): our bearing_frequencies() orders (BPFO 3.5848x, BPFI 5.4152x, BSF 2.3572x, FTF 0.3983x) land within 0.1% of the published CWRU orders (3.585x / 5.415x / 2.357x / 0.399x) — see tests/test_cwru_adapter.py."
+    },
+    "MAFAULDA_ABVT": {
+      "n_balls": 8, "ball_dia_mm": 7.145, "pitch_dia_mm": 28.519, "contact_angle_deg": 0.0,
+      "_comment": "SpectraQuest ABVT Machinery Fault Simulator rig bearing (MAFAULDA, Phase 8). Geometry transcribed verbatim from the dataset's own official documentation (https://www02.smt.ufrj.br/~offshore/mfs/page_01.html section 1.2, 'Experimental Bench Specifications'): 8 balls, balls diameter 0.7145 cm, cage diameter 2.8519 cm (taken as the pitch diameter — it is the ratio ball_dia/pitch_dia that the frequency formulas depend on). Contact angle is not stated; 0deg is the standard assumption for a deep-groove rig bearing and is the same assumption CWRU/MFPT use. NOT marked _verify because it is INDEPENDENTLY VERIFIED against the same page's own published fault-frequency orders — a third published source after CWRU and MFPT. Our frozen bearing_frequencies() reproduces all four to within 0.005-0.071%: FTF 0.3747 vs 0.3750 (0.071%), BPFO 2.9979 vs 2.9980 (0.005%), BPFI 5.0021 vs 5.0020 (0.003%), BSF 1.8705 vs 1.8710 (0.029%). See outputs/mafaulda_results.md and tests/test_mafaulda_adapter.py."
+    },
+    "MFPT_NICE": {
+      "n_balls": 8, "ball_dia_mm": 5.969, "pitch_dia_mm": 31.623, "contact_angle_deg": 0.0, "_verify": true,
+      "_comment": "MFPT Bearing Fault Dataset (Phase 7) lab-rig bearing. Geometry transcribed verbatim from the dataset's own 'MFPT Fault Data Sets/5 - Analyses/NiceBearing.m' (Eric Bechhoefer, April 10 2009): roller diameter 0.235in (5.969mm), pitch diameter 1.245in (31.623mm), contact angle 0deg, 8 elements. Independently verified (Phase 7) against real rig files: our bearing_frequencies() BPFO (81.12 Hz @ 25Hz shaft) lands within 0.76% of OuterRaceFault_1.mat's dominant envelope peak (80.50 Hz); BPFI (118.88 Hz) lands within 1.0% of InnerRaceFault_vload_7.mat's dominant peak (117.67 Hz), with clear ±1x-shaft sidebands. See outputs/field_validation_results.md."
+    }
+  }
+}

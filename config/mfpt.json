@@ -1,0 +1,52 @@
+{
+  "_comment": "Adapter-level DSP/parsing config for the MFPT (Machinery Failure Prevention Technology) Bearing Fault Dataset (Phase 7). Consumed only by src/vib_agent/adapters/mfpt.py — never by pdm_core. Not a pdm_core tunable, so it is not subject to the profiles.route whitelist; it configures signal *preprocessing* (envelope demodulation) and dataset provenance, not detector/gate/confidence logic.",
+  "_envelope_band_note": "Reused VERBATIM from config/cwru.json's envelope_band_hz/envelope_region_hz — same rig-agnostic bandpass-then-envelope technique, zero new DSP tuning for the cross-rig claim. Empirically verified against real MFPT rig files before adoption (see outputs/field_validation_results.md): OuterRaceFault_1.mat's dominant envelope peak lands at 80.50 Hz vs computed BPFO 81.12 Hz (0.76% delta); InnerRaceFault_vload_7.mat's dominant peak lands at 117.67 Hz vs computed BPFI 118.88 Hz (1.0% delta), with clear ±1x-shaft sidebands.",
+  "envelope_band_hz": [1500, 5500],
+  "envelope_region_hz": [0, 500],
+  "sample_rates_hz": {
+    "high": 97656,
+    "low": 48828
+  },
+  "expected_shaft_rate_hz": 25.0,
+  "shaft_rate_tolerance_pct": 1.0,
+  "bearing_key": "MFPT_NICE",
+  "geometry_source": "MFPT Fault Data Sets/5 - Analyses/NiceBearing.m (Eric Bechhoefer, April 10 2009): roller diameter 0.235in, pitch diameter 1.245in, contact angle 0deg, 8 elements. GetBearFreqRatio.m's outer/inner-race ratio formulas are algebraically identical to pdm_core.bearing_rca.bearing_frequencies()'s BPFO/BPFI formulas (verified by inspection). Its cage-frequency (FTF) formula for side=2 (outer race fixed) does NOT satisfy the BPFO = n_balls * FTF kinematic identity that must hold whenever the outer race is stationary -- our own frozen FTF formula does satisfy it. Treated as a documented discrepancy in Bechhoefer's demo script, not adopted; pdm_core's FTF is used as-is (unmodified, per the frozen-constants invariant) and is NOT expected to match his script's plotted cage line.",
+  "rig_files": {
+    "_comment": "filename (data/mfpt/<name>.mat) -> {source zip path suffix, load in lbs (string '270' etc from the file's own load field, or null for the vload-0 IR file which reports load='0'), fault_type: normal|outer|inner, sample_rate_family: high|low}. rate (shaft Hz) is read from each file directly and asserted ~= expected_shaft_rate_hz, not hardcoded here.",
+    "baseline_1": {"zip_path": "1 - Three Baseline Conditions/baseline_1.mat", "fault_type": "normal", "sample_rate_family": "high"},
+    "baseline_2": {"zip_path": "1 - Three Baseline Conditions/baseline_2.mat", "fault_type": "normal", "sample_rate_family": "high"},
+    "baseline_3": {"zip_path": "1 - Three Baseline Conditions/baseline_3.mat", "fault_type": "normal", "sample_rate_family": "high"},
+    "outer_270_1": {"zip_path": "2 - Three Outer Race Fault Conditions/OuterRaceFault_1.mat", "fault_type": "outer", "sample_rate_family": "high"},
+    "outer_270_2": {"zip_path": "2 - Three Outer Race Fault Conditions/OuterRaceFault_2.mat", "fault_type": "outer", "sample_rate_family": "high"},
+    "outer_270_3": {"zip_path": "2 - Three Outer Race Fault Conditions/OuterRaceFault_3.mat", "fault_type": "outer", "sample_rate_family": "high"},
+    "outer_vload_1": {"zip_path": "3 - Seven More Outer Race Fault Conditions/OuterRaceFault_vload_1.mat", "fault_type": "outer", "sample_rate_family": "low"},
+    "outer_vload_2": {"zip_path": "3 - Seven More Outer Race Fault Conditions/OuterRaceFault_vload_2.mat", "fault_type": "outer", "sample_rate_family": "low"},
+    "outer_vload_3": {"zip_path": "3 - Seven More Outer Race Fault Conditions/OuterRaceFault_vload_3.mat", "fault_type": "outer", "sample_rate_family": "low"},
+    "outer_vload_4": {"zip_path": "3 - Seven More Outer Race Fault Conditions/OuterRaceFault_vload_4.mat", "fault_type": "outer", "sample_rate_family": "low"},
+    "outer_vload_5": {"zip_path": "3 - Seven More Outer Race Fault Conditions/OuterRaceFault_vload_5.mat", "fault_type": "outer", "sample_rate_family": "low"},
+    "outer_vload_6": {"zip_path": "3 - Seven More Outer Race Fault Conditions/OuterRaceFault_vload_6.mat", "fault_type": "outer", "sample_rate_family": "low"},
+    "outer_vload_7": {"zip_path": "3 - Seven More Outer Race Fault Conditions/OuterRaceFault_vload_7.mat", "fault_type": "outer", "sample_rate_family": "low"},
+    "inner_vload_1": {"zip_path": "4 - Seven Inner Race Fault Conditions/InnerRaceFault_vload_1.mat", "fault_type": "inner", "sample_rate_family": "low"},
+    "inner_vload_2": {"zip_path": "4 - Seven Inner Race Fault Conditions/InnerRaceFault_vload_2.mat", "fault_type": "inner", "sample_rate_family": "low"},
+    "inner_vload_3": {"zip_path": "4 - Seven Inner Race Fault Conditions/InnerRaceFault_vload_3.mat", "fault_type": "inner", "sample_rate_family": "low"},
+    "inner_vload_4": {"zip_path": "4 - Seven Inner Race Fault Conditions/InnerRaceFault_vload_4.mat", "fault_type": "inner", "sample_rate_family": "low"},
+    "inner_vload_5": {"zip_path": "4 - Seven Inner Race Fault Conditions/InnerRaceFault_vload_5.mat", "fault_type": "inner", "sample_rate_family": "low"},
+    "inner_vload_6": {"zip_path": "4 - Seven Inner Race Fault Conditions/InnerRaceFault_vload_6.mat", "fault_type": "inner", "sample_rate_family": "low"},
+    "inner_vload_7": {"zip_path": "4 - Seven Inner Race Fault Conditions/InnerRaceFault_vload_7.mat", "fault_type": "inner", "sample_rate_family": "low"}
+  },
+  "real_world_files": {
+    "_comment": "The 3 field-collected files (folder '6 - Real World Examples'). NOT officially labeled by fault location -- fault_type is 'real_world' throughout; scored only per Part B's two-outcome rule, never against an invented answer key. Each file's own struct carries 'ball'/'cage'/'outer'/'inner' fields -- dimensionless ORDERS (multiples of the file's own 'rate' field, itself in Hz) for the four classical bearing fault families, presumably computed by the dataset's author (Eric Bechhoefer) from the actual field bearing's catalog geometry -- NOT derived from MFPT_NICE, which is the lab rig's bearing only. These embedded orders are read directly from each file at parse time (never hardcoded here) and are the sole ground truth Part B scores against.",
+    "real_world_intermediate_speed_bearing": {
+      "zip_path": "6 - Real World Examples/IntermediateSpeedBearing.mat",
+      "description": "Wind turbine gearbox intermediate-speed shaft bearing"
+    },
+    "real_world_oil_pump_bearing": {
+      "zip_path": "6 - Real World Examples/OilPumpBearing.mat",
+      "description": "Wind turbine oil pump shaft bearing"
+    },
+    "real_world_planet_bearing": {
+      "zip_path": "6 - Real World Examples/PlanetBearing.mat",
+      "description": "Wind turbine gearbox planet bearing"
+    }
+  }
+}

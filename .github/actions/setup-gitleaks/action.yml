@@ -1,0 +1,55 @@
+name: Install gitleaks (pinned, checksum-verified)
+description: >
+  Puts a pinned, SHA256-verified gitleaks binary on PATH. Extracted in Session
+  CI-1 from security.yml, where it already lived, so ci.yml's two gitleaks pins
+  in tests/test_secrets_hygiene.py and security.yml's full-history scan cannot
+  end up on different rulesets.
+
+# WHY A CHECKSUMMED TARBALL RATHER THAN gitleaks/gitleaks-action@v2, verbatim
+# from security.yml's own reasoning: this repo uses only first-party actions/*;
+# the action's v2 licence is free for personal accounts but gated for
+# organizations, which would bite the day this repo moves under one; and a
+# checksum-verified binary is reproducible in a way a floating tag is not.
+#
+# gitleaks is deliberately absent from pyproject.toml -- it is a Go binary, not
+# a PyPI package. The operator installs it with `brew install gitleaks`
+# (docs/SECURITY.md); CI downloads this.
+#
+# TO UPGRADE: bump `version` and replace `sha256` with the matching line from
+# that release's gitleaks_<version>_checksums.txt. Both defaults must move
+# together, and security.yml's env block must move with them.
+
+inputs:
+  version:
+    description: gitleaks release to install
+    required: false
+    default: "8.30.1"
+  sha256:
+    description: SHA256 of gitleaks_<version>_linux_x64.tar.gz
+    required: false
+    default: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+
+runs:
+  using: composite
+  steps:
+    - name: Install gitleaks ${{ inputs.version }}
+      shell: bash
+      env:
+        GITLEAKS_VERSION: ${{ inputs.version }}
+        GITLEAKS_SHA256: ${{ inputs.sha256 }}
+      run: |
+        set -euo pipefail
+        if command -v gitleaks >/dev/null 2>&1; then
+          echo "gitleaks already on PATH: $(gitleaks version)"
+          exit 0
+        fi
+        tmp=$(mktemp -d)
+        curl -sSfL --retry 3 -o "$tmp/gitleaks.tar.gz" \
+          "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+        # The verification, and it is the whole point of this file. A tarball
+        # that does not match is a hard stop, never a warning.
+        echo "${GITLEAKS_SHA256}  $tmp/gitleaks.tar.gz" | sha256sum -c -
+        tar -xzf "$tmp/gitleaks.tar.gz" -C "$tmp" gitleaks
+        sudo install -m 0755 "$tmp/gitleaks" /usr/local/bin/gitleaks
+        rm -rf "$tmp"
+        gitleaks version

@@ -1,0 +1,465 @@
+{# Session H — the evidence layer, as macros so the deterministic report and the
+   drafted report emit byte-identical blocks. Every value here is already
+   computed; nothing in this file derives a number. #}
+
+{% macro status_badge(charts, status_line) -%}
+{% if charts and charts.status %}
+![{{ charts.status.alt }}]({{ charts.status.rel_path }})
+{% else %}
+**STATUS — {{ status_line }}**
+{% endif %}
+{%- endmacro %}
+
+{% macro analysis_parameters_table(rows) -%}
+## Analysis Parameters
+
+| Parameter | Value |
+|---|---|
+{% for name, value in rows %}
+| {{ name }} | {{ value }} |
+{% endfor %}
+{%- endmacro %}
+
+{% macro fmax_adequacy(fa) -%}
+{# Session REPORT-2 (item 5). Up to which harmonic each computed fault frequency
+   is inside the measured range. Every line arrives fully assembled from
+   report/generate.py::fmax_adequacy_context; this macro derives nothing and
+   words nothing. The markdown twin of _v2.html.j2::fmax_adequacy_section --
+   the two are edited together or not at all. #}
+{% if fa %}
+## {{ fa.heading }}
+
+{{ fa.intro }}
+{% for line in fa.lines %}
+- {{ line }}
+{% endfor %}
+{% if fa.absence %}
+
+{{ fa.absence }}
+{% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro spectral_evidence(charts) -%}
+{% if charts and charts.has_channel_figures %}
+## Spectral Evidence
+
+Figures are rendered from the same computed values as the findings above — the
+measured spectrum, the shaft orders at the measured running speed, the bearing
+fault frequencies where a geometry was supplied, the peaks the analysis matched,
+and the amplitude floor from the active threshold profile. No figure introduces
+a number that is not already in this report.
+{% for channel in charts.channels %}
+{% for figure in channel.figures %}
+
+### {{ figure.title }}
+
+![{{ figure.alt }}]({{ figure.rel_path }})
+
+_{{ figure.caption }}_
+{% endfor %}
+{% endfor %}
+{% endif %}
+{%- endmacro %}
+
+{# Session LIMITS-1c, item 1. `custom_basis` is a PARAMETER and not read off the
+   context: every import of this file is a plain `{% import %}` without
+   `with context`, so a macro here cannot see the caller's variables and
+   `ctx.custom_basis` would have been silently Undefined -- falsy -- i.e. the
+   ISO branch on every basis, a fix that renders as a no-op. It defaults to
+   false so a call site that does not pass it keeps today's bytes exactly. #}
+{% macro history_provenance_note(provenance, custom_basis=false) -%}
+{# Session HIST-1. The markdown twin of _v2.html.j2::history_provenance_note --
+   the two are edited together or not at all. See that macro for why the note
+   exists; the wording is reproduced exactly, because tests/test_report_html.py
+   asserts what the markdown says also appears on the page. #}
+{% if provenance %}
+
+**History supplied by the analyst.** This trend was computed from readings you saved in this browser — {{ provenance.n_points }} in total — and sent with this upload. We keep no copy of them and cannot check them against the files they came from; a reading that was edited or removed would change this trend, and nothing here would show it.{% if provenance.needed and provenance.n_points < provenance.needed %} A trend verdict needs {{ provenance.needed }} readings; this one has {{ provenance.n_points }}, so no {% if custom_basis %}machine-specific alarm limit{% else %}ISO §6.5.2 alarm limit{% endif %} and no forward projection is offered yet.{% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro trend_figure(charts) -%}
+{% if charts and charts.trend %}
+
+![{{ charts.trend.alt }}]({{ charts.trend.rel_path }})
+{% endif %}
+{%- endmacro %}
+
+{% macro damage_stage(stage) -%}
+{# Session R1. Rendered ONLY when a bearing fault was committed -- stage.fault is
+   None otherwise and the whole block disappears. Every line is a restatement of
+   pdm_core.staging.classify_bearing_stage(); this macro derives nothing.
+   Both the deterministic report and the drafted report import this same macro,
+   so the block is byte-identical on both paths by construction rather than by
+   two templates being kept in sync by hand. #}
+{% if stage and stage.fault %}
+## Damage Stage Estimate
+
+{# Inline expression, not an {% if %} block: trim_blocks eats the newline after a
+   block tag, which would collapse this line and "Evidence:" into one paragraph. #}
+**{{ stage.label }}**{{ " — " ~ stage.fault if stage.determinable else "" }}
+
+Evidence:
+{% for item in stage.evidence %}
+- {{ item }}
+{% endfor %}
+
+_{{ stage.limitation }}_
+{% endif %}
+{%- endmacro %}
+
+{% macro unexplained_peak(up) -%}
+{# Session UNEXPLAINED-PEAK. Rendered ONLY beside a COMMITTED finding, and only
+   when the loudest line on that channel is claimed by nothing -- `up` is None
+   or `outranks_committed` is false otherwise and the whole block disappears.
+   The no-findings branch prints `up.sentence` itself and must not call this.
+   Every number is read off the peak set the analysis saw; this macro derives
+   nothing. Both documents import this same macro, so the block is identical on
+   both paths by construction rather than by hand. #}
+{% if up and up.outranks_committed %}
+
+**Unexplained dominant peak.** {{ up.sentence }}
+{% endif %}
+{%- endmacro %}
+
+{% macro cause_hypotheses(causes, heading) -%}
+{# Session R2-BUILD. Rendered ONLY when a bearing fault was committed AND the
+   approved cause library returned entries for it -- report/generate.py's
+   cause_section() returns None otherwise and this whole block disappears.
+   Every string below comes from knowledge/causes.yaml through
+   knowledge/loader.lookup_causes(); this macro selects and prints, it never
+   derives, ranks or rewords. Both the deterministic report and the drafted
+   report import this same macro, so the block is byte-identical on both paths
+   by construction -- the Session R1 damage_stage precedent, applied again. #}
+{% if causes %}
+## {{ heading }}
+
+**These are hypotheses, not findings.** The analysis committed
+{{ causes.fault_labels | join(" and ") }} from the measured spectrum. What follows is the
+reference library's list of causes known to produce that fault, in its own
+order — **none of them is confirmed by this measurement, and this
+analysis did not perform the inspection that would settle any of them.** A
+vibration reading identifies the fault; it does not identify what caused it.
+Each entry below names the evidence that would confirm or exclude it, split by
+who can collect it.
+
+_"Checked by this analysis" means the pipeline assessed evidence of that kind in
+the reading it was given — not that a measurement was taken specifically to test
+that cause. Bracketed references resolve against `references/INDEX.md`.
+`(our reasoning)` marks an observation that is ours rather than something a
+cited source states._
+{% for cause in causes.causes %}
+
+### {{ cause.name }}
+
+{{ cause.mechanism }} {{ cause.citations }}
+{% if cause.consider %}
+
+_{{ cause.consider }}_
+{% endif %}
+{% if cause.checked %}
+
+**Checked by this analysis** — {{ "vibration and reading-history evidence" if causes.history_checked else "vibration evidence" }} the pipeline evaluated:
+{% for item in cause.checked %}
+- {{ item.text }} {{ item.citation }}
+{% endfor %}
+{% endif %}
+{% if cause.collect %}
+
+**Evidence to collect** — analyst fieldwork; not performed by this analysis:
+{% for item in cause.collect %}
+- {{ item.text }} _How to collect: {{ item.how }}_ {{ item.citation }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{%- endmacro %}
+
+{% macro coverage_roster(coverage) -%}
+{# Session REPORT-NA. One line per fault family this analysis did NOT assess,
+   reason class stated — never silent omission. Every line arrives fully
+   assembled from report/generate.py::coverage_context (roster keyed to
+   outputs/FAULT_COVERAGE_2026-08-31.md §3); this macro derives nothing and
+   words nothing. Both the deterministic report and the drafted report import
+   this same macro, so the section is byte-identical on both paths by
+   construction — the Session R1/R2 precedent, applied again. #}
+{% if coverage %}
+## Coverage — what this analysis did not assess
+
+{{ coverage.preamble }}
+{% for row in coverage.rows %}
+- {{ row.line }}
+{% endfor %}
+{% endif %}
+{%- endmacro %}
+
+{% macro recommendations_section(recommendations) -%}
+{# Session REC-1. The corrective recommendations, each in the analyst's
+   three-part shape (action -> timing -> reassessment). Every sentence arrives
+   fully assembled from pdm_core/recommendations.py::corrective_recommendation
+   via report/generate.py::_recommendation_texts; this macro derives nothing and
+   words nothing.
+
+   The markdown twin of _v2.html.j2::recommendations_section — the two are
+   edited together or not at all. Both reproduce the deterministic report's own
+   section (default_survey.md.j2:207-216, survey.html.j2:250-259), which is NOT
+   restructured: this macro exists so the DRAFTED report can carry the same
+   section under the same heading, which it lost entirely when the model stopped
+   writing one (outputs/PARTC_2026-09-11.md E2 item 5). Pinned byte-for-byte
+   against the deterministic section by tests/test_rec1_report.py. #}
+## Recommendations
+{% if recommendations %}
+
+{% for rec in recommendations %}
+{{ loop.index }}. {{ rec }}
+{% endfor %}
+{% else %}
+
+No corrective action recommended at this time.
+{% endif %}
+{%- endmacro %}
+
+{% macro comparison_section(comparison) -%}
+{# Session HIST-2. The Before/After comparison, rendered from
+   pdm_core.compare.compare_readings()'s ComparisonResult. Every figure and
+   every verdict word arrives computed; this macro derives nothing and words
+   nothing. It is the markdown twin of _v2.html.j2::comparison_section — the
+   two are edited together or not at all — and the drafting model is never
+   shown either: the section is spliced in deterministically after drafting,
+   exactly as the cause and coverage sections are, so a narrated delta cannot
+   disagree with the arithmetic because no narration produces one. #}
+{% if comparison %}
+## Before / after comparison
+
+{{ comparison.headline }}
+{% if comparison.status != "ok" %}
+
+{{ comparison.reason }}
+{% else %}
+{% if comparison.overall %}
+
+### Overall level
+
+| | Before | After | Change |
+| --- | --- | --- | --- |
+{% if comparison.overall.before_mms is not none and comparison.overall.after_mms is not none and comparison.overall.delta_mms is not none %}
+| Overall vibration | {{ "%.2f"|format(comparison.overall.before_mms) }} mm/s | {{ "%.2f"|format(comparison.overall.after_mms) }} mm/s | {{ "%+.2f"|format(comparison.overall.delta_mms) }} mm/s{% if comparison.overall.pct_change is not none %} ({{ "%+.1f"|format(comparison.overall.pct_change) }}%){% endif %} |
+{% endif %}
+| ISO zone | {{ comparison.overall.zone_before }} | {{ comparison.overall.zone_after }} | {{ comparison.overall.zone_movement or "not assessable" }} |
+{% if comparison.overall.reason %}
+
+{{ comparison.overall.reason }}
+{% endif %}
+{% if comparison.overall.zone_note %}
+
+{{ comparison.overall.zone_note }}
+{% endif %}
+{% endif %}
+{% for s in comparison.spectra %}
+
+### Band levels — {{ s.kind }} spectrum, axis {{ s.axis }}
+
+Shaft {{ "%.2f"|format(s.shaft_hz) }} Hz; compared over 0–{{ "%g"|format(s.fmax_hz) }} Hz at {{ "%g"|format(s.bin_hz) }} Hz per line.
+{% if s.truncation_note %}
+
+{{ s.truncation_note }}
+{% endif %}
+
+| Band | Before | After | Change | Verdict |
+| --- | --- | --- | --- | --- |
+{% for b in s.bands %}
+| {{ b.label }} — {% if b.hi_order %}{{ "%g"|format(b.lo_order) }}–{{ "%g"|format(b.hi_order) }}×{% else %}above {{ "%g"|format(b.lo_order) }}×{% endif %} ({{ "%g"|format(b.lo_hz) }}–{{ "%g"|format(b.hi_hz) }} Hz) | {{ "%.4g"|format(b.before) }} | {{ "%.4g"|format(b.after) }} | {% if b.pct_change is not none %}{{ "%+.1f"|format(b.pct_change) }}%{% else %}n/a{% endif %} | {{ verdict_word(b.verdict) }} |
+{% endfor %}
+{% set movers = s.matched | selectattr("verdict", "ne", "no_significant_change") | list %}
+{% set steady = s.matched | selectattr("verdict", "eq", "no_significant_change") | list %}
+{% if movers or s.new_frequencies or s.gone_frequencies %}
+
+**Peaks**
+
+{% for p in movers %}
+- {{ "%g"|format(p.before_hz) }} Hz ({{ "%g"|format(p.order) }}×) — amplitude {{ "%.4g"|format(p.before_amp) }} → {{ "%.4g"|format(p.after_amp) }}{% if p.pct_change is not none %} ({{ "%+.1f"|format(p.pct_change) }}%){% endif %}, {{ verdict_word(p.verdict) }}
+{% endfor %}
+{% for p in s.new_frequencies %}
+- NEW at {{ "%g"|format(p.after_hz) }} Hz ({{ "%g"|format(p.order) }}×) — amplitude {{ "%.4g"|format(p.after_amp) }}; not present in the before reading
+{% endfor %}
+{% for p in s.gone_frequencies %}
+- GONE at {{ "%g"|format(p.before_hz) }} Hz ({{ "%g"|format(p.order) }}×) — amplitude {{ "%.4g"|format(p.before_amp) }} before; not among the after reading's peaks
+{% endfor %}
+{% endif %}
+{% if steady %}
+
+{{ steady | length }} further peak{{ "s" if steady | length != 1 else "" }} matched with no significant amplitude change.
+{% endif %}
+{% endfor %}
+{% if comparison.spectra_note %}
+
+{{ comparison.spectra_note }}
+{% endif %}
+{% if comparison.repair %}
+
+### Repair verification
+
+{% for r in comparison.repair %}
+- **{{ r.description }}** — {{ repair_word(r.verdict) }}. {{ r.evidence }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if comparison.what_to_collect %}
+
+**What would resolve this**
+
+{% for line in comparison.what_to_collect %}
+- {{ line }}
+{% endfor %}
+{% endif %}
+{% if comparison.status == "ok" %}
+
+{{ comparison.significance_note }}
+{% endif %}
+{% endif %}
+{%- endmacro %}
+
+{# The two closed vocabularies, printed as words. They live here rather than in
+   the macros above so the markdown and the HTML cannot word the same verdict
+   differently; report/generate.py registers them on BOTH environments. #}
+
+{% macro signature_block() -%}
+## Review & Approval
+
+This report is a draft produced by automated analysis. It is not a certified
+condition assessment until reviewed and signed below.
+
+Reviewed and approved by: ______________________________  (analyst, cert level: __________)
+
+Date: ______________________
+{%- endmacro %}
+
+{% macro evidence_table(rows) -%}
+{# Session REPORT-3 (item 4). Lifted VERBATIM out of default_survey.md.j2 so
+   the deterministic report and the drafted report's spliced copy are the same
+   bytes rather than two tables kept in step by hand -- the REC-1
+   recommendations_section precedent, for the same reason.
+
+   The two order columns are REPORT-2's; PARTC F-10 found they never reached a
+   drafted report, because the model wrote its own table and nothing rendered
+   this one. #}
+{% if rows %}
+
+## Evidence
+
+| Finding | Axis | Computed (Hz) | Computed (×) | Observed (Hz) | Observed (×) | 2× harmonic | Sidebands |
+|---|---|---|---|---|---|---|---|
+{% for row in rows %}
+| {{ row.label }} | {{ row.axis }} | {{ row.computed if row.computed is not none else "—" }} | {{ row.computed_order }} | {{ row.observed if row.observed is not none else "—" }} | {{ row.observed_order }} | {{ row.harmonic }} | {{ row.sidebands }} |
+{% endfor %}
+{% endif %}
+{%- endmacro %}
+
+{% macro location_evidence(locations) -%}
+{# Session REPORT-3 (item 8) — Evidence per measurement point, in ROSTER ORDER.
+
+   Renders NOTHING for a single-location report (report/generate.py::
+   location_roster returns None for a roster of one or none), which is what
+   keeps every document today byte-identical apart from page 1. The machine-
+   level call is on page 1: the sheet says what is wrong and names every
+   position it was seen at, and this says what each point showed.
+
+   The markdown twin of _v2.html.j2::location_evidence — edited together or not
+   at all. #}
+{% if locations %}
+
+## Evidence by location
+{% for loc in locations %}
+
+### {{ loc.label }}{% if loc.zone %} — {{ loc.zone_label }} {{ loc.zone }}{% endif %}
+{% if loc.rms is not none %}
+
+Overall {{ "%.2f"|format(loc.rms) }} mm/s RMS{% if loc.axis %} on the {{ axis_phrase(loc.axis) }}{% endif %}{% if loc.zone %}, {{ loc.zone_label }} {{ loc.zone }}{% endif %}.
+{% endif %}
+
+{% if loc.not_diagnosed %}**Not diagnosed at this point:** {{ loc.not_diagnosed }}.
+{% else %}**Committed at this point:** {% if loc.committed %}{{ loc.committed | join("; ") }}.{% else %}nothing.{% endif %}
+{% endif %}
+{{ evidence_table(loc.evidence_rows) }}
+{{ spectral_evidence(loc.charts) }}
+{% endfor %}
+{% endif %}
+{%- endmacro %}
+
+{% macro fault_sheet(sheet, charts=none) -%}
+{# Session REPORT-3 (item 1) — page 1, the fault sheet: the report an analyst
+   would sign, and the page a reader may stop after. Every value arrives fully
+   assembled from report/generate.py::fault_sheet_context; this macro selects
+   and prints, it never derives or words anything.
+
+   The markdown twin of _v2.html.j2::fault_sheet — the two are edited together
+   or not at all (common law #7). They are NOT identical, and deliberately:
+   "page 1" is a property of the paginated PDF, which is rendered from the HTML.
+   So the HTML twin carries the spectrum figure, the trend and the page break;
+   here the sheet is an ADDITIVE leading section and every section below it
+   stays exactly where it was. That is what keeps report.md — the reference
+   document the drafting model is handed — compatible with itself. #}
+{% if sheet %}
+## Fault Sheet
+
+{# trim_blocks eats the newline after a block tag, so a line ENDING in
+   {% raw %}{% endif %}{% endraw %} swallows the blank line that follows it. The extra blank line
+   below is that newline, not a stray one. #}
+**Machine:** {{ sheet.machine_id }}{% if sheet.locations %} — {{ sheet.locations | join(", ") }}{% endif %}
+
+
+**Date of collection:** {{ sheet.collected | default("not recorded on this reading", true) }}
+
+**Analyst:** {{ sheet.analyst | default("______________________________", true) }}
+{% if sheet.health.zone_clause %}
+
+**Health:** {{ sheet.health.zone_clause }}{% if sheet.health.assumed %} _(group and support class assumed)_{% endif %}.
+{% elif sheet.not_assessable %}
+
+**Health:** ISO severity not assessable on this reading — overall vibration is not rated.
+{% endif %}
+{# Session LIMITS-1b item 4. Rendered only when the machine carries its own
+   limits, so an ISO-basis document is byte-identical to what it was. #}
+{% if sheet.health.gate_note %}
+
+_{{ sheet.health.gate_note }}_
+{% endif %}
+{% if sheet.data_quality %}
+
+_{{ sheet.data_quality }}._
+{% endif %}
+{% if sheet.fault %}
+
+**Fault:** {{ sheet.fault.label }}{% if sheet.fault.positions %} at {{ sheet.fault.positions | join(", ") }}{% endif %}{% if sheet.fault.axis %} on the {{ axis_phrase(sheet.fault.axis) }}{% endif %}{% if sheet.fault.confidence %} — {{ sheet.fault.confidence }} confidence{% endif %}.
+{% if sheet.fault.evidence %}
+
+{{ sheet.fault.evidence }}
+{% endif %}
+{% endif %}
+{% if sheet.recommendation %}
+
+### Recommendation
+
+- **Action:** {{ sheet.recommendation.action }}
+- **When:** {{ sheet.recommendation.timing }}
+- **Reassess:** {{ sheet.recommendation.reassess }}
+{% endif %}
+{% if sheet.trigger %}
+
+**Escalation trigger:** {{ sheet.trigger }}
+{% endif %}
+{% if charts and charts.sheet %}
+
+![{{ charts.sheet.alt }}]({{ charts.sheet.rel_path }})
+
+_{{ charts.sheet.caption }}_
+{% endif %}
+{% if charts and charts.trend %}
+
+![{{ charts.trend.alt }}]({{ charts.trend.rel_path }})
+{% endif %}
+
+**Work order:** ______________________________
+{% endif %}
+{%- endmacro %}

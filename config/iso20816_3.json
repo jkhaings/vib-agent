@@ -1,0 +1,19 @@
+{
+  "_comment": "ISO 20816-3 machine-group classification by rated power, in kW. Session INTAKEFIX-1 moved these out of adapters/uploads/common.py, where INTAKE-2 left them with its own F-2 recorded against them: 'All tunable constants live in config/*.json' (CLAUDE.md) and these are the only two numbers in the intake that were not. The VALUES ARE UNCHANGED by the move - INTAKE-2's brief is still their only origin and this session adjusted neither.",
+  "_verify": true,
+  "_verify_note": "NO INDEXED SOURCE. references/INDEX.md and references/GAPS.md were both grepped for '20816' at Session INTAKEFIX-1 and return zero hits, so per CLAUDE.md's citation rule these are assumed constants until the operator indexes the standard. A cause with a plausible-sounding mechanism and no INDEX row is a guess wearing a citation's clothes; so is a boundary. When the standard is indexed, replace each 'source' below with its INDEX number and table (e.g. '#NN Table 1') and drop _verify.",
+  "groups": {
+    "group_1": {
+      "min_kw": 300.0,
+      "_verify": true,
+      "source": "unverified - no indexed reference",
+      "_rationale": "Above this rated power the machine is judged against the Group 1 rows of config/iso_zones.json. Read as a STRICT lower bound: group_from_rated_kw applies Group 1 only when rated_kw is greater than this, so a machine rated exactly 300 kW is Group 2 - the tighter row, which is the conservative direction on a boundary nobody has verified."
+    },
+    "group_2": {
+      "min_kw": 15.0,
+      "_verify": true,
+      "source": "unverified - no indexed reference",
+      "_rationale": "The Group 2 floor AND the standard's own scope floor, which are one number here because they are one number in the standard as INTAKE-2 read it. Deliberately not stored twice: a second copy would be a second thing to keep in step, and the first one to drift would be the one nobody reads. Below it the machine is outside ISO 20816-3's scope entirely - it is still classified against the closest row, and ISO_BELOW_SCOPE_NOTE says so on the report rather than presenting the zone as the standard's own answer."
+    }
+  }
+}

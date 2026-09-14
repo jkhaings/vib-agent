@@ -1,0 +1,122 @@
+{
+  "_comment": "Follow-up measurement rule table (Phase 3). pdm_core/recommendations.py evaluates each rule's named trigger predicate (code) against the analysis result and emits the matching RecommendedMeasurement. This config owns the *what-fires-what* (techniques, purposes, priorities, phrasing); the trigger primitives live in code. Classical discriminators seeded from analyst practice — verify against the user's own measurement playbook.",
+  "_verify": true,
+  "diagnosis_rules": [
+    {
+      "id": "missing_axial_channel",
+      "technique": "Triaxial (or repeat axial) velocity measurement at the same point",
+      "purpose": "A 1x line on a single radial channel is consistent with rotor imbalance AND with an axial-dominant misalignment or bent shaft; the two differ in the AXIAL proportion, which an unmeasured axial channel cannot supply. Re-measuring with the sensor axially at the same point resolves the differential directly, and is the cheaper first step before phase work.",
+      "priority": "high"
+    },
+    {
+      "id": "unresolved_1x2x_differential",
+      "technique": "Cross-coupling phase analysis",
+      "purpose": "Phase relationships across the coupling separate imbalance from misalignment and confirm the 1x/2x source that a single sensor cannot resolve.",
+      "priority": "high"
+    },
+    {
+      "id": "low_confidence_bearing",
+      "technique": "Time-waveform capture with enveloping/PeakVue and a higher-resolution spectrum",
+      "purpose": "Demodulated envelope and a longer time record confirm or rule out an early-stage bearing defect when the spectral peak alone is marginal.",
+      "priority": "high"
+    },
+    {
+      "id": "synchronous_shaft_collision",
+      "technique": "Synchronous-averaged (order-tracked) time-waveform capture with envelope demodulation",
+      "purpose": "The matched bearing frequency coincides with an integer shaft order, where a bearing defect cannot be separated from shaft-order content (misalignment, looseness, electrical, or a plain shaft harmonic). Order-synchronous averaging cancels the shaft-order lines and envelope demodulation isolates any true bearing impact, resolving whether the peak is a bearing defect at all.",
+      "priority": "high"
+    },
+    {
+      "id": "bearing_below_amplitude_floor",
+      "technique": "High-resolution enveloping/PeakVue capture with a longer time record",
+      "purpose": "The matched bearing peak sits near the broadband noise floor, where an apparent tone is not distinguishable from spectral noise. Demodulated enveloping amplifies early bearing impacts and a longer record lifts a true defect above the floor, confirming or clearing the candidate.",
+      "priority": "high"
+    },
+    {
+      "id": "misalignment_committed",
+      "technique": "Laser shaft-alignment verification and thermography across the coupling",
+      "purpose": "Confirms the alignment condition directly and checks for coupling heat before committing to a corrective outage.",
+      "priority": "medium"
+    },
+    {
+      "id": "bent_shaft_committed",
+      "technique": "1x phase comparison at both bearings of the affected shaft, plus dial-indicator shaft runout",
+      "purpose": "A bent shaft and an axial-dominant misalignment produce the same dominant axial 1x line, and on a machine whose shafts are not joined there is nothing to align or thermograph. The discriminator is the shaft itself: 1x phase read at both bearings separates a bend from a balance problem and indicates where along the shaft it sits, and dial-indicator runout measures the bend directly before committing to a straightening or replacement outage.",
+      "priority": "medium"
+    },
+    {
+      "id": "looseness_bearing_ambiguity",
+      "technique": "Time-waveform crest-factor and impact analysis",
+      "purpose": "Distinguishes mechanical looseness from a late-stage bearing defect, which can present overlapping harmonic content.",
+      "priority": "medium"
+    },
+    {
+      "id": "suspected_resonance",
+      "technique": "Bump test / coast-down sweep",
+      "purpose": "A natural-frequency check separates a structural resonance from a forced-vibration fault at the same frequency.",
+      "priority": "medium"
+    },
+    {
+      "id": "electrical_suspicion",
+      "technique": "Motor current signature analysis (MCSA) with a coast-down capture",
+      "purpose": "Coast-down separates electrically-forced vibration (disappears with power) from mechanical sources; MCSA confirms rotor/stator faults.",
+      "priority": "medium"
+    }
+  ],
+  "severity_coverage": {
+    "_comment": "Session A. Fired once when the reading's ISO zone is not_assessable (velocity absent, or present-but-implausible) -- the reduced-scope coverage follow-up that resolves severity WITHOUT touching the fault diagnosis. Deliberately NOT a data_quality_rule (those fire per gate check and would also fire on machine-off fixtures); recommendations.py gates this on the reading itself.",
+    "not_assessable": {
+      "technique": "Velocity measurement per ISO 20816 (10-1000 Hz broadband, mm/s RMS)",
+      "purpose": "Establishes the ISO 20816-3 severity zone. Severity cannot be assessed from this reading -- velocity was not measured (acceleration-only) or was outside a plausible range -- while fault detection from the spectral/envelope evidence is unaffected.",
+      "priority": "high"
+    }
+  },
+  "data_quality_rules": {
+    "_comment": "Fired per failing/warning data-quality check on the reading, so an insufficient-data report still names exactly what to re-collect.",
+    "machine_running": {
+      "technique": "Re-measure with the machine confirmed running under normal load",
+      "purpose": "Vibration amplitudes were below the running threshold — the machine appears to have been off or unloaded during capture.",
+      "priority": "high"
+    },
+    "configuring": {
+      "technique": "Re-capture after the sensor has exited configuration mode",
+      "purpose": "The sensor was still configuring, so the reading is not a valid operating measurement.",
+      "priority": "high"
+    },
+    "spectrum_non_flat": {
+      "technique": "Verify sensor mounting and cabling, then re-capture",
+      "purpose": "The spectrum was flat/dead, which usually indicates a disconnected or failed sensor rather than a healthy machine.",
+      "priority": "high"
+    },
+    "spectral_plateau": {
+      "technique": "Re-capture, and confirm the export was not amplitude-capped or post-processed",
+      "purpose": "A run of spectral bins carried one identical amplitude, so the levels in that region were written by something other than the measurement (a cap, a quantiser, or a synthetic fill) and cannot be read as true levels. Session DQ-FLAGS: this deliberately no longer advises a sensor range/gain change -- the check was renamed from 'clipping' because a flat-topped SPECTRUM is not what sensor saturation produces (saturation raises the broadband floor and adds harmonics), so the old advice pointed at a cause this evidence cannot establish.",
+      "priority": "high"
+    },
+    "sensor_settling": {
+      "technique": "Allow the sensor to settle after mounting/power-up, then re-capture",
+      "purpose": "Amplitude falls steeply and monotonically away from DC across the lowest bins -- the signature of a sensor or charge amplifier still settling during the capture, which inflates low-frequency amplitudes.",
+      "priority": "medium"
+    },
+    "ac_coupling_rolloff": {
+      "technique": "Re-capture with a sensor and coupling rated below the running speed, or measure displacement",
+      "purpose": "The running speed sits at or below the AC-coupling corner, so a true 1x line is attenuated by the measurement chain itself and its amplitude reads low.",
+      "priority": "medium"
+    },
+    "line_frequency_content": {
+      "technique": "Confirm sensor cable routing and grounding, and declare the supply frequency and pole count",
+      "purpose": "A discrete line sits on a nominal supply frequency and is not a shaft order on this machine. The origin cannot be established from this reading alone -- separating supply pickup from real machine content needs the declared line frequency and pole count, or slip sidebands.",
+      "priority": "medium"
+    },
+    "ski_slope": {
+      "technique": "Check mounting integrity and re-capture with an appropriate high-pass setting",
+      "purpose": "A low-frequency 'ski-slope' artifact was present, typically from a loose mount, cabling, or sensor settling.",
+      "priority": "medium"
+    },
+    "speed_sanity": {
+      "technique": "Confirm the machine's actual running speed and re-capture",
+      "purpose": "No spectral content was found near the stated running speed, so the recorded speed or the capture may be wrong.",
+      "priority": "medium"
+    }
+  }
+}

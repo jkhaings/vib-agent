@@ -1,0 +1,706 @@
+{# Shared macros for the v2 HTML survey page.
+
+   Session V2-WIRE. Every string these macros print arrives from
+   report/generate.py::build_context() — the SAME dict default_survey.md.j2
+   renders from. Nothing here derives a number and nothing here authors a
+   sentence; where the wording is the product, it is reproduced exactly, and
+   tests/test_report_html.py asserts every KEEP-VERBATIM string in the rendered
+   markdown also appears in the rendered HTML, so the two cannot drift.
+
+   Autoescape is ON for this environment (it is OFF for the markdown one), so
+   `{{ x }}` is safe by default and prose that carries the report's inline
+   markdown goes through the `md_inline` filter, which escapes first. #}
+
+{# A numbered section heading. A section that is absent consumes no number,
+   because a document does not number the chapters it does not have — the
+   caller increments the counter only when it is actually rendering. #}
+{% macro sec_head(n, title, sub="") -%}
+<h2>{% if n %}{{ n }} · {% endif %}{{ title }}{% if sub %} <b>· {{ sub }}</b>{% endif %}</h2>
+{%- endmacro %}
+
+{# An absent thing gets a labelled slot, never silence: silence reads as
+   "not applicable" when it means "not measured". #}
+{% macro absent(label, body) -%}
+<div class="absent"><b>{{ label }}</b>{{ body | md_inline }}</div>
+{%- endmacro %}
+
+{# Session HIST-1. The readings behind this trend were held in the analyst's own
+   browser and posted back with the upload: we keep no copy of them and cannot
+   check them against the files they came from. A trend computed from them is
+   still worth having; a trend computed from them in SILENCE is a claim the
+   document cannot support.
+
+   `provenance` is None on every other path — the NCD stream, the trend-schema
+   CSV whose points came out of the analyst's own file, the synthetic generator,
+   every benchmark adapter — so the block disappears and those documents are
+   byte-identical. Twin of _evidence.md.j2::history_provenance_note; the two are
+   edited together or not at all. Written ONCE per format and called from all
+   four page templates: three copies of one sentence is how the
+   UNEXPLAINED-PEAK defect survived. #}
+{# Session LIMITS-1c, item 1. `custom_basis` is a PARAMETER and not read off the
+   context: every import of this file is a plain `{% import %}` without
+   `with context`, so a macro here cannot see the caller's variables and
+   `ctx.custom_basis` would have been silently Undefined -- falsy -- i.e. the
+   ISO branch on every basis, a fix that renders as a no-op. It defaults to
+   false so a call site that does not pass it keeps today's bytes exactly. #}
+{% macro history_provenance_note(provenance, custom_basis=false) -%}
+{% if provenance %}
+<div class="absent"><b>History supplied by the analyst.</b> This trend was computed from readings you saved in this browser — {{ provenance.n_points }} in total — and sent with this upload. We keep no copy of them and cannot check them against the files they came from; a reading that was edited or removed would change this trend, and nothing here would show it.{% if provenance.needed and provenance.n_points < provenance.needed %} A trend verdict needs {{ provenance.needed }} readings; this one has {{ provenance.n_points }}, so no {% if custom_basis %}machine-specific alarm limit{% else %}ISO §6.5.2 alarm limit{% endif %} and no forward projection is offered yet.{% endif %}</div>
+{% endif %}
+{%- endmacro %}
+
+{% macro kv_table(rows) -%}
+<table class="kv"><tbody>
+{% for name, value in rows %}
+<tr><td>{{ name | md_inline }}</td><td>{{ value | md_inline }}</td></tr>
+{% endfor %}
+</tbody></table>
+{%- endmacro %}
+
+{# One committed finding: the label, its computed-confidence tag, its severity,
+   its reason, and EVERY confidence factor. The factor list is never truncated —
+   the factors are the evidence the confidence is computed from. #}
+{% macro finding_card(d) -%}
+<div class="finding">
+  <header>
+    <h3>{{ d.label | md_inline }}</h3>
+    <span class="conf {{ d.confidence | lower }}">Confidence {{ d.confidence | lower }}</span>
+  </header>
+  <div class="sev-tag">{{ d.tag | md_inline }}</div>
+  {% if d.lead %}<p><b>{{ d.lead | md_inline }}</b></p>{% endif %}
+  <p>{{ d.reason | md_inline }}</p>
+  {% if d.factors %}
+  <div class="lbl" style="margin-top:14px">Evidence:</div>
+  <ul class="factors">
+    {% for factor in d.factors %}<li>{{ factor | md_inline }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{%- endmacro %}
+
+{# The ISO A–D bands with their boundary values, and the machine's value flagged
+   at its measured position.
+
+   On a not_assessable reading the bands are drawn WITHOUT a marker. That is
+   deliberate: the scale still exists, this reading just does not sit on it.
+   Rendering nothing at all would let a reader assume no scale applies. #}
+{% macro zone_strip(iso, marked) -%}
+{% if iso and iso.th_ab is not none and iso.th_bc is not none and iso.th_cd is not none %}
+{% set value = iso.severity_rms if marked else none %}
+{% set top = [iso.th_cd * 1.55, (value or 0) * 1.15] | max %}
+<div class="zonestrip">
+  <div class="bands">
+    {% for label, lo, hi in [("A", 0.0, iso.th_ab), ("B", iso.th_ab, iso.th_bc),
+                             ("C", iso.th_bc, iso.th_cd), ("D", iso.th_cd, top)] %}
+    <div class="band" style="flex:0 0 {{ "%.4f"|format((hi - lo) / top * 100) }}%;background:{{ zone_colour(label) }}">{{ label }} · {% if label == "D" %}{{ "%g"|format(lo) }}+{% else %}{{ "%g"|format(lo) }}–{{ "%g"|format(hi) }}{% endif %}</div>
+    {% endfor %}
+  </div>
+  {% if value is not none %}
+  {% set pos = [value / top * 100, 100.0] | min %}
+  <div class="mark" style="left:{{ "%.4f"|format(pos) }}%"></div>
+  <div class="val" style="left:{{ "%.4f"|format(pos) }}%">{{ "%.2f"|format(value) }} mm/s</div>
+  {% endif %}
+</div>
+{% endif %}
+{%- endmacro %}
+
+{# One measured-spectrum channel figure, and its caption verbatim — including
+   the negative one ("No peak on this channel matched a computed fault frequency
+   within tolerance.").
+
+   NO header strip is rendered here. `ChartFigure.header` carries the channel
+   key/values (Channel, Overall, RMS, Speed, Spectrum, Δf, Lines, Date) and the
+   PNG already DRAWS them across its own top edge — rendering them again above
+   the image printed every one of them twice and cost ~0.9 in per figure, which
+   was enough to orphan each figure on a page of its own. The figure is
+   self-contained: it carries its own title and its own header, exactly as it
+   does in report.md. See SESSION_V2WIRE.md for the follow-up this defers. #}
+{% macro channel_figure(figure) -%}
+<figure>
+  <div class="plot"><img src="{{ figure.rel_path }}" alt="{{ figure.alt }}"></div>
+  {% if figure.caption %}<figcaption>{{ figure.caption | md_inline }}</figcaption>{% endif %}
+</figure>
+{%- endmacro %}
+
+{# ══ shared document furniture ═════════════════════════════════════════════
+   Both the deterministic page and the agent-drafted page are built from these,
+   so the chrome, the appendix and the footer are the same on both paths BY
+   CONSTRUCTION rather than by two templates being kept in step by hand — the
+   precedent `_evidence.md.j2`'s macros already set for the markdown pair. #}
+
+{% macro masthead(machine) -%}
+<div class="mast">
+  <div class="mark">VIB-AGENT<em>Vibration survey report</em></div>
+  <div class="mast-right">
+    <span>{{ machine.name }}</span>
+    {# The DRAFT footer's words, promoted to a header badge as well as kept in
+       the footer. Neither copy is reworded. #}
+    <span class="draftbadge">DRAFT — prepared by automated analysis, pending analyst review.</span>
+  </div>
+</div>
+<div class="rule"></div>
+<h1 style="position:absolute;left:-9999px">Vibration Survey Report — {{ machine.name }}</h1>
+{%- endmacro %}
+
+{# The full status string, in words. The verdict is NEVER carried by colour
+   alone; the zone colour is decoration on top of the sentence. #}
+{% macro status_banner(status_line, status_colour) -%}
+<div class="statusline" style="border-left-color:{{ status_colour }}">{{ status_line }}</div>
+{%- endmacro %}
+
+{# Doctrine is that the quality gate runs first and nothing downstream is valid
+   without it, so a non-PASS verdict is hoisted above the diagnosis, carrying
+   every attention line verbatim. This is deterministic on EVERY path — it is
+   what keeps the coverage rule true of a report whose prose a model wrote. #}
+{% macro gate_ribbon(gate, dq_notes) -%}
+{% if gate.overall != "pass" %}
+<div class="ribbon{% if gate.overall == 'fail' %} fail{% endif %}">
+  <b>Gate verdict: {{ gate.overall | upper }}</b>
+  {% for note in dq_notes %}<span>{{ note | md_inline }}</span>{% endfor %}
+  <span class="muted">Full roster below.</span>
+</div>
+{% endif %}
+{%- endmacro %}
+
+{# A SUMMARY of the machine identification. A row the report prints as its own
+   "—" placeholder is dropped from this line only — `Type · —` reads as a
+   rendering slip rather than as "not recorded". The full Machine Details table
+   keeps every row and every placeholder exactly as rendered. #}
+{% macro meta_strip(machine, result, analysis_parameters) -%}
+<div class="meta">
+  <div><h4>Machine</h4><p>{{ machine.name }}{% if machine.type %} · {{ machine.type }}{% endif %}</p></div>
+  <div><h4>Duty</h4><p>
+    {%- set duty = [] -%}
+    {%- if result.rca and result.rca.rpm %}{% set _ = duty.append("%d rpm"|format(result.rca.rpm)) %}{% endif -%}
+    {%- if machine.iso_group %}{% set _ = duty.append("ISO group " ~ machine.iso_group) %}{% endif -%}
+    {%- if machine.bearing %}{% set _ = duty.append("bearing " ~ (machine.bearing.model or "(geometry supplied)")) %}{% endif -%}
+    {{ duty | join(" · ") if duty else "—" }}</p></div>
+  <div><h4>Data</h4><p>
+    {%- set params = dict(analysis_parameters) -%}
+    {%- set data = [] -%}
+    {%- if params.get("Spectrum type") %}{% set _ = data.append(params["Spectrum type"]) %}{% endif -%}
+    {%- if params.get("Spectral lines (N)") %}{% set _ = data.append(params["Spectral lines (N)"] ~ " lines") %}{% endif -%}
+    {%- if params.get("Fmax") %}{% set _ = data.append(params["Fmax"]) %}{% endif -%}
+    {{ data | join(" · ") if data else "not recorded" }}</p></div>
+</div>
+{%- endmacro %}
+
+{# The webapp's own insertions — the units-conversion note, the "Channels
+   measured" line, the coverage note. The markdown report places them right
+   after the Machine Details table; here they sit under the meta strip, which is
+   the same position relative to the machine identification and above the
+   diagnosis. The strings are untouched — only the container moved. #}
+{% macro notes_panel(notes) -%}
+{% if notes %}
+<div class="panel" style="margin:16px 0 0">
+  {% for note in notes %}<div>{{ note | md_inline }}</div>{% endfor %}
+</div>
+{% endif %}
+{%- endmacro %}
+
+{# Severity and the committed diagnosis, in the report's own words for all four
+   Diagnosis states.
+
+   A REJECTED reading asserts NO severity. `classify` does still run on a
+   gate-fail reading and does still return a zone, but doctrine is that nothing
+   downstream of a failed gate is valid, and a card is a verdict in a way a
+   table row is not. The value is not hidden — it stays in the Machine Details
+   table, where it is a record. #}
+{% macro cards(ctx) -%}
+<div class="cards">
+  {% if ctx.insufficient %}
+  <div class="card sev unrated">
+    <div class="lbl">Severity</div>
+    <h3>Severity not established</h3>
+    <div class="sub">The reading did not pass quality checks, so no severity is asserted.</div>
+  </div>
+  {% elif ctx.analysis_failed %}
+  <div class="card sev unrated">
+    <div class="lbl">Severity</div>
+    <h3>Severity not established</h3>
+    <div class="sub">The fault screen did not complete, so no severity is asserted. The measured value is in the Machine Details table.</div>
+  </div>
+  {% elif ctx.not_assessable %}
+  <div class="card sev unrated">
+    <div class="lbl">Severity</div>
+    <h3>Severity unrated</h3>
+    <div class="sub">{{ ctx.not_assessable_reason }} — ISO 20816-3</div>
+  </div>
+  {% elif ctx.iso and ctx.iso.iso_zone in ("A", "B", "C", "D") %}
+  <div class="card sev z{{ ctx.iso.iso_zone }}">
+    <div class="lbl">Severity</div>
+    <h3>Zone {{ ctx.iso.iso_zone }} — {{ ctx.zone_word | lower }}</h3>
+    <div class="sub">{{ "%.2f"|format(ctx.iso.severity_rms) }} mm/s on {{ ctx.iso.dominant_axis }}{% if ctx.iso.threshold_note %} · {{ ctx.iso.threshold_note }}{% endif %}</div>
+  </div>
+  {% else %}
+  <div class="card sev unrated">
+    <div class="lbl">Severity</div>
+    <h3>Severity unrated</h3>
+    <div class="sub">no classified reading</div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="lbl">Committed diagnosis</div>
+    {% if ctx.insufficient %}
+    <h3>Insufficient data — no diagnosis made.</h3>
+    <div class="sub">No fault assessment is possible from this reading.</div>
+    {% elif ctx.analysis_failed %}
+    <h3>Analysis failed — no diagnosis made.</h3>
+    <div class="sub">The fault screen did not complete. Nothing was assessed and nothing was ruled out.</div>
+    {% elif ctx.no_findings and ctx.unmatched_periodicity %}
+    <h3>Committed diagnosis: none — but this reading is not clear.</h3>
+    {% elif ctx.no_findings %}
+    <h3>Committed diagnosis: none — parameters within normal range.</h3>
+    {% else %}
+    <h3>{{ ctx.diagnosis[0].label | md_inline }}</h3>
+    <div class="sub">confidence {{ ctx.diagnosis[0].confidence }} · severity {{ ctx.diagnosis[0].severity }}{% if ctx.diagnosis | length > 1 %} · {{ ctx.diagnosis | length - 1 }} further finding{{ "s" if ctx.diagnosis | length > 2 else "" }} below{% endif %}</div>
+    {% endif %}
+  </div>
+</div>
+{%- endmacro %}
+
+{# Absent without a committed bearing fault — the whole section DISAPPEARS
+   rather than rendering empty, because on a misalignment report there is no
+   "missing" damage stage to report; the concept does not apply. #}
+{% macro damage_stage_section(n, damage_stage, graphic="") -%}
+{% if damage_stage and damage_stage.fault %}
+<section>
+  {{ sec_head(n, "Damage stage estimate") }}
+  <div class="finding">
+    <header><h3>{{ damage_stage.label }}{% if damage_stage.determinable %} — {{ damage_stage.fault }}{% endif %}</h3></header>
+    <ul>{% for item in damage_stage.evidence %}<li>{{ item | md_inline }}</li>{% endfor %}</ul>
+    <p class="muted" style="margin:12px 0 0">{{ damage_stage.limitation | md_inline }}</p>
+  </div>
+  {{ graphic }}
+</section>
+{% endif %}
+{%- endmacro %}
+
+{% macro unexplained_peak(up) -%}
+{# Session UNEXPLAINED-PEAK — the mirror of _evidence.md.j2::unexplained_peak.
+   Rendered INSIDE the Diagnosis section beside the committed finding cards, so
+   an analyst reading the diagnosis learns in the same breath that the loudest
+   line in the spectrum is not the one being committed to. #}
+{% if up and up.outranks_committed %}
+  <div class="finding">
+    <header><h3>Unexplained dominant peak</h3></header>
+    <p>{{ up.sentence | md_inline }}</p>
+  </div>
+{% endif %}
+{%- endmacro %}
+
+{% macro spectral_section(n, charts) -%}
+{% if charts and charts.has_channel_figures %}
+<section>
+  {{ sec_head(n, "Spectral evidence") }}
+  <p>Figures are rendered from the same computed values as the findings above — the
+measured spectrum, the shaft orders at the measured running speed, the bearing
+fault frequencies where a geometry was supplied, the peaks the analysis matched,
+and the amplitude floor from the active threshold profile. No figure introduces
+a number that is not already in this report.</p>
+  {% for channel in charts.channels %}
+    {% for figure in channel.figures %}{{ channel_figure(figure) }}{% endfor %}
+  {% endfor %}
+</section>
+{% endif %}
+{%- endmacro %}
+
+{# Rendered ONLY when a bearing fault was committed AND the operator-approved
+   library returned entries. Every string comes from knowledge/causes.yaml
+   through lookup_causes(); this selects and prints — it never derives, ranks or
+   rewords. No cap, no truncation. #}
+{% macro causes_section(n, causes, cause_heading, cause_illustration) -%}
+{% if causes %}
+<section>
+  {{ sec_head(n, cause_heading) }}
+  <p><strong>These are hypotheses, not findings.</strong> The analysis committed
+{{ causes.fault_labels | join(" and ") }} from the measured spectrum. What follows is the
+reference library's list of causes known to produce that fault, in its own
+order — <strong>none of them is confirmed by this measurement, and this
+analysis did not perform the inspection that would settle any of them.</strong> A
+vibration reading identifies the fault; it does not identify what caused it.
+Each entry below names the evidence that would confirm or exclude it, split by
+who can collect it.</p>
+  <p><em>"Checked by this analysis" means the pipeline assessed evidence of that kind in
+the reading it was given — not that a measurement was taken specifically to test
+that cause. Bracketed references resolve against <code>references/INDEX.md</code>.
+<code>(our reasoning)</code> marks an observation that is ours rather than
+something a cited source states.</em></p>
+  {% for cause in causes.causes %}
+  <div class="cause">
+    <h3><span class="n">{{ "%02d"|format(loop.index) }}</span>{{ cause.name | md_inline }}</h3>
+    {{ cause_illustration(cause) }}
+    <p>{{ cause.mechanism | md_inline }} <span class="cite">{{ cause.citations }}</span></p>
+    {% if cause.consider %}<div class="consider">{{ cause.consider | md_inline }}</div>{% endif %}
+    {% if cause.checked or cause.collect %}
+    <div class="split">
+      {% if cause.checked %}
+      <div class="checked">
+        <h4>Checked by this analysis — {{ "vibration and reading-history evidence" if causes.history_checked else "vibration evidence" }} the pipeline evaluated:</h4>
+        <ul>
+        {% for item in cause.checked %}
+          <li>{{ item.text | md_inline }}<div class="cite{% if item.inferred %} inferred{% endif %}">{{ item.citation }}</div></li>
+        {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if cause.collect %}
+      <div class="collect">
+        <h4>Evidence to collect — analyst fieldwork; not performed by this analysis:</h4>
+        <ul>
+        {% for item in cause.collect %}
+          <li>{{ item.text | md_inline }} <span class="how">How to collect: {{ item.how | md_inline }}</span><div class="cite{% if item.inferred %} inferred{% endif %}">{{ item.citation }}</div></li>
+        {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+{%- endmacro %}
+
+{# Session REPORT-NA. One line per fault family this analysis did NOT assess,
+   reason class stated — never silent omission. Every line arrives fully
+   assembled from report/generate.py::coverage_context (roster keyed to
+   outputs/FAULT_COVERAGE_2026-08-31.md §3); this macro derives nothing and
+   words nothing, so the markdown twin (_evidence.md.j2::coverage_roster)
+   carries the identical sentences by construction. #}
+{% macro coverage_section(n, coverage) -%}
+{% if coverage %}
+<section>
+  {{ sec_head(n, "Coverage — what this analysis did not assess") }}
+  <p>{{ coverage.preamble | md_inline }}</p>
+  <ul>
+  {% for row in coverage.rows %}
+    <li>{{ row.line | md_inline }}</li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{%- endmacro %}
+
+{# Session REC-1. The HTML twin of _evidence.md.j2::recommendations_section —
+   same list, same words, same order; edited together or not at all. The body
+   reproduces survey.html.j2:250-259, which is NOT restructured; this macro
+   exists so the DRAFTED page can carry the same section under the same heading
+   (outputs/PARTC_2026-09-11.md E2 item 5). Additive: it inserts a section and
+   restyles nothing. #}
+{% macro recommendations_section(n, recommendations) -%}
+<section>
+  {{ sec_head(n, "Recommendations") }}
+{% if recommendations %}
+  <ol>{% for rec in recommendations %}<li>{{ rec | md_inline }}</li>{% endfor %}</ol>
+{% else %}
+  <p>No corrective action recommended at this time.</p>
+{% endif %}
+</section>
+{%- endmacro %}
+
+{# Session REPORT-2 (item 5). The HTML twin of _evidence.md.j2::fmax_adequacy —
+   same context dict, same words, same order; edited together or not at all.
+   Additive: it inserts a section and restyles nothing. #}
+{% macro fmax_adequacy_section(n, fa) -%}
+{% if fa %}
+<section>
+  {{ sec_head(n, fa.heading) }}
+  <p>{{ fa.intro | md_inline }}</p>
+  {% if fa.lines %}
+  <ul>
+  {% for line in fa.lines %}
+    <li>{{ line | md_inline }}</li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+  {% if fa.absence %}
+  <p class="muted">{{ fa.absence | md_inline }}</p>
+  {% endif %}
+</section>
+{% endif %}
+{%- endmacro %}
+
+{# Every row the builders emit, INCLUDING the honest non-values: "Window: not
+   recorded on this path", "Spectrum amplitude units: as supplied at upload",
+   and "not recorded" wherever no spectrum was available. #}
+{# Session HIST-2. The HTML twin of _evidence.md.j2::comparison_section. Same
+   ComparisonResult, same words (verdict_word/repair_word are registered on BOTH
+   environments from pdm_core.compare, so a verdict has one spelling in the
+   product), same order. Additive: it inserts a section and restyles nothing —
+   every table here is the document's existing plain-table style. #}
+{% macro comparison_section(n, comparison) -%}
+{% if comparison %}
+<section>
+  {{ sec_head(n, "Before / after comparison") }}
+  <p><strong>{{ comparison.headline | md_inline }}</strong></p>
+{% if comparison.status != "ok" %}
+  {{ absent("No comparison was made — ", comparison.reason) }}
+{% else %}
+{% if comparison.overall %}
+  <div class="sub-h">Overall level</div>
+  <div class="scroll"><table>
+    <thead><tr><th></th><th>Before</th><th>After</th><th>Change</th></tr></thead>
+    <tbody>
+{% if comparison.overall.before_mms is not none and comparison.overall.after_mms is not none and comparison.overall.delta_mms is not none %}
+      <tr><td>Overall vibration</td>
+          <td class="num">{{ "%.2f"|format(comparison.overall.before_mms) }} mm/s</td>
+          <td class="num">{{ "%.2f"|format(comparison.overall.after_mms) }} mm/s</td>
+          <td class="num">{{ "%+.2f"|format(comparison.overall.delta_mms) }} mm/s{% if comparison.overall.pct_change is not none %} ({{ "%+.1f"|format(comparison.overall.pct_change) }}%){% endif %}</td></tr>
+{% endif %}
+      <tr><td>ISO zone</td>
+          <td class="num">{{ comparison.overall.zone_before }}</td>
+          <td class="num">{{ comparison.overall.zone_after }}</td>
+          <td class="num">{{ comparison.overall.zone_movement or "not assessable" }}</td></tr>
+    </tbody>
+  </table></div>
+{% if comparison.overall.reason %}
+  <p>{{ comparison.overall.reason | md_inline }}</p>
+{% endif %}
+{% if comparison.overall.zone_note %}
+  <p><em>{{ comparison.overall.zone_note | md_inline }}</em></p>
+{% endif %}
+{% endif %}
+{% for s in comparison.spectra %}
+  <div class="sub-h">Band levels — {{ s.kind }} spectrum, axis {{ s.axis }}</div>
+  <p class="gfx-cap">Shaft {{ "%.2f"|format(s.shaft_hz) }} Hz; compared over 0–{{ "%g"|format(s.fmax_hz) }} Hz at {{ "%g"|format(s.bin_hz) }} Hz per line.{% if s.truncation_note %} {{ s.truncation_note | md_inline }}{% endif %}</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Band</th><th>Before</th><th>After</th><th>Change</th><th>Verdict</th></tr></thead>
+    <tbody>
+    {% for b in s.bands %}
+      <tr><td>{{ b.label }} <span class="trigger">{% if b.hi_order %}{{ "%g"|format(b.lo_order) }}–{{ "%g"|format(b.hi_order) }}×{% else %}above {{ "%g"|format(b.lo_order) }}×{% endif %} · {{ "%g"|format(b.lo_hz) }}–{{ "%g"|format(b.hi_hz) }} Hz</span></td>
+          <td class="num">{{ "%.4g"|format(b.before) }}</td>
+          <td class="num">{{ "%.4g"|format(b.after) }}</td>
+          <td class="num">{% if b.pct_change is not none %}{{ "%+.1f"|format(b.pct_change) }}%{% else %}n/a{% endif %}</td>
+          <td>{{ verdict_word(b.verdict) }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% set movers = s.matched | selectattr("verdict", "ne", "no_significant_change") | list %}
+  {% set steady = s.matched | selectattr("verdict", "eq", "no_significant_change") | list %}
+  {% if movers or s.new_frequencies or s.gone_frequencies %}
+  <div class="sub-h">Peaks</div>
+  <ul>
+    {% for p in movers %}
+    <li>{{ "%g"|format(p.before_hz) }} Hz ({{ "%g"|format(p.order) }}×) — amplitude {{ "%.4g"|format(p.before_amp) }} → {{ "%.4g"|format(p.after_amp) }}{% if p.pct_change is not none %} ({{ "%+.1f"|format(p.pct_change) }}%){% endif %}, {{ verdict_word(p.verdict) }}</li>
+    {% endfor %}
+    {% for p in s.new_frequencies %}
+    <li><b>NEW</b> at {{ "%g"|format(p.after_hz) }} Hz ({{ "%g"|format(p.order) }}×) — amplitude {{ "%.4g"|format(p.after_amp) }}; not present in the before reading</li>
+    {% endfor %}
+    {% for p in s.gone_frequencies %}
+    <li><b>GONE</b> at {{ "%g"|format(p.before_hz) }} Hz ({{ "%g"|format(p.order) }}×) — amplitude {{ "%.4g"|format(p.before_amp) }} before; not among the after reading's peaks</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if steady %}
+  <p class="gfx-cap">{{ steady | length }} further peak{{ "s" if steady | length != 1 else "" }} matched with no significant amplitude change.</p>
+  {% endif %}
+{% endfor %}
+{% if comparison.spectra_note %}
+  <p>{{ comparison.spectra_note | md_inline }}</p>
+{% endif %}
+{% if comparison.repair %}
+  <div class="sub-h">Repair verification</div>
+  <ul>
+  {% for r in comparison.repair %}
+    <li><b>{{ r.description | md_inline }}</b> — {{ repair_word(r.verdict) }}. {{ r.evidence | md_inline }}</li>
+  {% endfor %}
+  </ul>
+{% endif %}
+{% endif %}
+{% if comparison.what_to_collect %}
+  <div class="sub-h">What would resolve this</div>
+  <ul>{% for line in comparison.what_to_collect %}<li>{{ line | md_inline }}</li>{% endfor %}</ul>
+{% endif %}
+{% if comparison.status == "ok" %}
+  <p class="gfx-cap">{{ comparison.significance_note | md_inline }}</p>
+{% endif %}
+</section>
+{% endif %}
+{%- endmacro %}
+
+{% macro parameters_section(n, machine_rows, analysis_parameters) -%}
+<section>
+  {{ sec_head(n, "Machine & analysis parameters") }}
+  <div class="sub-h">Machine details</div>
+  <div class="scroll">{{ kv_table(machine_rows) }}</div>
+  <div class="sub-h">Analysis parameters</div>
+  <div class="scroll">{{ kv_table(analysis_parameters) }}</div>
+</section>
+{%- endmacro %}
+
+{# Stated in the checks' OWN terms. Nothing counts claims, so no count is
+   printed: a tally would be the one fabricated number in the document. #}
+{% macro provenance_panel() -%}
+<div class="panel" style="margin:30px 0 0">
+<b>How the numbers got here.</b> Every value on this page is computed by the
+deterministic analysis and rendered from its result; nothing in this report is
+arithmetic done in prose. Where the wording is drafted rather than rendered, the
+written narrative is checked against those computed numbers before issue — the
+title line, the severity language, the fault terms, the confidence binding, every
+quoted number, the damage-stage language, the cause language and the structured
+echo. A draft that fails any check is refused, and the report is issued from the
+computed result alone, with a visible note, rather than in unchecked prose.
+</div>
+{%- endmacro %}
+
+{# Blank rules, to be signed by hand. A draft that arrives pre-signed is the one
+   thing this block exists to prevent. #}
+{% macro signature_block() -%}
+<div class="sign">
+  <div class="lbl">Review &amp; approval</div>
+  <p>This report is a draft produced by automated analysis. It is not a certified
+condition assessment until reviewed and signed below.</p>
+  <p class="rule-line">Reviewed and approved by: ______________________________  (analyst, cert level: __________)</p>
+  <p class="rule-line">Date: ______________________</p>
+</div>
+{%- endmacro %}
+
+{% macro page_footer(deletion_footer) -%}
+<footer>
+  <b>DRAFT — prepared by automated analysis, pending analyst review.</b>
+  {% if deletion_footer %}<span>{{ deletion_footer }}</span>{% endif %}
+</footer>
+{%- endmacro %}
+
+{# Session REPORT-3 (item 1) — PAGE 1, the fault sheet. The report an analyst
+   would sign, and the page a reader may stop after: machine and point, when it
+   was collected, who signs it, the health line, the fault and its evidence, the
+   decision, the recommendation in REC-1's three named parts, what would change
+   the answer, one figure, and a blank work-order field. In that order, and
+   nothing else.
+
+   Every value arrives fully assembled from
+   report/generate.py::fault_sheet_context; this macro selects and prints.
+
+   The twin of _evidence.md.j2::fault_sheet — edited together or not at all
+   (common law #7) — but deliberately NOT identical: "page 1" is a property of
+   the paginated PDF, which is rendered from this document and not from the
+   markdown. So the figure, the trend and the `break-after: page` live here.
+
+   `.sheet` is the only new class; everything inside reuses the page's existing
+   type scale (`.lead`, `.kv`, `.rec`, `.gfx-cap`) because the brief says do not
+   restyle — the layout is REPORT-2's plus CHARTS-2's figures. #}
+{# Session REPORT-3 (item 4) — the HTML twin of
+   _evidence.md.j2::evidence_table, edited together or not at all. Lifted
+   verbatim out of survey.html.j2 so the deterministic page and the drafted
+   page's spliced copy render the same table, with REPORT-2's two order
+   columns, rather than the model's own without them (PARTC F-10). #}
+{# Session REPORT-3 (item 8) — Evidence per measurement point, in ROSTER ORDER,
+   and the twin of _evidence.md.j2::location_evidence. Renders nothing for a
+   single-location report. #}
+{% macro location_evidence(n, locations) -%}
+{% if locations %}
+<section>
+  {{ sec_head(n, "Evidence by location") }}
+  {% for loc in locations %}
+  <h3 class="sub-h">{{ loc.label }}{% if loc.zone %} — {{ loc.zone_label }} {{ loc.zone }}{% endif %}</h3>
+  {% if loc.rms is not none %}
+  <p>Overall <b>{{ "%.2f"|format(loc.rms) }} mm/s RMS</b>{% if loc.axis %} on the {{ axis_phrase(loc.axis) }}{% endif %}{% if loc.zone %}, {{ loc.zone_label }} {{ loc.zone }}{% endif %}.</p>
+  {% endif %}
+  {% if loc.not_diagnosed %}
+  <p><b>Not diagnosed at this point:</b> {{ loc.not_diagnosed }}.</p>
+  {% else %}
+  <p><b>Committed at this point:</b> {% if loc.committed %}{{ loc.committed | join("; ") }}.{% else %}nothing.{% endif %}</p>
+  {% endif %}
+  {{ evidence_table_body(loc.evidence_rows) }}
+  {% if loc.charts %}{{ spectral_section(none, loc.charts) }}{% endif %}
+  {% endfor %}
+</section>
+{% endif %}
+{%- endmacro %}
+
+{% macro evidence_table_body(rows) -%}
+  <div class="scroll"><table>
+    <thead><tr><th>Finding</th><th>Axis</th><th>Computed (Hz)</th><th>Computed (×)</th><th>Observed (Hz)</th><th>Observed (×)</th><th>2× harmonic</th><th>Sidebands</th></tr></thead>
+    <tbody>
+    {% for row in rows %}
+      <tr>
+        <td>{{ row.label | md_inline }}</td>
+        <td class="num">{{ row.axis }}</td>
+        <td class="num">{{ row.computed if row.computed is not none else "—" }}</td>
+        <td class="num">{{ row.computed_order }}</td>
+        <td class="num">{{ row.observed if row.observed is not none else "—" }}</td>
+        <td class="num">{{ row.observed_order }}</td>
+        <td class="num">{{ row.harmonic }}</td>
+        <td class="num">{{ row.sidebands }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+{%- endmacro %}
+
+{% macro evidence_table(n, rows) -%}
+{% if rows %}
+<section>
+  {{ sec_head(n, "Evidence") }}
+  {{ evidence_table_body(rows) }}
+</section>
+{% endif %}
+{%- endmacro %}
+
+{% macro fault_sheet(sheet, charts, figure) -%}
+{% if sheet %}
+<section class="sheet">
+  {# Identification on ONE line rather than a three-row table. Measured: the
+     table cost 33 mm of a 269 mm page that also has to seat a 177 mm figure,
+     and a report an analyst can stop after is worth more than a table of three
+     values. Every field is still named, in the brief's order. #}
+  <p class="sheet-id"><b>{{ sheet.machine_id }}</b>{% if sheet.locations %} · {{ sheet.locations | join(", ") }}{% endif %} · collected {{ sheet.collected or "date not recorded on this reading" }}
+    &nbsp;·&nbsp; Analyst: <span class="blank"></span></p>
+
+  {% if sheet.health.zone_clause %}
+  <p class="lead"><b>Health.</b> {{ sheet.health.zone_clause | md_inline }}{% if sheet.health.assumed %} <em>(group and support class assumed)</em>{% endif %}.</p>
+  {% elif sheet.not_assessable %}
+  <p class="lead"><b>Health.</b> ISO severity not assessable on this reading — overall vibration is not rated.</p>
+  {% endif %}
+  {# Session LIMITS-1b item 4 — the markdown twin is _evidence.md.j2's own
+     `gate_note` block, fed by the same context key so the two cannot drift. #}
+  {% if sheet.health.gate_note %}
+  <p class="sheet-rule">{{ sheet.health.gate_note | md_inline }}</p>
+  {% endif %}
+  {% if sheet.data_quality %}
+  <div class="absent"><b>Data quality.</b> {{ sheet.data_quality }}.</div>
+  {% endif %}
+
+  {% if sheet.fault %}
+  <p class="lead"><b>Fault.</b> {{ sheet.fault.label | md_inline }}{% if sheet.fault.positions %} at {{ sheet.fault.positions | join(", ") }}{% endif %}{% if sheet.fault.axis %} on the {{ axis_phrase(sheet.fault.axis) }}{% endif %}{% if sheet.fault.confidence %} — {{ sheet.fault.confidence }} confidence{% endif %}.{% if sheet.fault.evidence %} {{ sheet.fault.evidence | md_inline }}{% endif %}</p>
+  {% endif %}
+
+  {% if sheet.recommendation %}
+  <h3 class="sub-h">Recommendation</h3>
+  {# NOT `.rec` — that is a two-column grid built for the numbered
+     Recommendations section, and on the sheet it cost 38 mm for three short
+     lines. Same words, same order, its own tight block. #}
+  <div class="sheet-rec">
+    {# Colons, not full stops: REC-1's parts are SPANS of one sentence, so
+       "Action. Replace the bearing When. at the next available maintenance
+       window" reads as two broken sentences on the page. Measured by reading
+       the drafted PDF, which is the only place the three sit together. #}
+    <p><b>Action:</b> {{ sheet.recommendation.action | md_inline }}</p>
+    <p><b>When:</b> {{ sheet.recommendation.timing | md_inline }}</p>
+    <p><b>Reassess:</b> {{ sheet.recommendation.reassess | md_inline }}</p>
+  </div>
+  {% endif %}
+  {% if sheet.trigger %}
+  <p class="sheet-rule"><b>Escalation trigger:</b> {{ sheet.trigger | md_inline }}</p>
+  {% endif %}
+
+  {% if figure %}
+  {{ channel_figure(figure) }}
+  {% endif %}
+  {% if charts and charts.trend %}
+  {# Image only, no figcaption — which is how the trend figure is rendered
+     everywhere else in this document, and not an oversight. Its caption names
+     an amplitude the `AnalysisResult` does not hold, and
+     tests/test_report_html.py::TestNoInventedNumbers reads the rendered PROSE:
+     printing it here would put a number in the report that traces to nothing.
+     Measured, on the trend fixture ('0.1376'). #}
+  <figure><div class="plot"><img src="{{ charts.trend.rel_path }}" alt="{{ charts.trend.alt }}"></div></figure>
+  {% endif %}
+
+  <p class="sheet-rule"><b>Work order:</b> <span class="blank"></span></p>
+</section>
+{% endif %}
+{%- endmacro %}

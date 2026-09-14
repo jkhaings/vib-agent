@@ -1,0 +1,1707 @@
+/* vib-agent webapp — shared stylesheet (ui-v1).
+   Adapted verbatim from vib-agent-ui-design-reference.html. IBM Plex is
+   self-hosted (SIL OFL 1.1) under /fonts — no third-party font CDN, so no
+   visitor IP leaks to Google, consistent with the privacy page. */
+
+/* ── self-hosted IBM Plex (subset of weights the design uses) ─────────── */
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:400;font-display:swap;
+  src:url("/fonts/IBMPlexSans-Regular.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:500;font-display:swap;
+  src:url("/fonts/IBMPlexSans-Medium.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:600;font-display:swap;
+  src:url("/fonts/IBMPlexSans-SemiBold.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;
+  src:url("/fonts/IBMPlexMono-Regular.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;font-display:swap;
+  src:url("/fonts/IBMPlexMono-Medium.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans Condensed";font-style:normal;font-weight:600;font-display:swap;
+  src:url("/fonts/IBMPlexSansCondensed-SemiBold.woff2") format("woff2")}
+
+:root{
+  --paper:#F6F7F5; --card:#FFFFFF; --ink:#101816; --mut:#5A6662;
+  --line:#D8DCD7; --brand:#1B4640; --brand-ink:#F2F5F3;
+  --trace:#0B63C5; --zoneA:#2E7D46; --zoneB:#7C8A34; --zoneC:#8A5A12; --zoneD:#B3372B;
+  --r:6px;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} *{transition:none !important; animation:none !important}}
+body{
+  background:var(--paper); color:var(--ink);
+  font:400 16px/1.55 "IBM Plex Sans",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--trace); text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--trace); outline-offset:2px; border-radius:3px}
+.wrap{max-width:880px; margin:0 auto; padding:0 20px}
+
+/* ── masthead ─────────────────────────────────────────── */
+header{border-bottom:1px solid var(--line); background:var(--card)}
+.mast{display:flex; align-items:baseline; justify-content:space-between; padding:18px 0 10px}
+.mark{font:600 20px/1 "IBM Plex Sans Condensed",sans-serif; letter-spacing:.12em}
+.mark span{color:var(--mut); font:500 12px/1 "IBM Plex Mono",monospace; letter-spacing:.08em; margin-left:10px}
+nav{display:flex; gap:18px; font:500 13px/1 "IBM Plex Sans",sans-serif}
+nav a{color:var(--ink)}
+/* signature: the spectrum strip */
+.spectrum{display:block; width:100%; height:64px; margin-bottom:-1px}
+
+/* ── hero ─────────────────────────────────────────────── */
+.hero{padding:38px 0 6px}
+h1{font:600 34px/1.15 "IBM Plex Sans Condensed",sans-serif; letter-spacing:.005em; max-width:22ch}
+.sub{color:var(--mut); max-width:62ch; margin:14px 0 0}
+.sub b{color:var(--ink); font-weight:600}
+.hero-actions{display:flex; flex-wrap:wrap; gap:10px; margin:22px 0 12px}
+.btn-ghost{
+  display:inline-block; font:600 15px/1 "IBM Plex Sans",sans-serif; color:var(--brand);
+  background:var(--card); border:1px solid var(--brand); border-radius:var(--r);
+  padding:13px 22px; cursor:pointer;
+}
+.btn-ghost:hover{background:#EDF1EF; text-decoration:none}
+.hero-note{font:400 13px/1.5 "IBM Plex Sans",sans-serif; color:var(--mut); max-width:58ch; margin-bottom:20px}
+.hero-note.note-live{color:var(--ink); font-weight:500}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:30px}
+.chip{font:500 12px/1 "IBM Plex Mono",monospace; letter-spacing:.02em;
+      border:1px solid var(--line); background:var(--card); color:var(--mut);
+      padding:7px 10px; border-radius:999px}
+.chip a{color:inherit}
+
+/* ── card / form ──────────────────────────────────────── */
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+      padding:24px 26px 22px; margin-bottom:26px}
+.card > .eyebrow{padding-bottom:14px; border-bottom:1px solid var(--line); margin-bottom:20px}
+.eyebrow{font:500 11px/1 "IBM Plex Mono",monospace; letter-spacing:.14em; color:var(--mut);
+         text-transform:uppercase; display:block; margin-bottom:14px}
+fieldset{border:0; padding:0; margin:0 0 20px}
+form > fieldset + fieldset{border-top:1px solid var(--line); padding-top:20px}
+form > fieldset:last-of-type{margin-bottom:16px}
+legend{padding:0}
+label{display:block; font:500 13px/1.3 "IBM Plex Sans",sans-serif; margin-bottom:6px}
+.help{font:400 12px/1.4 "IBM Plex Sans",sans-serif; color:var(--mut); margin-top:5px}
+input[type=text],input[type=number],select{
+  width:100%; font:400 15px/1.2 "IBM Plex Sans",sans-serif; color:var(--ink);
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  padding:10px 12px;
+}
+input[type=text]:hover,input[type=number]:hover,select:hover{border-color:#C2C9C4}
+input[type=file]{font:400 13px/1.3 "IBM Plex Sans",sans-serif; color:var(--mut); width:100%}
+input::placeholder{color:var(--mut)}  /* AA contrast on --paper (was #9AA39F, 2.4:1) */
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 16px}
+.grid .full{grid-column:1/-1}
+.drop{
+  border:1.5px dashed var(--line); border-radius:var(--r); background:var(--paper);
+  padding:20px 18px; text-align:center;
+}
+.drop label{display:block; cursor:pointer}
+.drop .f{font:500 13px/1 "IBM Plex Mono",monospace; color:var(--mut); margin-top:8px; letter-spacing:.02em}
+.drop .alt{margin-top:8px; font-size:12px; color:var(--mut)}
+.drop input[type=file]{display:block; width:auto; margin:12px auto 0}
+.drop .alt,.alt{margin-top:10px; font:400 13px/1.5 "IBM Plex Sans",sans-serif; color:var(--mut)}
+.drop-loud{margin-top:14px; font:400 13px/1.5 "IBM Plex Sans",sans-serif; color:var(--mut); max-width:52ch;
+           margin-left:auto; margin-right:auto}
+.drop-loud b{color:var(--ink); font-weight:600}
+.export-hints{list-style:none; padding:0; margin:12px 0 0;
+              font:400 12.5px/1.6 "IBM Plex Sans",sans-serif; color:var(--mut)}
+.export-hints li{padding-left:14px; position:relative}
+.export-hints li::before{content:"›"; position:absolute; left:0; color:var(--brand)}
+.export-hints b{color:var(--ink); font-weight:600}
+.lane{margin-top:14px; padding:14px 16px; background:var(--paper); border:1px solid var(--line);
+      border-left:3px solid var(--brand); border-radius:var(--r);
+      font:400 13px/1.55 "IBM Plex Sans",sans-serif; color:var(--mut)}
+.lane b{color:var(--ink); font-weight:600}
+.opt{color:var(--mut); font-weight:400}
+
+.btn-link{
+  display:inline-block; margin-top:12px; padding:0; border:0; background:none; cursor:pointer;
+  font:600 13px/1.3 "IBM Plex Sans",sans-serif; color:var(--brand);
+}
+.btn-link:hover{text-decoration:underline}
+
+/* ── progressive disclosure: everything a first run doesn't need ──── */
+details.more{border:1px solid var(--line); border-radius:var(--r); background:var(--paper); margin:0 0 22px}
+details.more>summary{
+  cursor:pointer; list-style:none; padding:13px 16px;
+  font:500 13px/1.3 "IBM Plex Sans",sans-serif; color:var(--ink);
+}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{
+  content:"+"; display:inline-block; width:14px; color:var(--mut);
+  font:500 14px/1 "IBM Plex Mono",monospace;
+}
+details.more[open]>summary::before{content:"\2013"}
+details.more[open]>summary{border-bottom:1px solid var(--line)}
+.more-body{padding:18px 16px 6px}
+.more-body .extra-channels{padding-bottom:18px; margin-bottom:20px; border-bottom:1px solid var(--line)}
+.more-body fieldset:last-child{margin-bottom:0}
+/* ── saved machines (browser-only memory) ─────────────────────────── */
+.saved-row{margin-bottom:16px}
+.saved-controls{display:flex; gap:8px; align-items:center}
+.saved-controls select{flex:1}
+.btn-mini{
+  font:500 13px/1 "IBM Plex Sans",sans-serif; color:var(--mut); background:var(--card);
+  border:1px solid var(--line); border-radius:var(--r); padding:11px 14px; cursor:pointer;
+}
+.btn-mini:hover:not(:disabled){color:var(--zoneD); border-color:var(--zoneD)}
+.btn-mini:disabled{opacity:.5; cursor:default}
+.consent{display:flex; gap:10px; align-items:flex-start; font:400 13px/1.5 "IBM Plex Sans",sans-serif;
+         color:var(--mut); margin-top:2px}
+.consent > span{flex:1}
+.consent input{margin-top:3px; width:auto}
+.cta{
+  font:600 15px/1 "IBM Plex Sans",sans-serif; color:var(--brand-ink);
+  background:var(--brand); border:0; border-radius:var(--r);
+  padding:13px 22px; cursor:pointer;
+}
+.cta:hover{background:#153B36}
+.cta:disabled{opacity:.55; cursor:progress}
+.cta-row{display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:6px}
+.cta-row .note{font:400 12px/1.4 "IBM Plex Sans",sans-serif; color:var(--mut); max-width:44ch}
+
+/* ── states ───────────────────────────────────────────── */
+/* U1. The status line replaces the pill. Colour is never the only carrier:
+   the state is spelled out in words on the same line, and `.el` carries the
+   one honest number the browser actually holds — elapsed, not remaining. */
+.statusline{border-left:4px solid var(--mut); background:var(--paper);
+  font:500 13px/1.45 "IBM Plex Mono",monospace; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink); padding:12px 14px; margin:0 0 16px; display:flex; gap:14px;
+  align-items:baseline; flex-wrap:wrap}
+.statusline .el{margin-left:auto; color:var(--mut); letter-spacing:.06em; font-weight:400}
+.statusline.work{border-left-color:var(--trace)}
+.statusline.pause{border-left-color:var(--trace)}
+.statusline.ok{border-left-color:var(--zoneA)}
+.statusline.warn{border-left-color:var(--zoneC)}
+.statusline.stop{border-left-color:var(--zoneD)}
+.statusline.unknown{border-left-color:var(--mut); border-left-style:dashed}
+
+/* ── the honest step rail ─────────────────────────────── */
+/* Five positions the server can actually DISTINGUISH. The bar that used to
+   sit here was drawn from a hardcoded per-state lookup — a picture of a
+   number nobody computed, in a product whose pillar is *computed*
+   confidence — and it is gone, along with its rules and the mobile comment
+   that described it as carrying progress. The active step animates as an
+   indeterminate sweep; every other step is inert. `.stopped` is the
+   dashed-never-done treatment for a step that did NOT run. */
+.rail{display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:0; margin:0 0 14px}
+.rail .s{padding:9px 10px 0 0; border-top:2px solid var(--line);
+         font:500 11px/1.35 "IBM Plex Mono",monospace; letter-spacing:.04em; color:var(--mut)}
+.rail .s:last-child{padding-right:0}
+.rail .s.done{border-top-color:var(--trace); color:var(--mut)}
+.rail .s.now{border-top-color:var(--trace); color:var(--ink); position:relative; overflow:hidden}
+.rail .s.now b{font-weight:600}
+.rail .s.now::after{content:""; position:absolute; top:-2px; left:0; height:2px; width:36%;
+  background:var(--ink); animation:sweep 1.5s ease-in-out infinite}
+.rail .s.pending b{font-weight:500}
+.rail .s.stopped{border-top-color:var(--mut); border-top-style:dashed; color:var(--mut)}
+@keyframes sweep{0%{transform:translateX(-100%)} 100%{transform:translateX(280%)}}
+@media (prefers-reduced-motion:reduce){
+  .rail .s.now::after{animation:none; width:100%; opacity:.35}
+}
+.now-line{font:500 15px/1.4 "IBM Plex Sans",sans-serif; color:var(--ink); margin:0 0 4px}
+.next-line{font:400 13.5px/1.55 "IBM Plex Sans",sans-serif; color:var(--mut); margin:0 0 12px;
+           max-width:70ch}
+.next-line b{color:var(--ink); font-weight:600}
+.kv{font:400 14px/1.6 "IBM Plex Sans",sans-serif; overflow-wrap:anywhere}
+.kv code{font:500 13px "IBM Plex Mono",monospace; background:var(--paper); padding:1px 6px; border-radius:4px}
+.ok{color:var(--zoneA)} .warn{color:var(--zoneC)} .stop{color:var(--zoneD)}
+.ready-actions{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px}
+.ready-actions .dl{margin-top:0}
+.ready-actions .btn-ghost{font-size:14px; padding:12px 18px}
+/* U4. The retention ledger — what was and was not kept. Six lines, two of
+   which flip on the analyst's own form choices. This is a PROMISE: it and
+   privacy.html must agree line for line, or one of them is false. */
+.ledger{border:1px solid var(--line); background:var(--paper); border-radius:var(--r); margin:16px 0 0}
+.ledger h5{font:500 10px/1.3 "IBM Plex Mono",monospace; letter-spacing:.14em;
+           text-transform:uppercase; color:var(--mut); padding:11px 14px 0; margin:0}
+.ledger ul{list-style:none; padding:8px 14px 12px; margin:0; display:grid; gap:6px}
+.ledger li{display:grid; grid-template-columns:16px 1fr; gap:10px; align-items:baseline;
+           font:400 13.5px/1.5 "IBM Plex Sans",sans-serif; color:var(--ink)}
+.ledger li .m{font:600 12px/1.5 "IBM Plex Mono",monospace; text-align:center}
+.ledger li.gone .m{color:var(--zoneA)}
+.ledger li.kept .m{color:var(--zoneC)}
+.ledger li.timed .m{color:var(--mut)}
+.ledger li b{font-weight:600; color:var(--ink)}
+.ledger .foot{border-top:1px solid var(--line); padding:10px 14px;
+              font:400 12.5px/1.5 "IBM Plex Sans",sans-serif; color:var(--mut)}
+/* Session DB-1: the "not yet in effect" list. Muted throughout, under its own
+   rule, so it reads as a plan rather than as a seventh, eighth and ninth
+   promise. No `display` is declared here -- tests/js/harness.js parses this
+   file for class rules that hide things, and a rule that did would change what
+   that harness believes is on screen. */
+.ledger h5.next{border-top:1px solid var(--line); padding-top:11px; margin-top:2px}
+.ledger li.future,.ledger li.future b,.ledger li.future .m{color:var(--mut)}
+.ledger .note{padding:0 14px 12px; font:400 12.5px/1.5 "IBM Plex Sans",sans-serif;
+              color:var(--mut)}
+.ledger .note b{color:var(--ink)}
+.dl{display:inline-block; font:600 14px/1 "IBM Plex Sans",sans-serif; color:var(--brand-ink);
+    background:var(--brand); border-radius:var(--r); padding:12px 18px; margin-top:12px}
+.dl:hover{background:#153B36; text-decoration:none}
+.dl.ghost{background:var(--card); color:var(--brand); border:1px solid var(--brand)}
+.dl.ghost:hover{background:var(--paper)}
+/* ── the result card, matched to the report (Session V2-WIRE) ──────────
+   The severity/diagnosis pair and the amber attention rows are the same two
+   ideas the PDF opens with, in the same colours — the report's tokens ARE
+   these tokens, which is why the two cannot drift apart. Nothing new is
+   claimed here: every value comes from `result_summary` / `gate_summary`,
+   which the worker builds from the AnalysisResult using the report's own
+   labels.
+
+   --zoneB was the one value the design found missing from this set: the file
+   defined A, C and D and simply had no B. */
+.rcards{display:grid; grid-template-columns:minmax(180px,1fr) minmax(220px,1.4fr);
+        gap:12px; margin:12px 0 4px}
+.rcard{border:1px solid var(--line); border-radius:var(--r); padding:14px 16px; background:var(--card)}
+.rcard .lbl{font:500 10px/1.3 "IBM Plex Mono",monospace; letter-spacing:.14em;
+            text-transform:uppercase; color:var(--mut); margin-bottom:6px}
+.rcard h4{font:600 19px/1.25 "IBM Plex Sans",sans-serif; color:var(--ink); margin:0}
+.rcard .sub{font:400 13px/1.5 "IBM Plex Mono",monospace; color:var(--mut); margin-top:6px}
+.rcard.sev{border-width:1.5px}
+.rcard.sev.zA{border-color:var(--zoneA); background:#F1F7F2}
+.rcard.sev.zB{border-color:var(--zoneB); background:#F6F8EE}
+.rcard.sev.zC{border-color:#B5893F; background:#FBF7EF}
+.rcard.sev.zD{border-color:var(--zoneD); background:#FBF1F0}
+.attn{display:flex; gap:10px; align-items:baseline; padding:9px 12px; margin:0 0 6px;
+      border-left:3px solid var(--zoneC); background:#FBF7EF; border-radius:0 var(--r) var(--r) 0}
+.attn.fail{border-left-color:var(--zoneD); background:#FBF1F0}
+.attn .st{font:600 10px/1.4 "IBM Plex Mono",monospace; letter-spacing:.11em;
+          color:var(--zoneC); flex:0 0 auto; min-width:32px}
+.attn.fail .st{color:var(--zoneD)}
+.attn span.txt{font:400 14px/1.5 "IBM Plex Sans",sans-serif; color:var(--ink)}
+@media (max-width:640px){ .rcards{grid-template-columns:1fr} }
+ul.plain{padding-left:18px; color:var(--mut); font-size:14px}
+ul.plain li{margin:4px 0}
+
+/* U5. Per-slot Remove sits next to the filename, and each slot is its own
+   drop target. The hover state promises "release to choose" — never "this will
+   work", because whether the file can be read is decided by a magic-byte sniff
+   over bytes that only exist once it has been dropped. */
+.slot-h{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-top:6px}
+.slot-h .f{font:500 13px/1.4 "IBM Plex Mono",monospace; color:var(--ink); overflow-wrap:anywhere}
+.extra-channels .grid > div.over{outline:2px dashed var(--trace); outline-offset:3px;
+                                 background:var(--paper); border-radius:var(--r)}
+.confirm-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px}
+.confirm-file{border:1px solid var(--line); border-radius:var(--r); background:var(--paper);
+              padding:14px 16px; margin-top:12px}
+.confirm-file.bad{border-left:3px solid var(--zoneC)}
+.confirm-file .confirm-grid{margin-top:10px}
+.confirm-file .consent{margin-top:10px}
+.tag-soft{font:500 10px/1 "IBM Plex Mono",monospace; letter-spacing:.1em; text-transform:uppercase;
+          color:var(--mut); background:var(--paper); border:1px solid var(--line);
+          border-radius:999px; padding:4px 8px; margin-left:6px; white-space:nowrap}
+.muted{color:var(--mut)}
+/* U3. The frequency-axis unit is DISPLAYED and cannot be corrected (ConfirmFile
+   has no x_unit field, app.py:167-171). So the reading gets its own read-only
+   panel ABOVE the editable trio rather than sitting inline with them, where it
+   read as a fourth control the analyst could fix. */
+.readas{border:1px solid var(--line); background:var(--card); border-radius:var(--r);
+        padding:13px 16px; margin:0 0 4px}
+.readas .lbl{font:500 10px/1.3 "IBM Plex Mono",monospace; letter-spacing:.14em;
+             text-transform:uppercase; color:var(--mut); margin-bottom:6px}
+.readas p{font:400 15px/1.6 "IBM Plex Sans",system-ui,sans-serif; color:var(--ink); margin:0}
+/* U3. The file is already on the server: confirming runs THAT file. Dashed
+   rather than solid because it is a statement of fact, not an action. */
+.frozen{display:flex; gap:10px; align-items:baseline; margin-top:14px; padding:11px 14px;
+        border:1px dashed var(--line); background:var(--card); border-radius:var(--r);
+        font:400 13px/1.5 "IBM Plex Sans",system-ui,sans-serif; color:var(--mut)}
+.frozen b{color:var(--ink); font-weight:600}
+
+/* ── how it works ─────────────────────────────────────── */
+.how{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:6px 0 26px}
+.how .step{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:18px}
+.how .n{font:500 12px/1 "IBM Plex Mono",monospace; color:var(--mut); letter-spacing:.1em}
+.how h3{font:600 16px/1.3 "IBM Plex Sans Condensed",sans-serif; margin:8px 0 6px}
+.how p{font-size:13px; color:var(--mut)}
+.creed{font:500 13px/1.5 "IBM Plex Mono",monospace; color:var(--mut); letter-spacing:.01em;
+       border-left:3px solid var(--brand); padding-left:12px; margin:0 0 40px}
+
+footer{border-top:1px solid var(--line); padding:22px 0 40px; margin-top:20px;
+       font:400 13px/1.6 "IBM Plex Sans",sans-serif; color:var(--mut)}
+footer .row{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:space-between}
+
+/* ── document view (privacy prose, /validation record) ── */
+.prose{padding:34px 0 10px}
+.prose h1{margin-bottom:6px}
+.prose h2{font:600 17px/1.3 "IBM Plex Sans Condensed",sans-serif; margin:26px 0 6px}
+.prose p{max-width:66ch; margin:8px 0; color:var(--ink)}
+.prose p.lead{color:var(--mut)}
+.doc-note{font:400 13px/1.5 "IBM Plex Sans",sans-serif; color:var(--mut); margin:0 0 16px}
+pre.doc{
+  font:400 13px/1.6 "IBM Plex Mono",monospace; color:var(--ink);
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  padding:20px 22px; margin:8px 0 20px; overflow-x:auto; white-space:pre; -webkit-overflow-scrolling:touch;
+}
+
+@media (max-width:640px){
+  h1{font-size:27px}
+  .grid{grid-template-columns:1fr}
+  .how{grid-template-columns:1fr}
+  .mast{flex-direction:column; gap:10px; align-items:flex-start}
+  .cta-row{flex-direction:column; align-items:stretch}
+  .cta{width:100%}
+  .hero-actions{flex-direction:column; align-items:stretch}
+  .hero-actions .btn-ghost{width:100%; text-align:center}
+  .ready-actions{flex-direction:column; align-items:stretch}
+  .ready-actions .dl,.ready-actions .btn-ghost{width:100%; text-align:center}
+  .card{padding:20px 18px 18px}
+  .saved-controls{flex-wrap:wrap}
+  .confirm-grid{grid-template-columns:1fr}
+  pre.doc{font-size:12px; padding:14px 14px}
+  .rail{grid-auto-flow:row; grid-auto-columns:auto}
+  .rail .s{padding-right:0}
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   FACELIFT LAYER — the landing.
+
+   Appended, never interleaved: every rule above this banner is the shipped
+   ui-v1 system and stays byte-for-byte where it is. This layer wins at equal
+   specificity by cascade order alone, so the restyle is additive and the
+   stylesheet's pinned substrings cannot be disturbed by it.
+
+   The vocabulary is the report's, not a website's: numbered mono eyebrows,
+   ink rules, prose in Sans and every number in Mono, square corners on
+   anything that is a label rather than a control. The zone hues do not appear
+   here at all — they are the verdict's, and a landing page has no verdict to
+   deliver. The one place they show is inside the report pages themselves.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── hero ─────────────────────────────────────────────────────────────
+   Full viewport, and the spectrum is the thing in it. The headline sets up
+   the claim; the plot is the evidence, drawn from the very file the demo
+   button uploads. */
+.hero{
+  padding:52px 0 44px; min-height:calc(100vh - 118px); min-height:calc(100svh - 118px);
+  display:flex; flex-direction:column; justify-content:center;
+}
+/* ?preview= hides sections with the hidden attribute, and an author-origin
+   `display` beats the UA stylesheet's [hidden]{display:none}. Every other
+   hidden section declares no display and disappears on its own; this one has
+   to say so. */
+.hero[hidden]{display:none}
+.hero h1{
+  font:600 clamp(38px,5.6vw,56px)/1.06 "IBM Plex Sans Condensed",sans-serif;
+  letter-spacing:-.004em; max-width:17ch;
+}
+.hero .sub{font-size:17.5px; line-height:1.62; max-width:57ch; margin-top:18px; color:var(--mut)}
+.hero .hero-actions{margin:26px 0 0}
+.hero .cta,.hero .btn-ghost{padding:14px 24px; font-size:15.5px}
+.hero .cta{text-decoration:none}
+.hero .cta:hover{text-decoration:none}
+
+/* the plot. It breaks the 880px measure at wide viewports — gently, so it
+   reads as a figure that outgrew the column rather than a banner. */
+.hero-viz{margin:40px 0 0}
+@media (min-width:1000px){
+  .hero-viz{margin-left:calc(440px - 42vw); margin-right:calc(440px - 42vw)}
+}
+.hv-stage{position:relative; width:100%}
+.hv-svg{display:block; width:100%; height:auto; overflow:visible; position:relative; z-index:1}
+.hv-legend{
+  font:400 12.5px/1.5 "IBM Plex Mono",monospace; color:var(--mut);
+  letter-spacing:.02em; margin-top:14px;
+}
+.hv-legend b{color:var(--ink); font-weight:500}
+/* the plot's own ink, in the report figure's language (report/charts.py):
+   the measured trace is the one blue series; computed fault frequencies are
+   dashed and rust; shaft orders are dotted and teal; the amplitude floor is
+   the muted dash-dot it is on page 8 of the sample report. */
+.hv-tr{fill:none; stroke:var(--trace); stroke-width:1.6; stroke-linejoin:round; stroke-linecap:round}
+.hv-ax{stroke:var(--line); stroke-width:1}
+.hv-ax-t{font:400 11px "IBM Plex Mono",monospace; fill:var(--mut); letter-spacing:.07em}
+.hv-fl{stroke:var(--mut); stroke-width:1; stroke-dasharray:5 3 1 3}
+.hv-fll{font:400 11px "IBM Plex Mono",monospace; fill:var(--mut); letter-spacing:.04em}
+.hv-g{stroke-width:1}
+.hv-gd{stroke:#A6480E; stroke-dasharray:5 4}
+.hv-gs{stroke:#0F8E80; stroke-dasharray:1 3}
+.hv-lb,.hv-fll,.hv-ax-t{paint-order:stroke fill; stroke:var(--paper); stroke-width:5px; stroke-linejoin:round}
+.hv-lb{font:500 12px "IBM Plex Mono",monospace; letter-spacing:.03em; fill:var(--ink)}
+.hv-l1{fill:#0F8E80}
+.hv-l2,.hv-l3,.hv-l4{fill:#A6480E}
+
+/* The choreography. Base state is the FINISHED plot, and every animation is
+   declared only under no-preference, so reduced motion, a disabled script and
+   the print stylesheet all get the final frame with nothing to undo. The pen
+   draws left to right and each peak is named just after it is passed. */
+@media (prefers-reduced-motion:no-preference){
+  .hv-tr{stroke-dasharray:1; stroke-dashoffset:0; animation:hv-draw 2.1s cubic-bezier(.32,.72,.24,1) .15s both}
+  @keyframes hv-draw{from{stroke-dashoffset:1}}
+  .hv-g,.hv-lb,.hv-fl,.hv-fll{opacity:1; animation:hv-in .5s ease-out both}
+  @keyframes hv-in{from{opacity:0}}
+  .hv-lb{animation-name:hv-rise}
+  @keyframes hv-rise{from{opacity:0; transform:translateY(5px)}}
+  .hv-g1{animation-delay:.45s}  .hv-l1{animation-delay:.60s}
+  .hv-g2{animation-delay:.85s}  .hv-l2{animation-delay:1.00s}
+  .hv-g3{animation-delay:1.40s} .hv-l3{animation-delay:1.55s}
+  .hv-g4{animation-delay:1.95s} .hv-l4{animation-delay:2.10s}
+  .hv-fl{animation-duration:1.1s; animation-delay:2.35s}
+  .hv-fll{animation-delay:2.60s}
+  .hv-legend{opacity:1; animation:hv-in .6s ease-out 2.7s both}
+}
+
+@media (max-height:820px) and (min-width:641px){
+  .hero{padding:34px 0 28px}
+  .hero h1{font-size:clamp(32px,4vw,42px)}
+  .hero .sub{font-size:16.5px; margin-top:14px}
+  .hero .hero-actions{margin-top:20px}
+  .hero-viz{margin-top:24px}
+}
+
+/* ── landing sections ─────────────────────────────────────────────────
+   Sections are separated the way the report separates them: a rule and a
+   numbered mono eyebrow, not a coloured band. The heavy 2.5px ink rule is
+   spent once, on the hero-to-content boundary, exactly as the report spends
+   it once under the masthead. */
+.landing{border-top:1px solid var(--line); padding-top:48px; margin-top:48px}
+.landing.hiw{border-top:2.5px solid var(--ink)}
+.landing > .eyebrow{letter-spacing:.16em; margin-bottom:30px}
+.landing.start{margin-bottom:52px}
+
+/* ── how a report is made ─────────────────────────────────────────────
+   Three rows, one claim each. The vignettes are the product's own surfaces
+   at reading size — the words in them are the strings the app really uses,
+   never a mock-up written for a landing page. */
+.step-row{
+  display:grid; grid-template-columns:52px minmax(0,1fr) minmax(0,1.05fr);
+  gap:22px; align-items:start; padding:26px 0; border-top:1px solid var(--line);
+}
+.step-row:first-of-type{border-top:0; padding-top:4px}
+.sn{font:500 13px/1.5 "IBM Plex Mono",monospace; letter-spacing:.12em; color:var(--mut)}
+.sc h3{font:600 21px/1.25 "IBM Plex Sans Condensed",sans-serif; margin:0 0 8px; letter-spacing:.002em}
+.sc p{font:400 14.5px/1.62 "IBM Plex Sans",sans-serif; color:var(--mut); max-width:44ch; margin:0}
+.sv{pointer-events:none; user-select:none}
+
+.sv-fmt{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.fmt{font:500 11.5px/1 "IBM Plex Mono",monospace; letter-spacing:.08em; color:var(--ink);
+     border:1px solid var(--line); background:var(--card); padding:8px 10px}
+.fmt-n{font:400 12px/1.5 "IBM Plex Mono",monospace; color:var(--mut); letter-spacing:.03em;
+       flex-basis:100%; margin-top:4px}
+
+.sv-confirm .readas{margin:0; border-left:3px solid var(--line)}
+.sv-confirm .readas p{font-size:14px}
+.sv-q{font:400 13px/1.55 "IBM Plex Sans",sans-serif; color:var(--mut); margin:9px 0 0}
+.sv-q code,.sv-confirm code{font:500 12.5px "IBM Plex Mono",monospace;
+  background:var(--paper); padding:1px 6px; border-radius:4px; color:var(--ink)}
+
+.sv-pages{display:flex; gap:14px; align-items:flex-start}
+.pgm{width:118px; height:auto; display:block; border:1px solid var(--line); background:var(--card)}
+.pgm-b{transform:rotate(-1.2deg); margin-top:9px}
+
+.creed{margin-top:30px; margin-bottom:0}
+
+/* ── benchmarked in public ────────────────────────────────────────────
+   Names and a link to the record. No score is quoted here: the record states
+   its own misses, and a landing page that repeated only the wins would be
+   the one dishonest surface in the product. */
+.proof .chips{margin:0 0 16px}
+.proof .chip{border-radius:0; padding:8px 11px; letter-spacing:.06em; color:var(--ink)}
+.proof .chip a{color:inherit}
+.proof-line{font:400 15px/1.65 "IBM Plex Sans",sans-serif; color:var(--mut); max-width:62ch; margin:0}
+
+/* ── the report is the product ────────────────────────────────────────
+   Whole pages, at A4 proportion, flat on the page. No device frames, no
+   perspective, no drop shadows: the artefact is a document. */
+.sh-lead{font:400 15px/1.65 "IBM Plex Sans",sans-serif; color:var(--mut); max-width:60ch; margin:-14px 0 26px}
+.shelf{display:grid; grid-template-columns:repeat(3,1fr); gap:22px}
+.pg{margin:0}
+.pgw{border:1px solid var(--line); background:var(--card); overflow:hidden;
+     aspect-ratio:1191/1020}
+.pgw img{display:block; width:100%; height:auto}
+.pg figcaption{font:400 13px/1.55 "IBM Plex Sans",sans-serif; color:var(--mut); margin-top:12px}
+.pg figcaption b{color:var(--ink); font-weight:600}
+.pn{font:500 11px/1 "IBM Plex Mono",monospace; letter-spacing:.1em; color:var(--mut);
+    text-transform:uppercase; margin-right:8px}
+.sh-cta{display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin:30px 0 0}
+.sh-note{font:400 12.5px/1.5 "IBM Plex Mono",monospace; color:var(--mut); letter-spacing:.02em}
+
+/* ── start ────────────────────────────────────────────────────────────
+   The closing pair. The example button here is the real control the hero
+   used to carry, not a second copy of it: it posts the bundled file through
+   the ordinary form. */
+.start-line{font:400 15.5px/1.6 "IBM Plex Sans",sans-serif; color:var(--ink); margin:0 0 20px; max-width:54ch}
+.start .hero-actions{margin:0 0 14px}
+.start .hero-note{margin-bottom:0}
+
+/* ── scroll reveal ────────────────────────────────────────────────────
+   Armed by script only, and only when motion is welcome. With no script,
+   with reduced motion, or in a test harness, `.rv` is simply visible text —
+   the hidden state never exists. */
+.rv-armed .rv{opacity:0; transform:translateY(15px);
+  transition:opacity .6s ease-out, transform .6s cubic-bezier(.22,.61,.21,1)}
+.rv-armed .rv.rv-in{opacity:1; transform:none}
+.rv-armed .rv-d1{transition-delay:.09s}
+.rv-armed .rv-d2{transition-delay:.18s}
+@media (prefers-reduced-motion:reduce){
+  .rv-armed .rv{opacity:1; transform:none}
+}
+
+/* ── landing, on a phone ──────────────────────────────────────────────
+   A second breakpoint block. The first one is the ui-v1 system's and is left
+   exactly as it stands. */
+@media (max-width:640px){
+  .hero{min-height:auto; padding:34px 0 30px}
+  .hero .sub{font-size:16.5px}
+  .hero-viz{margin-left:0; margin-right:0}
+  .hv-legend{font-size:11.5px}
+  /* SVG type scales with the viewBox, so on a phone the labels need more
+     user units to stay readable. The floor caption is the one that cannot
+     shrink gracefully -- its line stays, its sentence goes. */
+  .hv-lb{font-size:22px}
+  .hv-ax-t{font-size:19px}
+  .hv-fll{display:none}
+  .landing{padding-top:36px; margin-top:36px}
+  .landing > .eyebrow{margin-bottom:22px}
+  .step-row{grid-template-columns:32px minmax(0,1fr); gap:14px 12px; padding:22px 0}
+  .step-row .sv{grid-column:2}
+  .sc p{max-width:none}
+  .shelf{grid-template-columns:1fr; gap:26px}
+  .sv-pages{gap:10px}
+  .pgm{width:96px}
+  .sh-cta .btn-ghost{width:100%; text-align:center}
+}
+
+/* ══ FACELIFT · app surfaces ═══════════════════════════════════════════
+   Same layer, same rule: additive only. The app screens are already the
+   report's colours -- what they lacked was its composure. Nothing below
+   changes a string, an id, or a state; it changes size, weight, spacing and
+   rhythm so the page reads as a document being prepared rather than a form
+   being filled. */
+
+/* ── masthead ─────────────────────────────────────────────────────────
+   The wordmark is the report's, so it is set the report's way: a little more
+   letterspacing, the kicker in caps at mono's own tracking. Markup untouched
+   -- it is duplicated in SIX places and must stay byte-identical:
+   static/{index,privacy,login,billing}.html, app.py::_MASTHEAD and
+   marketing/templates/_shell.html. This comment said "three" from
+   Session PAGES (which added the sixth) until UX-4 counted them, and
+   the nav really had diverged in the meantime -- STRANGER C1.
+   `tests/test_ux1_views.py::TestTheFourNavsCannotDriftApart` now
+   asserts all six against one declared list. */
+.mast{padding:22px 0 12px}
+.mark{font-size:21px; letter-spacing:.14em}
+.mark span{letter-spacing:.16em; text-transform:uppercase; margin-left:12px}
+nav{gap:22px}
+nav a{letter-spacing:.01em}
+nav a:hover{text-decoration:none; color:var(--brand)}
+
+/* ── page furniture ───────────────────────────────────────────────────*/
+body{line-height:1.6}
+@media (min-width:641px){ .card{padding:30px 32px 26px} }
+.card > .eyebrow{padding-bottom:16px; margin-bottom:24px; letter-spacing:.16em; color:var(--ink)}
+footer{padding:26px 0 44px; margin-top:34px}
+footer .row{gap:10px 26px}
+
+/* `.state-tag` is emitted by the server's report-notice pages and had no rule
+   in this stylesheet at all -- it survived on an inline background alone. */
+.state-tag{
+  display:inline-block; font:500 10px/1 "IBM Plex Mono",monospace; letter-spacing:.12em;
+  text-transform:uppercase; color:#FFFFFF; padding:6px 9px; margin-bottom:12px;
+}
+
+/* ── document pages (/privacy, /validation, the notice pages) ─────────
+   These share the shell, so they inherit the whole layer. What they need on
+   top is the report's heading rhythm: prose in Sans at a readable measure,
+   headings small and quiet rather than large and loud. */
+.prose{padding:40px 0 12px}
+.prose h1{font:600 clamp(28px,3.4vw,38px)/1.12 "IBM Plex Sans Condensed",sans-serif;
+          letter-spacing:-.002em; max-width:22ch; margin-bottom:10px}
+.prose h2{font:500 11px/1.3 "IBM Plex Mono",monospace; letter-spacing:.16em;
+          text-transform:uppercase; color:var(--mut); margin:34px 0 10px}
+.prose p{max-width:68ch; line-height:1.68}
+.prose p.lead{font-size:17px; max-width:60ch}
+.doc-note{font-family:"IBM Plex Mono",monospace; font-size:12.5px; letter-spacing:.02em}
+@media (min-width:641px){ pre.doc{padding:24px 26px} }
+pre.doc{line-height:1.65}
+
+/* ── the form, as three calm groups ───────────────────────────────────
+   Measurements, Machine, More options — then the invite line and the button,
+   which are not a fourth group but the card's action bar. The grouping is done
+   with rules and space rather than boxes, because the form is already inside a
+   card and a box inside a box reads as a nested dialog. Field order, ids,
+   names and containment are untouched: they are pinned, and rightly so. */
+form > fieldset > .eyebrow{color:var(--ink); letter-spacing:.16em; margin-bottom:18px}
+form > fieldset + fieldset{padding-top:26px}
+form > fieldset:last-of-type{border-top:1px solid var(--line); padding-top:24px}
+.cta-row{margin-top:16px}
+.cta-row .note{max-width:46ch; line-height:1.5}
+
+label{font-size:13.5px; margin-bottom:7px}
+.help{font-size:12.5px; line-height:1.5}
+.grid{gap:18px}
+input[type=text],input[type=number],select{padding:11px 13px}
+input[type=text]:hover,input[type=number]:hover,select:hover{border-color:#B9C1BC}
+input[type=text]:focus-visible,input[type=number]:focus-visible,select:focus-visible{
+  border-color:var(--trace)}
+
+/* the drop zone is the one thing on this page a first-time visitor must find */
+.drop{padding:30px 22px; border-color:#C9D0CB}
+.drop label{font:600 15px/1.4 "IBM Plex Sans",sans-serif; color:var(--ink)}
+.drop .f{margin-top:10px; letter-spacing:.04em}
+.drop-loud{margin-top:18px; max-width:56ch; line-height:1.6}
+.export-hints{margin-top:14px; line-height:1.7}
+.lane{margin-top:16px; padding:15px 17px; line-height:1.6}
+
+/* the extra channel slots read as slots: one panel, two labelled rows */
+.extra-channels{
+  border:1px solid var(--line); background:var(--card); border-radius:var(--r);
+  padding:18px 18px 16px; margin-top:14px;
+}
+.extra-channels > .eyebrow{color:var(--ink); letter-spacing:.16em}
+.slot-h{margin-top:8px}
+.btn-link{margin-top:16px; font-size:13.5px}
+
+details.more{margin:0 0 20px}
+details.more > summary{padding:14px 17px; font-size:13.5px}
+details.more > summary:hover{background:#EFF1EE}
+.more-body{padding:20px 17px 8px}
+
+/* ── the confirm card ─────────────────────────────────────────────────
+   This is the screen where the analyst is asked to agree with a reading, so
+   the reading itself gets the weight and the controls sit quietly under it.
+   Strings and control ids are the server's own and are untouched. */
+.confirm-file{padding:18px 20px}
+.confirm-file .kv{font-size:15px}
+.readas{padding:15px 18px; border-left:3px solid var(--line)}
+.readas .lbl{letter-spacing:.16em}
+.readas p{font-size:15.5px; line-height:1.55}
+.confirm-grid{gap:16px}
+.tag-soft{border-radius:0; letter-spacing:.12em; padding:5px 9px}
+.frozen{padding:12px 15px; line-height:1.55}
+
+/* ── the working states, the result, and the ledger ───────────────────
+   The rail, the elapsed clock, the retention ledger and the error branching
+   are UX-WIRE's and are behaviourally untouched here: no step is added or
+   renamed, no percentage appears, nothing counts down. This pass only settles
+   their type and spacing onto the same scale as the rest.
+
+   Nothing below sets grid-template-columns, flex-direction, width or padding
+   on .rail, .rcards or .ready-actions -- those belong to the phone blocks
+   above, which sit earlier in the file and would lose a specificity tie. */
+.statusline{padding:13px 15px; letter-spacing:.11em}
+.rail{margin-bottom:16px}
+.rail .s{letter-spacing:.06em; font-size:11.5px}
+.now-line{font-size:16px; line-height:1.35}
+.next-line{font-size:14px; line-height:1.62; max-width:72ch}
+.kv{line-height:1.62}
+.kv code{border-radius:0; letter-spacing:.02em}
+ul.plain li{margin:6px 0}
+
+/* A step handing over to the next one is a real event, so it is allowed a
+   quiet transition -- but only where motion is welcome. The indeterminate
+   sweep and the dashed never-ran treatment are unchanged. */
+@media (prefers-reduced-motion:no-preference){
+  .rail .s{transition:border-top-color .45s ease, color .45s ease}
+}
+
+/* the result pair, squared off to match the report's own severity cards */
+.rcards{gap:14px; margin:14px 0 6px}
+.rcard{border-radius:0; padding:16px 18px}
+.rcard .lbl{letter-spacing:.16em; margin-bottom:8px}
+.rcard h4{font-size:21px; line-height:1.22}
+.rcard .sub{margin-top:8px; line-height:1.5}
+.attn{padding:10px 13px; border-radius:0}
+.attn .st{letter-spacing:.13em}
+.dl{padding:13px 20px}
+.ready-actions{gap:12px; margin-top:14px}
+
+/* the ledger is a promise, so it is set to be read, not skimmed */
+.ledger{margin-top:20px}
+.ledger h5{letter-spacing:.16em; padding:13px 16px 0}
+.ledger ul{padding:10px 16px 14px; gap:8px}
+.ledger li{line-height:1.55}
+.ledger .foot{padding:11px 16px}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE-POLISH LAYER — the phone pass (360–430px).
+
+   Appended, never interleaved, for the same reason the FACELIFT layer was:
+   every rule above stays byte-for-byte where it is, and this block wins at
+   equal specificity by cascade order alone. That ordering matters MORE here
+   than it did there. The two `max-width:640px` blocks above sit earlier in
+   the file, so a phone declaration written into either of them loses to any
+   later unconditional rule touching the same property -- which is exactly
+   why the FACELIFT layer had to promise, in writing, not to set
+   grid-template-columns / flex-direction / width / padding on `.rail`,
+   `.rcards` or `.ready-actions`. Everything below is inside its own
+   `max-width:640px` block instead: last word on the phone, silent elsewhere.
+
+   Nothing here is a redesign. It changes size, spacing and hit area only --
+   no string, no id, no state, no colour token; no rule above is deleted,
+   relaxed or restated. The mobile gates the landing already had are
+   untouched and still do their work: the global reduced-motion block at the
+   top of this file still kills every transition and animation with
+   `!important`. (This paragraph used to name a second gate -- "Three.js never
+   initialises below 720px (app.js `heroDepth`)" -- a threshold that lived
+   only in JS and had no counterpart here. Session UX-4 deleted the block and
+   the vendored build with it, so the asymmetry is gone rather than papered
+   over.)
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width:640px){
+
+  /* ── 1 · nothing scrolls sideways ───────────────────────────────────
+     A grid or flex item's default `min-width:auto` floors it at its own
+     min-content width, so one wide <select> option -- "Group 2 — medium
+     (15–300 kW)" is the widest string on the form -- can shove a 1fr track
+     past the viewport and take the whole page with it. The guard goes on the
+     containers that hold form controls and server-supplied text, NOT on
+     <body>: clipping the document would hide the next one of these rather
+     than prevent it, and the point of the pass is that there is no next one. */
+  .grid > *,.confirm-grid > *,.rcards > *,.saved-controls > *,
+  .statusline > *,.attn > *,.slot-h > *,.ledger li > *,footer .row > *{min-width:0}
+  input[type=text],input[type=number],select{max-width:100%}
+  /* Text that arrives from a file, a form field or the server -- a machine
+     alias, a filename, a gate reason, a contact address -- breaks rather
+     than widening the column it sits in. */
+  .kv,.help,.lane,.now-line,.next-line,.drop .f,.slot-h .f,
+  .attn .txt,.ledger li,ul.plain li,.rcard h4,.rcard .sub{overflow-wrap:anywhere}
+  .prose p,footer .row span,.proof-line,.start-line,.sub{overflow-wrap:break-word}
+  /* The hero figure is the one element that leaves its box on purpose: the
+     BPFO label is drawn above the viewBox's top edge and must not be cut.
+     `clip` on a single axis leaves the other visible -- `hidden` would not --
+     so the vertical bleed survives and the horizontal one can never reach
+     the document's scroll region. */
+  .hero-viz{overflow-x:clip}
+
+  /* ── 2 · every control is at least 44px in the finger's direction ────
+     Measured, not guessed. `.cta` was a 15px line box inside 13px of padding
+     = 41px; `.dl` 40px; `.btn-mini` ("Remove", "Forget") 35px; and
+     `.btn-link` ("+ Add a channel"), padding:0 by design, 17px. A bare
+     `min-height` is not the fix on its own -- it drops a short label to the
+     top of the taller box -- so the floor comes with centring.
+
+     Widths are deliberately NOT set here. `.hero-actions`, `.ready-actions`,
+     `.cta-row` and `.sh-cta` already stretch their children in the blocks
+     above; restating that would be the overwrite this layer exists to avoid.
+     Centring does fix one thing those blocks missed: they gave
+     `text-align:center` to `.btn-ghost` and not to `.cta`, so the hero's
+     full-width "Upload route data" was the one stretched button on the page
+     with its label hard left. */
+  .cta,.btn-ghost{display:inline-flex; align-items:center; justify-content:center;
+                  min-height:48px}
+  .btn-mini{display:inline-flex; align-items:center; justify-content:center; min-height:44px}
+  .btn-link{display:inline-flex; align-items:center; min-height:44px;
+            padding:10px 2px; margin-top:6px}
+  /* The two report links are what the whole page is for, so they take the
+     column and a little more than the floor. This also reaches the lone
+     `.dl` on the stopped card, which sits outside `.ready-actions`. */
+  .dl{display:flex; width:100%; align-items:center; justify-content:center;
+      min-height:48px; text-align:center}
+  /* The masthead links were 13px of text with no padding at all: a 13px-tall
+     target, and the only navigation on the page. Vertical padding only, so
+     three links still cross 320px of content without wrapping. */
+  .mast{padding:18px 0 6px}
+  nav{gap:18px; flex-wrap:wrap}
+  nav a{display:block; padding:13px 0; line-height:1.4}
+
+  /* ── 3 · fields the phone will not zoom into ─────────────────────────
+     iOS Safari zooms the viewport on focus for any form control under 16px,
+     and the ui-v1 field size is 15px. The page carries no maximum-scale and
+     must never get one -- that takes pinch-zoom away from everyone to paper
+     over a problem whose real fix is the font size. This is the font size. */
+  input[type=text],input[type=number],select{font-size:16px; min-height:48px}
+  input[type=file]{font-size:14px}
+  /* The file picker is the first control of the product and it shipped as
+     the platform default. Unsupported browsers drop this rule whole and get
+     that default back. */
+  input[type=file]::file-selector-button{
+    font:500 14px/1.2 "IBM Plex Sans",sans-serif; color:var(--ink);
+    background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+    padding:12px 16px; min-height:44px; margin-right:12px;
+  }
+  .consent input[type=checkbox]{flex:none; width:20px; height:20px; margin-top:2px}
+
+  /* ── 4 · nested padding, paid back ───────────────────────────────────
+     At 360px the card leaves 284px inside it, and `.drop`, `.extra-channels`
+     and `.confirm-file` each take another 28-44px of that before a word is
+     set. Same boxes, at a phone's scale. */
+  .drop{padding:24px 16px}
+  /* the label carries for="file", so it -- not just the native control -- opens
+     the picker. On one line it was a 31px target; centred inside a 44px floor
+     it is a real one, and it stays centred the way `.drop`'s text-align asks. */
+  .drop label{display:flex; align-items:center; justify-content:center; min-height:44px}
+  /* `.drop` centres its text, which is right for a two-line label and wrong
+     for the paragraph under it: at 360px that paragraph is eight ragged
+     centred lines. The label, the filename and the picker stay centred; the
+     prose gets an edge to start from. */
+  .drop-loud{text-align:left; max-width:none}
+  .drop input[type=file]{width:fit-content; max-width:100%}
+  /* `.eyebrow` is set at line-height 1 -- correct for the single line it is
+     almost always on, and unreadable for the two it wraps to at this width
+     ("ADDITIONAL CHANNELS · SAME MACHINE, SAME SESSION"). */
+  .eyebrow{line-height:1.45}
+  .extra-channels{padding:15px 14px 14px}
+  .confirm-file{padding:15px 14px}
+  .readas{padding:13px 14px}
+  .lane{padding:13px 14px}
+  .ledger h5,.ledger .foot{padding-left:13px; padding-right:13px}
+  .ledger ul{padding-left:13px; padding-right:13px}
+
+  /* ── 5 · the three channel slots, stacked ────────────────────────────
+     A slot is a file input and its own direction select. The block above
+     stacks the `.grid` that holds them into one column, and stacked, the six
+     controls read as one undifferentiated list: the gap between a file and
+     ITS direction is the gap between two different slots. A hairline gives
+     the boundary back -- a rule and space, which is how this stylesheet has
+     separated everything since the FACELIFT layer said so. */
+  .extra-channels .grid + .grid{border-top:1px solid var(--line); padding-top:16px}
+  .slot-h{flex-wrap:wrap}
+  .slot-h .btn-mini{flex:none}   /* Remove never squeezes to fit a long filename */
+
+  /* ── 6 · the frozen note reads as a sentence again ───────────────────
+     `.frozen` is a flex row, so its lead <b> is one flex item and the
+     sentence after it is another. At 880px that is a lead-in beside a
+     paragraph; at 360px it is a 118px label crushing the sentence into the
+     126px left over. This is the failure `.consent > span{flex:1}` was
+     written to prevent, and for one sentence on a phone the honest layout is
+     one sentence. */
+  .frozen{display:block}
+
+  /* ── 7 · the working states ──────────────────────────────────────────
+     The block above already turns the rail from five columns into five rows.
+     What it could not do from there is give the type back what it lost at
+     11.5px. No step is added, renamed or re-ordered; the indeterminate sweep
+     and the dashed never-ran treatment are untouched. */
+  .rail .s{font-size:12.5px; padding:10px 0 0}
+  .statusline{gap:8px 14px; padding:12px 13px}
+
+  /* ── 8 · the landing at a phone's measure ────────────────────────────
+     The headline's floor was 38px, chosen for the 641px end of this
+     breakpoint; at 360px that is eight characters to the line. The clamp
+     never exceeds that floor -- it only gives the narrow end somewhere to go
+     -- and 17ch stops constraining a column already narrower than 17
+     characters of it. */
+  .hero h1{font-size:clamp(30px,8.6vw,38px); max-width:none}
+  /* SVG type scales with the viewBox, so the 22px the block above set for the
+     peak labels renders at eight physical pixels on a 360px screen. The peak
+     labels have empty plot above them and can take a few more user units --
+     except BPFO's, the only one long enough to run off the left edge if it
+     grows, so that one stays exactly where it was.
+
+     The AXIS TICKS cannot move at all, and this is the pinned-rule-wins case
+     the brief describes. Their baseline is y=212 against an axis line at
+     y=196: 16 user units of headroom, which is a cap height of about 21px of
+     type and no more. The 19px above is already at that ceiling -- taking
+     them to 30px put the numbers through the axis and the trace. Measured on
+     the rendered page, not reasoned about: the change lost. */
+  .hv-lb{font-size:26px}
+  .hv-lb.hv-l2{font-size:22px}
+  /* The benchmark chips wrap to two and three lines at this width, on a
+     line-height of 1 -- and only the <a> inside the first one was tappable,
+     with the chip's own padding sitting outside the hit area. The negative
+     margin hands that padding to the link instead of adding to it, so the hit
+     area reaches 44px and the chip is exactly the size it always was. */
+  .chip{line-height:1.5}
+  .chip a{display:block; padding:4px 0; margin:-4px 0}
+  /* Footer links are inline in a sentence, which is the one target-size
+     exception -- but 17px of line box is still a mean thing to aim at with a
+     thumb. More leading, and a hit area that grows into it without reaching
+     the line above or below. */
+  footer{line-height:1.9}
+  footer .row{gap:12px 20px}
+  footer .row a{display:inline-block; padding:4px 0}
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   UX-1 LAYER — the machines list and the machine page.
+
+   Appended, never interleaved, for the reason the FACELIFT banner above gives:
+   every rule before this point is shipped and stays byte-for-byte where it is.
+
+   No new colour and no new type scale. The zone hues, the ink, the hairline
+   and the spaced-caps mono idiom are the tokens this file already paints the
+   site with -- which is also what report.css was ported FROM, so the machines
+   list, the shell and the PDF cannot drift apart.
+
+   EVERY BARE CLASS RULE THAT DECLARES A `display` CARRIES ITS `[hidden]`
+   GUARD. tests/js/harness.js reads this file to decide whether a `hidden`
+   element would really be off screen, and an unguarded `display` makes it
+   answer "visible" for something a browser hides. `setHidden` sets an inline
+   display and wins either way; the guard keeps the ORACLE honest.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── the list ───────────────────────────────────────────── */
+.mhead{display:flex; flex-wrap:wrap; gap:12px; align-items:baseline;
+       justify-content:space-between; margin:30px 0 14px}
+.mhead[hidden]{display:none}
+.mhead .eyebrow{margin:0}
+
+.mcards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+        gap:12px; margin:0 0 26px}
+.mcards[hidden]{display:none}
+
+.mcard{display:block; background:var(--card); border:1px solid var(--line);
+       border-radius:var(--r); padding:15px 17px 14px; color:var(--ink)}
+.mcard[hidden]{display:none}
+.mcard:hover{border-color:#B9C1BC; text-decoration:none}
+.mname{font:600 17px/1.3 "IBM Plex Sans",sans-serif; color:var(--ink)}
+.mat{font:400 13px/1.5 "IBM Plex Mono",monospace; color:var(--mut); margin-top:2px}
+.mtype{font:500 10.5px/1.4 "IBM Plex Mono",monospace; letter-spacing:.13em;
+       text-transform:uppercase; color:var(--mut); margin-top:9px}
+.mlast{font:400 13.5px/1.6 "IBM Plex Sans",sans-serif; color:var(--ink); margin-top:7px}
+.mline{font:400 13px/1.5 "IBM Plex Sans",sans-serif; color:var(--mut); margin-top:4px}
+.mline.zA{color:var(--zoneA)} .mline.zC{color:#8A5A12} .mline.zD{color:var(--zoneD)}
+.marrow{font-weight:600}
+
+/* The zone, as a word. The tint is decoration ON TOP of the sentence, never
+   the carrier of it -- the report's own rule (templates/_v2.html.j2). */
+.ztag{font:500 11px/1 "IBM Plex Mono",monospace; letter-spacing:.08em;
+      text-transform:uppercase; border:1px solid var(--line); border-radius:0;
+      padding:4px 7px; white-space:nowrap; color:var(--mut)}
+.ztag.zA{border-color:var(--zoneA); color:var(--zoneA); background:#F1F7F2}
+.ztag.zB{border-color:var(--zoneB); color:#5F6A28; background:#F6F8EE}
+.ztag.zC{border-color:#B5893F; color:#8A5A12; background:#FBF7EF}
+.ztag.zD{border-color:var(--zoneD); color:var(--zoneD); background:#FBF1F0}
+
+/* ── the machine page ───────────────────────────────────── */
+.backlink{display:inline-block; font:500 12px/1 "IBM Plex Mono",monospace;
+          letter-spacing:.08em; color:var(--mut); margin:30px 0 12px; padding:6px 0}
+.backlink[hidden]{display:none}
+.backlink:hover{color:var(--ink)}
+#view-machine .eyebrow{margin:0 0 16px; font-size:15px; letter-spacing:.06em;
+                       text-transform:none; color:var(--ink)}
+
+.mfacts{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+        gap:14px 22px; border:1px solid var(--line); background:var(--card);
+        border-radius:var(--r); padding:16px 18px; margin:0 0 16px}
+.mfacts[hidden]{display:none}
+.mfacts dt{font:500 10px/1.3 "IBM Plex Mono",monospace; letter-spacing:.14em;
+           text-transform:uppercase; color:var(--mut); margin-bottom:4px}
+.mfacts dd{font:400 14px/1.5 "IBM Plex Sans",sans-serif; color:var(--ink); margin:0}
+
+.mtable{width:100%; border-collapse:collapse; margin:16px 0 0}
+.mtable caption{text-align:left; font:400 12px/1.4 "IBM Plex Sans",sans-serif;
+                color:var(--mut); padding:0 0 8px}
+.mtable th{text-align:left; font:500 10px/1.3 "IBM Plex Mono",monospace;
+           letter-spacing:.13em; text-transform:uppercase; color:var(--mut);
+           border-bottom:1px solid var(--line); padding:0 10px 7px 0}
+.mtable td{font:400 14px/1.6 "IBM Plex Sans",sans-serif; color:var(--ink);
+           border-bottom:1px solid var(--line); padding:9px 10px 9px 0}
+.mtable td.num{font:400 14px/1.6 "IBM Plex Mono",monospace}
+.mtable tr:last-child td{border-bottom:none}
+
+/* ── HIST-1's band tile, which has never been styled ─────
+   `trendCard` emits class="rcard zA|zC|zD" WITHOUT `sev`, and the only zone
+   rules above are `.rcard.sev.zA`...`.rcard.sev.zD` -- so the "Since the first
+   reading" tile has rendered as a plain white box since the trend card
+   shipped, while the tile beside it carried the zone. Fixed here rather than
+   in app.js so the ready card's MARKUP is untouched. */
+.rcard.zA{border-color:var(--zoneA); background:#F1F7F2}
+.rcard.zB{border-color:var(--zoneB); background:#F6F8EE}
+.rcard.zC{border-color:#B5893F; background:#FBF7EF}
+.rcard.zD{border-color:var(--zoneD); background:#FBF1F0}
+
+/* ── the phone floor, for this layer's containers only ───
+   The established rules from the MOBILE-POLISH block above, applied to the
+   elements that block could not know about: nothing scrolls sideways, server-
+   and analyst-supplied text wraps anywhere, and the one primary action is a
+   full-width 48px target. */
+@media (max-width:640px){
+  .mcards{grid-template-columns:1fr}
+  .mcards > *, .mhead > *, .mfacts > *{min-width:0}
+  .mname,.mat,.mtype,.mlast,.mline,.mfacts dd,.mtable td{overflow-wrap:anywhere}
+  .mhead{margin-top:22px}
+  .mhead .cta{width:100%; min-height:48px}
+  #view-machine .ready-actions .cta{width:100%; min-height:48px}
+  .mtable th,.mtable td{padding-right:8px}
+}
+
+/* ═══ UX-2 LAYER — the lifecycle ════════════════════════════════════════
+   Session UX-2. Same rule as the UX-1 layer above and checked by the same
+   test: any bare single-class rule that declares a `display` carries its own
+   `[hidden]{display:none}` guard, because tests/js/harness.js reads THIS FILE
+   to decide whether a hidden element is really off screen, and an unguarded
+   rule would make it answer "visible" for something a browser hides. */
+.mform{display:grid; gap:14px; margin:4px 0 0}
+.mform[hidden]{display:none}
+.mfield{display:grid; gap:5px}
+.mfield[hidden]{display:none}
+.mfield label{font:500 13.5px/1.4 "IBM Plex Sans",sans-serif; color:var(--ink)}
+.mfield .opt{color:var(--mut); font-weight:400}
+.mfield input,.mfield select{width:100%; box-sizing:border-box; padding:11px 12px;
+  border:1px solid var(--line); border-radius:var(--r); background:var(--card);
+  font:400 15px/1.3 "IBM Plex Sans",sans-serif; color:var(--ink)}
+.mfield input:focus-visible,.mfield select:focus-visible{outline:2px solid var(--brand);
+  outline-offset:1px}
+.mdanger{border:1px solid var(--zoneD); border-radius:var(--r); background:var(--card);
+  padding:14px; margin:16px 0 0}
+.mdanger[hidden]{display:none}
+.mdanger label{display:block; margin:10px 0 5px;
+  font:500 13.5px/1.4 "IBM Plex Sans",sans-serif}
+.mdanger input{width:100%; max-width:22rem; box-sizing:border-box; padding:11px 12px;
+  border:1px solid var(--line); border-radius:var(--r);
+  font:400 15px/1.3 "IBM Plex Sans",sans-serif}
+.cta.danger{background:var(--zoneD)}
+.cta.danger:hover{background:#8E2C22}
+.mtable td.racts{text-align:right; white-space:nowrap}
+.rlink{background:none; border:0; padding:4px 2px; cursor:pointer; color:var(--mut);
+  font:500 13px/1.4 "IBM Plex Sans",sans-serif; text-decoration:underline}
+.rlink:hover{color:var(--ink)}
+.rlink.stop{color:var(--zoneD)}
+.rlink:focus-visible{outline:2px solid var(--brand); outline-offset:2px; border-radius:3px}
+/* Visually hidden, still announced -- the actions column needs a header for a
+   screen reader and needs none for anybody else. */
+.vh{position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden;
+  clip:rect(0 0 0 0); white-space:nowrap; border:0}
+@media (max-width:560px){
+  .mdanger input{max-width:none}
+  .mtable td.racts{text-align:left}
+}
+
+/* ── the spectrum preview (Session UX-2) ─────────────────────────────────
+   The report's own palette, so a preview and the figures in the PDF read as
+   one product: --trace is already report/charts.py's C_TRACE (#0B63C5), and
+   --shaft is its C_SHAFT (#0F8E80), which had no token here because nothing
+   in the webapp had ever drawn a shaft order. Same guard rule as the layer
+   above: any bare single-class `display` carries its `[hidden]` twin. */
+:root{--shaft:#0F8E80}
+.spx{margin:12px 0 0; padding:0; border:1px solid var(--line); border-radius:var(--r);
+     background:var(--card); overflow:hidden}
+.spx[hidden]{display:none}
+.spx-svg{display:block; width:100%; height:auto; background:var(--card)}
+.spx-svg[hidden]{display:none}
+.spx-tr{stroke:var(--trace); stroke-width:1.4; stroke-linejoin:round; fill:none}
+.spx-o{stroke:var(--shaft); stroke-width:1.1; stroke-dasharray:4 3}
+.spx-ol{fill:var(--shaft); font:600 11px "IBM Plex Mono",monospace}
+.spx-ax{stroke:var(--line); stroke-width:1}
+.spx-xl,.spx-xr{fill:var(--mut); font:500 11px "IBM Plex Mono",monospace}
+.spx-xr{text-anchor:end}
+.spx figcaption{border-top:1px solid var(--line); padding:10px 12px;
+  font:400 12.5px/1.55 "IBM Plex Sans",sans-serif; color:var(--mut)}
+.spx figcaption b{color:var(--ink)}
+.spx-tag{font:600 10px/1.3 "IBM Plex Mono",monospace; letter-spacing:.12em;
+  color:var(--brand-ink); background:var(--brand); padding:2px 6px; border-radius:3px}
+.spx-none figcaption{border-top:0}
+@media (prefers-reduced-motion:no-preference){
+  .spx-svg{transition:opacity .2s ease}
+}
+
+/* ── the four steps (Session UX-2) ───────────────────────────────────────
+   The rail is the SAME component the job states use — `.rail .s` with
+   done/now/pending — because an analyst reading "step 2 of 4" on the way in
+   and "Analysis" on the way out is reading one product. The one difference is
+   the sweep: on a job it means "this is happening now"; on a form it would
+   mean nothing was happening at all, so it is switched off here.
+   Every bare-class `display` below carries its `[hidden]` guard: the node
+   harness reads this file to decide whether a hidden element is really off
+   screen, and an unguarded rule makes it answer "visible" for something a
+   browser hides. */
+.rail.steps{counter-reset:step; margin-bottom:18px}
+.rail.steps .s{list-style:none; padding-right:10px}
+.rail.steps .s.now::after{animation:none; width:100%; opacity:.28}
+.rail.steps .s b{display:inline-block; min-width:1.2em}
+.rail.steps .s.locked{color:var(--line)}
+.rail.steps .s.done{color:var(--mut)}
+.step{display:block}
+.step[hidden]{display:none}
+.step-h{font:600 19px/1.3 "IBM Plex Sans",sans-serif; color:var(--ink); margin:0 0 4px}
+.step-lede{font:400 14.5px/1.6 "IBM Plex Sans",sans-serif; color:var(--mut);
+  margin:0 0 18px; max-width:64ch}
+.step-nav{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:22px;
+  padding-top:18px; border-top:1px solid var(--line)}
+.step-nav[hidden]{display:none}
+.spx-mount{display:block; margin:10px 0 0}
+.spx-mount[hidden]{display:none}
+
+/* ── step 3: the roster, read forwards ───────────────────────────────────
+   Three states, three treatments, and the difference between them is the
+   whole point: ON is a check that will run, OFF is one field away, and
+   ANSWERED is neither — "coupled" is an answer the report prints, not a gap
+   to be nagged about. */
+.unlocks{border:1px solid var(--line); border-radius:var(--r); background:var(--paper);
+  padding:14px; margin:0 0 20px}
+.unlocks[hidden]{display:none}
+.unlocks h4{font:500 10px/1.3 "IBM Plex Mono",monospace; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--mut); margin:0 0 10px}
+.ul-list{list-style:none; padding:0; margin:0; display:grid; gap:9px}
+.ul-list[hidden]{display:none}
+.ul{display:grid; grid-template-columns:18px 1fr; gap:9px; align-items:baseline;
+  font:400 13.5px/1.55 "IBM Plex Sans",sans-serif; color:var(--ink)}
+.ul[hidden]{display:none}
+.ul .m{font:600 13px/1.5 "IBM Plex Mono",monospace; text-align:center}
+.ul.on .m{color:var(--zoneA)}
+.ul.off .m{color:var(--mut)}
+.ul.off{color:var(--mut)}
+.ul.off b{color:var(--ink)}
+.ul.answered{color:var(--mut)}
+.ul.answered b{color:var(--ink)}
+.ul-cav{color:var(--zoneC)}
+.ul-note{border-top:1px solid var(--line); margin-top:12px; padding-top:11px;
+  font:400 12.5px/1.55 "IBM Plex Sans",sans-serif; color:var(--mut)}
+.ul-plain{margin:6px 0; padding-left:20px}
+.ul-plain[hidden]{display:none}
+
+/* ── step 4: RULED D-24, asked before the run ────────────────────────────*/
+.dup{border:1px solid var(--zoneC); border-radius:var(--r); background:var(--card);
+  padding:14px; margin:0 0 18px}
+.dup[hidden]{display:none}
+.dup h4{font:600 15px/1.35 "IBM Plex Sans",sans-serif; color:var(--ink); margin:0 0 8px}
+.dup-opt{display:flex; gap:9px; align-items:flex-start; margin:8px 0 0;
+  font:400 14px/1.5 "IBM Plex Sans",sans-serif; cursor:pointer}
+.dup-opt[hidden]{display:none}
+.dup-opt input{margin-top:3px}
+@media (max-width:560px){
+  .rail.steps .s{font-size:10px; padding-right:6px}
+  .step-nav .cta,.step-nav .btn-ghost{width:100%; text-align:center}
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   UX-4 LAYER — one visual system: type, space, buttons, tables, focus.
+
+   Appended, never interleaved, for the reason every layer above says: each
+   rule before this point stays byte-for-byte where it is, and this block
+   wins at equal specificity by cascade order alone. `tests/js/harness.js`
+   parses this file to decide whether a `hidden` element is really off
+   screen, so every bare single-class rule here that declares a `display`
+   carries its own `.cls[hidden]{display:none}` guard.
+
+   WHAT THIS LAYER CLAIMS, exactly. It declares a type scale and a spacing
+   scale as tokens, and it sets every size it sets from them -- there is no
+   raw px font-size below this banner, and `tests/test_ux4_system.py` pins
+   that. It does NOT retro-fit the whole stylesheet: 26 distinct font sizes
+   were in use above this line and most of them still are. The claim is that
+   there is now ONE place a size comes from, and that everything this session
+   touched comes from it. Anything stronger would be a sentence nothing
+   backs.
+
+   Loading order matters and is easy to get wrong: /marketing.css is linked
+   AFTER /style.css on the four marketing pages, so it wins at equal
+   specificity no matter where a rule sits in this file. Two of the fixes
+   below therefore have a second half in `marketing/assets/marketing.css`,
+   named at the rule.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* Type. Seven steps, replacing a ladder of 26 measured values
+     (10 … 56px). Named by role, not by size, so a step can be retuned
+     without a rename. */
+  --t-xs:12px; --t-sm:13px; --t-base:15px; --t-md:17px;
+  --t-lg:21px; --t-xl:28px; --t-2xl:38px;
+  --lh-tight:1.3; --lh-body:1.55;
+
+  /* Space. Seven steps on a 4px grid. */
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:22px; --s-6:32px; --s-7:48px;
+
+  /* One control height, everywhere a finger can land. 44px is the audited
+     floor recorded at the MOBILE-POLISH banner above; the phone block at the
+     end of this layer keeps that layer's measured 48px where it set it. */
+  --ctl-h:44px;
+
+  /* The signature strip's own trace. It was a raw #C9D2CD in five files
+     (index.html, privacy.html, login.html, app.py::_MASTHEAD and
+     marketing/_shell.html) and matched no token; naming it here lets the
+     rule below reach every copy at once without touching five markups. */
+  --sig:#C9D2CD;
+}
+
+/* ── focus: visible for the keyboard, invisible for the router ─────────
+   STRANGER U6. `focusHeading()` (app.js) moves focus to an
+   `h2[tabindex="-1"]` after every route change so the next Tab starts at
+   the new view -- correct, and the reason the heading was ringed blue on
+   arrival at /#/m/new. `:focus-visible` is exactly the distinction that
+   fixes it: a programmatic focus on a non-input does not match it, a
+   keyboard focus does. So the ring is REMOVED from the one case it was
+   wrong in and STRENGTHENED everywhere else, rather than switched off. */
+[tabindex="-1"]:focus:not(:focus-visible){outline:none}
+:focus-visible{outline:2px solid var(--brand); outline-offset:2px; border-radius:3px}
+
+/* ── the signature strip ───────────────────────────────────────────────
+   Colour by token rather than by attribute, which reaches all five copies
+   of this SVG without editing five files (CSS outranks a presentation
+   attribute). */
+.spectrum polyline{stroke:var(--sig)}
+.spectrum line{stroke:var(--line)}
+.sig-lb{font:500 9px/1 "IBM Plex Mono",monospace; fill:var(--mut)}
+
+/* ── ONE button system ─────────────────────────────────────────────────
+   STRANGER U10: "Button styles mix -- 'Sample report (PDF)' / 'The worked
+   before/after' are monospace, the buttons above and below are sans-serif;
+   primary green vs outlined green vs grey-fill."
+
+   Five classes carry a button today (.cta, .cta.danger, .btn-ghost,
+   .btn-mini, .btn-link) plus .dl, and NONE of them is renamed here. app.js
+   is written against these names and `readyCard`'s source is pinned
+   byte-for-byte against tests/fixtures/ux1/ready_card_fn.js, so a rename
+   would be a large diff for no reader's benefit. What is unified is the
+   thing a reader actually sees: one family, one weight, one size, one
+   radius, one height, one focus ring -- and the difference between them is
+   FILL alone. The monospace half of U10 lives in marketing.css `.dl-row a`
+   and is fixed there. */
+.cta,.btn-ghost,.btn-mini,.dl{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:var(--ctl-h); padding:0 var(--s-5);
+  font:600 var(--t-base)/1 "IBM Plex Sans",system-ui,sans-serif;
+  border-radius:var(--r); cursor:pointer; text-align:center;
+}
+.cta[hidden]{display:none}
+.btn-ghost[hidden]{display:none}
+.btn-mini[hidden]{display:none}
+.dl[hidden]{display:none}
+/* Fill is the only difference. */
+.cta{color:var(--brand-ink); background:var(--brand); border:1px solid var(--brand)}
+.dl{color:var(--brand-ink); background:var(--brand); border:1px solid var(--brand)}
+.btn-ghost{color:var(--brand); background:var(--card); border:1px solid var(--brand)}
+.dl.ghost{color:var(--brand); background:var(--card); border:1px solid var(--brand)}
+.btn-mini{color:var(--mut); background:var(--card); border:1px solid var(--line);
+          padding:0 var(--s-4); font-weight:500; font-size:var(--t-sm)}
+.cta.danger{color:var(--brand-ink); background:var(--zoneD); border-color:var(--zoneD)}
+/* The text button keeps its shape -- it is a link that happens to be a
+   <button> -- but it takes the same family, weight and hit area. */
+.btn-link{
+  display:inline-flex; align-items:center; min-height:var(--ctl-h);
+  padding:var(--s-2) var(--s-1); border:0; background:none;
+  font:600 var(--t-sm)/var(--lh-tight) "IBM Plex Sans",system-ui,sans-serif;
+  color:var(--brand); cursor:pointer;
+}
+.btn-link[hidden]{display:none}
+
+/* ── ONE table treatment ───────────────────────────────────────────────
+   STRANGER U2 ("CWRU bearings" breaking as "CWR / U / beari / ngs", "20 /
+   24" one character per line) and U3 ("0.01 / 414", "0.0 / %").
+
+   Both were caused by `overflow-wrap:anywhere`, which is a fine rule for a
+   machine alias an analyst typed and a wrong one for a corpus name or a
+   number. Under 600px the table SCROLLS rather than stacking into cards:
+   the reason to read a benchmark table is to compare down a column, and a
+   card stack takes that away. `.mtable` is the one table component in the
+   product and the marketing pages already inherit it, so this is genuinely
+   one treatment and not two that agree. */
+.mtable th,.mtable td{overflow-wrap:normal; word-break:normal; hyphens:none}
+.mtable th,.mtable td.num,.mtable td.zone{white-space:nowrap}
+.mtable caption{white-space:normal}
+
+/* ── images never push the page out ────────────────────────────────────
+   STRANGER U1: /product at 375px reported `document.scrollWidth` 1211,
+   because the sample-report <img> carries width="1191" and nothing capped
+   it. Unconditional, not inside a phone block: a 1191px image overflows
+   every viewport narrower than itself, and the next image added will do the
+   same thing. */
+img{max-width:100%; height:auto}
+
+/* ── the phone ─────────────────────────────────────────────────────────
+   Two blocks, and the split is deliberate. 640px restates the MOBILE-POLISH
+   layer's audited control heights, because this layer sits BELOW it and
+   would otherwise silently undo a measurement somebody took. 600px is this
+   session's own breakpoint, for the things STRANGER measured at 375px. */
+@media (max-width:640px){
+  /* Verbatim from the audit at the MOBILE-POLISH banner: .cta was 41px,
+     .dl 40px, .btn-mini 35px, .btn-link 17px. Restated, not re-decided. */
+  .cta,.btn-ghost{min-height:48px}
+  .dl{display:flex; width:100%; min-height:48px}
+  .dl[hidden]{display:none}
+  .btn-mini,.btn-link{min-height:var(--ctl-h)}
+}
+@media (max-width:600px){
+  /* U4 · the strip's labels shrink to unreadable smudges long before this,
+     and they annotate a decorative line. Below 600px the line stays and the
+     annotations go. */
+  .sig-lb{display:none}
+  .sig-lb[hidden]{display:none}
+  /* U2 / U3 · the table scrolls in place; nothing it contains wraps. */
+  .mtable{display:block; overflow-x:auto; -webkit-overflow-scrolling:touch}
+  .mtable[hidden]{display:none}
+  .mtable th,.mtable td{white-space:nowrap}
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   UX-4 LAYER · slice 2 — the shell: one nav, the home order, the machines
+   header, the step rail.
+
+   Operator amendment, mid-session: THIS IS A WEB APPLICATION FIRST. Every
+   rule below was designed at 1280/1440 and then checked at 375; where the
+   two wanted different things the desktop one won. The one measurement that
+   settles most of it: `.wrap` is max-width:880px, so the masthead column is
+   880px at BOTH desktop widths -- 1440 buys the nav no more room than 1280,
+   and the six-item nav fits one row with ~150px to spare at either.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── the machines header: one row, title left, both actions right ──────
+   The operator's screenshot. `.mhead` was `align-items:baseline`, which
+   lines a 44px button up by the text inside it rather than by its box, so a
+   heading and a button never sat level. Centre instead, and hold the two
+   actions in one group so they stay together at the right edge. */
+.mhead{align-items:center}
+.mhead-actions{display:flex; gap:var(--s-3); align-items:center}
+.mhead-actions[hidden]{display:none}
+.mhead-actions > *{white-space:nowrap}
+
+/* ── the home page's order (STRANGER C2) ───────────────────────────────
+   "The very first thing on the home page is a grey MACHINES — No machines
+   yet… admin panel, and only BELOW it the marketing hero."
+
+   The markup does not move: `tests/test_ux1_views.py` pins `#state` as the
+   last section in <main>, and the view containers sit above the hero on
+   purpose so the node harness can prove them hidden (index.html:46-52). So
+   <main> becomes a flex column and the order is decided here, from the one
+   attribute `orderHome()` sets.
+
+   The order chosen is hero -> machines -> the rest of the pitch, NOT hero ->
+   whole pitch -> machines. This is a web application: once a reader knows
+   what it is, the next thing they should meet is the product, not four more
+   sections of story. A visitor who wants the story scrolls on.
+
+   Margins do not collapse inside a flex container. Checked rather than
+   assumed: every section here spaces itself with `padding-top` plus a
+   `margin-top` against siblings that set no `margin-bottom`, so there was no
+   collapsing to lose. */
+main.wrap{display:flex; flex-direction:column}
+#hero{order:1}
+#view-machines[data-first="landing"]{order:2}
+#how,#proof,#showcase,#start{order:3}
+#form-card,#state{order:4}
+
+@media (max-width:600px){
+  /* ── the nav (STRANGER U4) ──────────────────────────────────────────
+     "Six nav items wrap to two rows with a large gap."
+
+     U4's own words offer two remedies -- "collapse to a menu or a
+     scrollable row". This takes the scrollable row, and the reason is the
+     amendment rather than laziness: a <details> menu would put new markup
+     into all SIX files that spell the nav out and lean on
+     `::details-content` to stay open above 600px, which is a 2024-and-later
+     rule. That is real browser-support risk and six files of churn, spent
+     entirely below the design target, to beat a remedy the finding already
+     names. The six sources stay byte-identical instead.
+
+     The wordmark takes its own row and the links take one line that
+     scrolls. `.mast` was already `flex-wrap:wrap`; what changes is that the
+     nav stops wrapping INSIDE itself, which is where the "large gap" came
+     from. */
+  .mast{flex-wrap:wrap; padding-bottom:0}
+  .mark{flex:0 0 100%}
+  nav{width:100%; flex-wrap:nowrap; overflow-x:auto; gap:var(--s-5);
+      scrollbar-width:none; -webkit-overflow-scrolling:touch}
+  nav::-webkit-scrollbar{display:none}
+  nav a{white-space:nowrap; padding:var(--s-3) 0}
+
+  /* ── the machines header keeps its shape ────────────────────────────
+     Two full-width stacked buttons would push the list below the fold, so
+     the actions stay side by side and share the row. */
+  .mhead-actions{width:100%; gap:var(--s-2)}
+  .mhead-actions > *{flex:1 1 0; min-width:0}
+
+  /* ── the step rail (STRANGER U5) ────────────────────────────────────
+     "1 Machine / 2 Measurement / 3 Details / 4 Review renders as four
+     stacked rows each with its own full-width rule."
+
+     Below 600px only: the current step alone, prefixed from the attributes
+     `renderRail` sets, so there is no second markup path to keep in sync
+     and no second string to translate. DESKTOP KEEPS THE FOUR-STEP RAIL --
+     it is the design target, and a pin refuses this rule above 600px. */
+  .rail.steps{display:flex; align-items:baseline; gap:0; border:0; padding:0}
+  .rail.steps::before{
+    content:"Step " attr(data-step) " of " attr(data-of) " — ";
+    font:500 var(--t-xs)/1.4 "IBM Plex Mono",monospace;
+    letter-spacing:.06em; color:var(--mut); white-space:pre;
+  }
+  .rail.steps .s{display:none}
+  .rail.steps .s.now{display:inline; border:0; padding:0; font-size:var(--t-xs)}
+  /* The number is already in the prefix -- without this it reads
+     "Step 1 of 4 — 1 Machine". Desktop keeps its <b>, which is the numeral
+     the four-step rail is built around. */
+  .rail.steps .s.now b{display:none}
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   UX-4 LAYER · slice 3a — the app surfaces get a wider container.
+
+   RULED by the operator, and it is a decision rather than a polish item:
+   `.wrap` has capped every page at 880px since ui-v1, which is a reading
+   measure. On /product or /privacy that is right and stays. On the app --
+   the machines list, a machine page, the four intake steps, the readings
+   table -- 880px in a 1440px window is 280px of empty margin either side
+   around the thing the product is for.
+
+   So the shell widens to 1200px and the READING sections inside it are
+   pulled back to 880 and centred. The masthead and footer widen with it so
+   the chrome and the content share an edge; the nav does not jump when an
+   analyst crosses from the landing into /#/.
+
+   Scoped by `body.app`, which only static/index.html carries. Nothing else
+   that renders this stylesheet -- /privacy, /login, /billing, the f-string
+   doc pages, the four marketing pages -- is touched.
+   ══════════════════════════════════════════════════════════════════════ */
+
+body.app header .wrap,
+body.app main.wrap,
+body.app footer .wrap{max-width:1200px; padding:0 clamp(20px, 2vw, 32px)}
+/* The gutter is clamped rather than fixed. A flat 32px is right at 1440 and
+   is 24px stolen from a 375px screen that has none to give -- measured: the
+   content column went 335 -> 311 before this. The floor is the 20px `.wrap`
+   has always used, so the phone is exactly where it was. */
+
+/* The landing keeps the measure it was written for. `#form-card` is here
+   too: a 1200px-wide form is a worse form -- the intake is a column of
+   labelled fields and a long line length hurts it. What actually wants the
+   room is the machines list, a machine page and the result. */
+body.app #hero,
+body.app #how,
+body.app #proof,
+body.app #showcase,
+body.app #start,
+body.app #form-card{width:100%; max-width:880px; margin-inline:auto}
+
+/* ══════════════════════════════════════════════════════════════════════
+   UX-4 LAYER · slice 3b — ONE confirmation, and the motion it shares.
+
+   STRANGER U12. Before this there were four shapes for one job — a `notice`
+   threaded into a re-render, a small grey `.help` line, a hidden `#…-error`
+   box, and a wholesale card swap — plus two actions (rename, forget a saved
+   machine) that reported nothing at all.
+
+   Designed at 1280/1440 per the operator's amendment: bottom-right, clear of
+   the 1200px content column, over nothing an analyst is reading. The phone
+   gets the full width it needs and sits above the thumb rather than under it.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root{
+  --motion-in:180ms;
+  --motion-out:200ms;
+  --ease-out:cubic-bezier(.22,.61,.36,1);
+}
+
+.toasts{
+  position:fixed; z-index:60;
+  inset-block-end:var(--s-5); inset-inline-end:var(--s-5);
+  display:flex; flex-direction:column; gap:var(--s-2);
+  /* NON-BLOCKING: the region spans a corner but must never eat a click meant
+     for the page under it. The toast itself takes its clicks back. */
+  pointer-events:none;
+  max-width:min(30rem, calc(100vw - 2 * var(--s-5)));
+}
+.toasts[hidden]{display:none}
+
+.toast{
+  pointer-events:auto;
+  display:flex; align-items:flex-start; gap:var(--s-3);
+  background:var(--ink); color:var(--paper);
+  border:1px solid var(--ink); border-radius:var(--r);
+  padding:var(--s-3) var(--s-3) var(--s-3) var(--s-4);
+  font:500 var(--t-sm)/1.5 "IBM Plex Sans",system-ui,sans-serif;
+  box-shadow:0 6px 24px rgba(16,24,22,.18);
+  animation:ux4-in var(--motion-in) var(--ease-out) both;
+}
+.toast[hidden]{display:none}
+.toast.leaving{animation:ux4-out var(--motion-out) var(--ease-out) both}
+/* Kind selects a fill and is NEVER the only carrier — the sentence says what
+   happened, and these differ in luminance as well as hue. */
+.t-ok{border-left:3px solid var(--zoneA)}
+.t-gone{border-left:3px solid var(--zoneD)}
+.t-msg{flex:1 1 auto; min-width:0}
+.t-x{
+  flex:none; background:none; border:0; cursor:pointer;
+  color:var(--paper); opacity:.7;
+  font:400 var(--t-md)/1 "IBM Plex Sans",system-ui,sans-serif;
+  padding:0 var(--s-1); min-height:auto;
+}
+.t-x:hover{opacity:1}
+.t-x:focus-visible{outline:2px solid var(--paper); outline-offset:2px; border-radius:3px}
+
+@keyframes ux4-in{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+@keyframes ux4-out{from{opacity:1; transform:none} to{opacity:0; transform:translateY(8px)}}
+
+/* The run's outcome enters the same way. Two names for one animation, flipped
+   by `showRun` on each announced state: a CSS animation restarts only when
+   its animation-name changes, and `#state` is not recreated between polls. So
+   this fires on a real state change and not on the poll that redraws the same
+   state 2.5s later. */
+@keyframes ux4-in-b{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+#state[data-enter="a"]{animation:ux4-in var(--motion-in) var(--ease-out) both}
+#state[data-enter="b"]{animation:ux4-in-b var(--motion-in) var(--ease-out) both}
+
+/* Reduced motion. The global block at the top of this file already kills
+   every animation with `!important`, so the toast simply appears and
+   disappears — which is why `dismissToast()` skips its exit phase there
+   rather than waiting 200ms for an animation that will not run. Restated
+   here so the pairing is findable from either side. */
+
+@media (max-width:600px){
+  .toasts{
+    inset-inline:var(--s-4); inset-block-end:var(--s-4);
+    max-width:none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   UX-4 LAYER · slice 4 — the document pages (STRANGER U7).
+
+   /validation and /field-validation-results.md were `<pre class="doc">`: a
+   fixed monospace block that could not reflow, with a Markdown pipe table
+   rendered as text and cut off on the right. `pre.doc` is KEPT above --
+   `marketing/mdpage.py` still emits it for a fenced code block, which is the
+   one place a fixed column is the point.
+
+   These pages stay at the 880px reading measure (they carry no `body.app`),
+   which is the whole reason the app container was scoped by a class rather
+   than applied to `.wrap`.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.prose h2{
+  font:600 var(--t-lg)/1.25 "IBM Plex Sans",system-ui,sans-serif;
+  margin:var(--s-7) 0 var(--s-3); padding-top:var(--s-5);
+  border-top:1px solid var(--line);
+}
+.prose h3{font:600 var(--t-md)/1.3 "IBM Plex Sans",system-ui,sans-serif; margin:var(--s-6) 0 var(--s-2)}
+.prose h4{font:600 var(--t-base)/1.4 "IBM Plex Sans",system-ui,sans-serif; margin:var(--s-5) 0 var(--s-2)}
+.prose p{margin:0 0 var(--s-4); max-width:70ch}
+/* These documents are written by engineers and quote identifiers:
+   `profiles.route.rca._rationale_spectrum_peak_selection)` is 54 characters
+   with no break opportunity in it, which is ~420px of mono in a 335px column.
+   Measured at 375px: the page scrolled to 443 with NO element's bounding box
+   exceeding the viewport -- text overflowing a correctly-sized box, which is
+   why a rect-based probe could not see it. A broken identifier reads worse
+   than an unbroken one and far better than a page that scrolls sideways. */
+.prose p,.prose li,.prose code,.prose blockquote,.doclist li,
+.docstat dt,.docstat dd{overflow-wrap:anywhere}
+.prose code{
+  font:400 0.92em/1.4 "IBM Plex Mono",monospace;
+  background:var(--card); border:1px solid var(--line); border-radius:3px;
+  padding:1px 4px;
+}
+.prose blockquote{
+  margin:var(--s-4) 0; padding:var(--s-2) 0 var(--s-2) var(--s-4);
+  border-left:3px solid var(--brand); color:var(--mut);
+}
+.prose blockquote p{margin:0}
+.doclist{margin:0 0 var(--s-4) var(--s-5); padding:0; max-width:70ch}
+.doclist li{margin:0 0 var(--s-2)}
+
+/* The stat rows. `validation_summary.md` aligns these with spaces, which only
+   works in a monospace column -- "Committed inner/outer-race diagnosis
+   correct:  20 / 24". This is what that alignment was imitating: a label and
+   a figure, on a real grid, so the figure is findable and the label can wrap. */
+.docstat{margin:0 0 var(--s-5); display:grid; gap:0}
+.docstat[hidden]{display:none}
+.docstat > div{
+  display:grid; gap:var(--s-4);
+  align-items:baseline; padding:var(--s-3) 0; border-bottom:1px solid var(--line);
+  /* `minmax(0, …)` on BOTH tracks. `1fr auto` blows the grid out when a value
+     is a sentence rather than a figure -- and eleven of these are figures
+     ("20 / 24") while three are prose ("NOT EVALUABLE -- the Welford baseline
+     never armed"). Measured at 375px: the row was 441px wide in a 375px
+     viewport and it was the only thing on the whole site scrolling sideways. */
+  grid-template-columns:minmax(0,1fr) minmax(0,max-content);
+}
+.docstat > div[hidden]{display:none}
+.docstat dt{font:400 var(--t-base)/1.4 "IBM Plex Sans",system-ui,sans-serif; color:var(--mut)}
+.docstat dd{
+  margin:0; font:500 var(--t-md)/1.35 "IBM Plex Mono",monospace;
+  color:var(--ink);
+  /* NOT `white-space:nowrap`. It is the right instinct for a figure and the
+     wrong one for the three of these whose value is a sentence -- and CSS
+     cannot tell them apart. A figure does not wrap anyway: it is shorter than
+     its track. */
+  overflow-wrap:anywhere;
+}
+
+/* The renderer wraps every table in this, so a wide one scrolls in its own
+   box rather than pushing the page sideways -- slice 1's one table treatment,
+   reached from the other direction. */
+.tw{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 0 var(--s-5)}
+.tw[hidden]{display:none}
+.doccode{
+  font:400 var(--t-sm)/1.6 "IBM Plex Mono",monospace;
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  padding:var(--s-4); margin:0 0 var(--s-5); overflow-x:auto; white-space:pre;
+}
+
+@media (max-width:600px){
+  .docstat > div{grid-template-columns:1fr; gap:var(--s-1)}
+  .docstat dd{font-size:var(--t-base)}
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   UX-5 LAYER · the run flow, from file to trusted result.
+
+   Everything here serves a stranger-test row and nothing here is
+   decoration. It plays by the UX-4 layer's rules because those rules are
+   audited from that banner to the end of this file: the type scale only
+   (`--t-*`), the spacing scale only (`--s-*`), and every bare-class
+   `display` carries its `[hidden]` guard, because tests/js/harness.js
+   reads this stylesheet to decide whether a hidden element is really off
+   screen and an unguarded rule makes it answer "visible" for something a
+   browser hides.
+
+   Designed at 1280/1440 (LAW 16). 375px is a constraint and is handled at
+   the end: nothing may scroll the page sideways, and the widened readings
+   table scrolls inside its own box rather than pushing the document.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* U8 · the retention ledger is one line until it is asked for.
+   Not deleted, collapsed: every row is still in the document and still
+   diffed against static/privacy.html. The summary is computed from what
+   this run actually did, so it is true rather than generic. */
+.ledger > summary{
+  list-style:none; cursor:pointer; padding:13px var(--s-4);
+  font:500 var(--t-xs)/1.5 "IBM Plex Sans",sans-serif; color:var(--mut);
+}
+.ledger > summary::-webkit-details-marker{display:none}
+.ledger > summary::after{
+  content:"▸"; margin-left:var(--s-2); color:var(--mut); font-size:var(--t-xs);
+}
+.ledger[open] > summary::after{content:"▾"}
+.ledger > summary:hover{color:var(--ink)}
+.ledger > summary:focus-visible{outline:2px solid var(--brand); outline-offset:-2px}
+.ledger > summary .sum{color:var(--ink); font-weight:500}
+/* The h5 immediately after the summary repeats it; the open panel does not
+   need its own title twice. */
+.ledger[open] > h5:first-of-type{display:none}
+.ledger[open] > h5:first-of-type[hidden]{display:none}
+
+/* B3 · the job reference, where the copy tells you to quote it. */
+.jobref{
+  display:flex; flex-wrap:wrap; align-items:center; gap:var(--s-2);
+  margin-top:var(--s-3); padding:var(--s-3) var(--s-4);
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--r);
+}
+.jobref[hidden]{display:none}
+.jobref .lbl{
+  font:500 var(--t-xs)/1 "IBM Plex Mono",monospace; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--mut);
+}
+.jobref code{
+  font:500 var(--t-sm)/1.4 "IBM Plex Mono",monospace; color:var(--ink);
+  background:var(--card); border:1px solid var(--line); border-radius:var(--r);
+  padding:var(--s-1) var(--s-2); user-select:all;
+}
+.jobref .help{flex-basis:100%; margin-top:0}
+
+/* C6 · the undo, inside the one confirmation component. */
+.toast .t-act{
+  flex:0 0 auto; font:600 var(--t-sm)/1 "IBM Plex Sans",sans-serif;
+  color:var(--brand-ink); background:none; border:1px solid currentColor;
+  border-radius:var(--r); padding:var(--s-1) var(--s-3); cursor:pointer;
+}
+.toast .t-act:hover{background:rgba(255,255,255,.14)}
+.toast .t-act:focus-visible{outline:2px solid currentColor; outline-offset:2px}
+
+/* C4 · what a saved machine carried into this run. */
+#carried{
+  padding:var(--s-3) var(--s-4); background:var(--paper);
+  border:1px solid var(--line); border-radius:var(--r); margin-top:var(--s-3);
+}
+
+/* C10 · the readings table gained four columns and a report link.
+   It scrolls inside its own box at every width -- at 1200 it fits, and on a
+   phone the alternative is a document that scrolls sideways. */
+.tscroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+.mtable .fname{
+  font:400 var(--t-xs)/1.4 "IBM Plex Mono",monospace; color:var(--mut);
+  max-width:18ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.mtable .rrep a{white-space:nowrap; margin-right:var(--s-2)}
+.mtable td,.mtable th{white-space:nowrap}
+.mtable .fname{white-space:nowrap}
+/* The committed call is the one column that may wrap: it is a sentence. */
+.mtable td:nth-child(6){white-space:normal; min-width:16ch}
+.trend-card .call,.ledger .call{color:var(--ink)}
+.ledger .foot.call{border-top:1px solid var(--line)}
+
+/* C5 · the run button's note, once a run has finished. */
+#submit-note b{color:var(--ink)}
+
+@media (max-width:600px){
+  .jobref{padding:var(--s-3)}
+  .jobref code{word-break:break-all; user-select:all}
+  .ledger > summary{padding:var(--s-3)}
+  .toast .t-act{padding:var(--s-2) var(--s-3)}
+  .mtable .fname{max-width:12ch}
+}

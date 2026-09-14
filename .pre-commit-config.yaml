@@ -1,0 +1,49 @@
+# pre-commit — SEC-1. One hook, one job: a secret never reaches a commit.
+#
+# Install (the exact operator command, also in docs/SECURITY.md):
+#
+#   brew install gitleaks
+#   PYTHONPATH=src ./.venv/bin/pip install -e ".[dev]"
+#   ./.venv/bin/pre-commit install
+#
+# This is the FIRST of the two lines of defence and the only one that acts
+# before the secret exists in history. The second is
+# .github/workflows/security.yml, which re-scans the whole history on every
+# push and pull request — because a hook can be skipped (`git commit -n`) and
+# is not installed on a fresh clone until someone runs the command above.
+# Neither layer is sufficient alone; the CI one is the one that cannot be
+# bypassed by the person making the mistake.
+
+repos:
+  - repo: local
+    hooks:
+      - id: gitleaks
+        name: gitleaks — scan staged changes for secrets
+        # `language: system` runs the Homebrew binary that is already on PATH.
+        #
+        # Deliberately NOT the upstream `repo: https://github.com/gitleaks/gitleaks`
+        # hook, which is `language: golang`: that bootstraps an entire Go
+        # toolchain to compile a binary this machine already has, and there is
+        # no Go installed here. The cost of `system` is that a missing binary
+        # is an error rather than an auto-install — which is the correct
+        # trade for a security control. A scanner that silently installs
+        # itself can also silently fail to.
+        language: system
+        entry: gitleaks
+        args:
+          - git
+          - --pre-commit          # scan the diff, not the whole repository
+          - --staged              # ...specifically what is staged for THIS commit
+          - --redact              # print the location, never the secret itself
+          - --no-banner
+          - --verbose             # name the rule and file, so a block is actionable
+          - --config=.gitleaks.toml
+        # The hook scans the staged diff itself, so pre-commit must not also
+        # append the changed filenames as positional arguments — gitleaks would
+        # read the first one as the repository path.
+        pass_filenames: false
+        # Run on every commit, including ones that touch no file this hook would
+        # otherwise be selected for. A secret scanner that only runs for certain
+        # file types is a secret scanner with a documented bypass.
+        always_run: true
+        stages: [pre-commit]

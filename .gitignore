@@ -1,0 +1,93 @@
+.venv/
+__pycache__/
+*.egg-info/
+outputs/*
+!outputs/.gitkeep
+# Version the machine-written results docs + hand-authored companions (Session A).
+# PDFs, datasets, and the *_timeline.json artifacts stay ignored (still under outputs/*)
+# EXCEPT inside the two directories re-included below, where everything is tracked.
+!outputs/*.md
+# Session FIXTURE-1 (DOCS-1 F-2). `outputs/*` excludes these two DIRECTORIES, and git
+# does not descend into an excluded directory -- so `git add outputs/BRIEFS/<brief>.md`
+# printed "the following paths are ignored" and exited 1 *while staging the file*, which
+# breaks any `git add ... && git commit` chain. Law #26 ("the brief is the branch's second
+# commit") could only be followed with `-f`, and `027eaf9` is the commit where it wasn't.
+# Re-including the DIRECTORY ENTRY is enough on its own: `outputs/*` is one level deep and
+# cannot reach a grandchild, so once git descends there is nothing left to re-exclude and
+# no `!outputs/BRIEFS/**` line is needed. That asymmetry is why the directory form is used
+# here and the file form is used above -- contrast `references/*` below, whose negations
+# are same-level file overrides and so do not need it.
+!outputs/BRIEFS/
+!outputs/demo_package/
+.pytest_cache/
+data/cwru/
+eval/cases/cwru/
+data/mfpt/
+eval/cases/mfpt/
+.claude/settings.local.json
+.env.api
+data/wind_turbine/
+eval/cases/wind_turbine/
+data/mafaulda/
+eval/cases/mafaulda/
+# Reference library (Session REF-INTAKE). The PDFs are never committed — only the
+# two hand-authored catalogue files, which are the citation register for the
+# knowledge layer. Note `references/*`, not `references/`: git does not descend
+# into an excluded directory, so under the directory form the negations below
+# would be unreachable. Same idiom as `outputs/*` + `!outputs/*.md` above.
+references/*
+!references/INDEX.md
+!references/GAPS.md
+.DS_Store
+scripts/eval/results/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SEC-1 — credential-shaped files can never be staged.
+#
+# Before this block the only credential rule in this file was `.env.api`
+# (kept above for provenance, now redundant). `.env`, `.env.local`, `*.key` and
+# `*.pem` were all committable, and the deployed unit reads its real Anthropic
+# key from an env file — `EnvironmentFile=/etc/vibagent/env`, see
+# deploy/vibagent.service:16 — which is exactly the file an operator copies
+# into the repo to edit.
+#
+# This is the passive half of the control. The active halves are the gitleaks
+# pre-commit hook and .github/workflows/security.yml, which scan CONTENT; these
+# rules only stop a file arriving by NAME. Neither substitutes for the other:
+# a secret pasted into a .py file is caught by content scanning and not by
+# this, and a .env staged before the hook is installed is caught by this and
+# not by that.
+#
+# Verified at SEC-1 that no tracked file matches any pattern below, so nothing
+# already in the index is orphaned by them. Pinned by tests/test_secrets_hygiene.py,
+# which also pins that these rules are NOT vacuous — a stray `*` here would
+# otherwise make every one of those pins pass while ignoring the whole repo.
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+# The server env-file, under the names it is given when copied locally.
+vibagent.env
+vibapp.env
+# A gitleaks report contains the raw secrets it found. Running a scan with
+# --report-path inside the working tree must never produce a committable file.
+gitleaks-report.json
+gitleaks-*.json
+
+# Session CI-1. The staging area for scripts/gate/assets.sh: 1 GB of tarballs
+# built from data/ and references/ and attached to a GitHub release, so a runner
+# can get the gitignored suite inputs. The TARBALLS are never committed either --
+# only scripts/gate/ASSETS.sha256, the manifest CI keys its cache on.
+.assets-cache/
+
+# --- Public-repo hardening (see README) ---
+# Blanket rules rather than per-subdirectory ones. The previous file named the
+# four dataset directories individually, so a fifth dataset dropped in later was
+# stageable; the blanket `/data` rule lived only in .git/info/exclude, which is
+# local and never published.
+/data/
+/scratchpad/
+/eval_s7/
+/.venv/

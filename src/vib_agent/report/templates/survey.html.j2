@@ -1,0 +1,351 @@
+{# The v2 survey report — the document an analyst downloads.
+
+   Session V2-WIRE (WIRING.md slice W2). A SECOND renderer over the SAME
+   build_context() the markdown template renders from: render_markdown() is
+   untouched, so report.md stays byte-identical and the agent keeps the exact
+   reference report it has always been given.
+
+   THREE STRUCTURAL DECISIONS, recorded here because they are the ones a
+   reviewer will ask about:
+
+   1. Reading order is the analyst's, not the template's. Summary → severity →
+      finding & confidence → evidence → differential comes BEFORE the machine
+      details and the analysis-parameters table. The markdown report puts those
+      two between the summary and the diagnosis; an analyst reads the call
+      first.
+   2. ...but the gate is never buried. Doctrine is that the quality gate runs
+      first and nothing downstream is valid without it, so a non-PASS verdict is
+      hoisted into a ribbon directly under the masthead, above the diagnosis,
+      carrying every attention line verbatim. The full 17-check roster keeps its
+      own numbered section further down. The gate's SUMMARY moves up; its DETAIL
+      stays where a document would put it.
+   3. Absence gets a slot. An empty differential and a null trend each render a
+      labelled panel saying what is absent and why. A missing damage stage and a
+      missing cause section render NOTHING, because that is what the markdown
+      template does and because on a misalignment report there is no "missing"
+      damage stage to report — the concept does not apply.
+
+   Sections are numbered by `ns.n`, incremented only where a section actually
+   renders. #}
+{% import "_v2.html.j2" as v2 %}
+{% set ns = namespace(n=0) %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vibration Survey Report — {{ machine.name }}</title>
+<style>{{ stylesheet }}</style>
+</head>
+<body>
+<main class="doc">
+
+{{ v2.masthead(machine) }}
+{{ v2.status_banner(status_line, status_colour) }}
+{# Session REPORT-3 — the gate ribbon and the webapp's notes stay ON PAGE 1,
+   which is the one deliberate exception to item 1's "in this order, nothing
+   else". Doctrine (structural decision 2 above) is that a non-PASS gate is
+   never buried, and a degraded job's note is the thing the reader most needs
+   before believing anything else on the page. Both render nothing when there
+   is nothing to say, so an ordinary report's page 1 is exactly the brief's
+   list. #}
+{{ v2.gate_ribbon(gate, dq_notes) }}
+{{ v2.notes_panel(notes) }}
+
+{# ── PAGE 1 · the fault sheet ─────────────────────────────────────────── #}
+{{ v2.fault_sheet(fault_sheet, charts, sheet_figure) }}
+
+{# ── Everything below is Evidence, and starts on page 2 (report.css
+      `.sheet { break-after: page }`). The machine summary and the severity /
+      diagnosis cards moved down here from page 1: the sheet above now states
+      the health line and the fault, so on page 1 they were the same claim
+      twice. #}
+<h2 class="evidence-head">Evidence</h2>
+{{ v2.meta_strip(machine, result, analysis_parameters) }}
+{{ v2.cards(ctx) }}
+
+{# ── 1 · Summary ──────────────────────────────────────────────────────── #}
+{% set ns.n = ns.n + 1 %}
+<section>
+  {{ v2.sec_head(ns.n, "Summary") }}
+  <p class="lead">{{ executive_summary | md_inline }}</p>
+</section>
+
+{# ── 2 · Severity ─────────────────────────────────────────────────────── #}
+{% set ns.n = ns.n + 1 %}
+<section>
+{% if not_assessable %}
+  {{ v2.sec_head(ns.n, "Severity & coverage") }}
+  {# The acceleration-only honesty block, verbatim. Added after a release
+     shipped "ISO Zone A" on known-faulted, acceleration-only machines. #}
+  <p><strong>What was assessed:</strong> fault detection from the spectral/envelope evidence{% if history_ran %}, plus the vibration trend over the reading history (unit-relative){% endif %}. Any findings above stand on that evidence alone.</p>
+  <p><strong>What was not assessed:</strong> ISO 20816 severity — the severity rating that places the machine in a vibration band. {{ not_assessable_reason | capitalize }}, and severity is a velocity judgement, so it is left unrated. A velocity measurement (mm/s RMS, per ISO 20816) is required to establish it — see <em>Recommended Follow-up Measurements</em>.</p>
+  {{ v2.zone_strip(iso, marked=false) }}
+  {% if iso and iso.th_ab is not none %}
+  <p class="gfx-cap">ISO zone boundaries for this machine{% if iso.threshold_note %} ({{ iso.threshold_note }}){% endif %}. <b>No value is marked</b> — severity was not assessable on this reading, so the scale is shown without a position on it.</p>
+  {% endif %}
+{% else %}
+  {{ v2.sec_head(ns.n, "Severity", iso.threshold_note if iso and iso.threshold_note else "") }}
+  {{ v2.zone_strip(iso, marked=not no_diagnosis) }}
+  {% if insufficient %}
+  {% if iso and iso.th_ab is not none %}
+  <p class="gfx-cap">ISO zone boundaries for this machine{% if iso.threshold_note %} ({{ iso.threshold_note }}){% endif %}. <b>No value is marked</b> — the reading did not pass the data-quality gate, so it is not placed on this scale. The measured figure is in the Machine Details table.</p>
+  {% endif %}
+  {% elif iso and iso.th_ab is not none and iso.severity_rms is not none %}
+  <p class="gfx-cap">Overall vibration <b>{{ "%.2f"|format(iso.severity_rms) }} mm/s</b>, marked at its measured position on {% if custom_basis %}the machine-specific limits scale{% else %}this machine's ISO zone scale{% endif %}.{% if iso.margin_to_next_boundary is not none and next_zone %} Computed margin to the next boundary: <b>{{ "%.2f"|format(iso.margin_to_next_boundary) }} mm/s</b> below the {{ iso.iso_zone }}&#8201;→&#8201;{{ next_zone }} boundary at {{ "%g"|format(next_boundary) }} mm/s.{% endif %}</p>
+  {% endif %}
+  {% if iso and not no_diagnosis %}
+  <div class="axes"><span class="muted">Per-axis velocity</span>
+    {% for ax in ("x", "y", "z") %}
+    {% set v = iso["%s_vel_mms"|format(ax)] %}
+    {% if v is not none %}<span>{{ ax | upper }} <b>{{ "%.2f"|format(v) }}</b> mm/s</span>{% endif %}
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endif %}
+  {{ iso_gate_crossref }}
+</section>
+
+{# ── 3 · Diagnosis ────────────────────────────────────────────────────── #}
+{% set ns.n = ns.n + 1 %}
+<section>
+{% if insufficient %}
+  {{ v2.sec_head(ns.n, "Diagnosis") }}
+  <div class="finding">
+    <header><h3>Insufficient data — no diagnosis made.</h3></header>
+    <p>The reading did not pass quality checks, so no fault assessment is possible. See <em>Recommended Follow-up Measurements</em> for exactly what to collect next.</p>
+  </div>
+{% elif analysis_failed %}
+  {{ v2.sec_head(ns.n, "Diagnosis") }}
+  <div class="finding">
+    <header><h3>Analysis failed — no diagnosis made.</h3></header>
+    <p>The fault screen did not complete on this reading, so no fault family was assessed and nothing was ruled out. The measurement itself passed the data-quality checks: this is a failure of the analysis, not of the data. Re-submit the reading. <b>The absence of findings below is not evidence that this machine is healthy.</b></p>
+  </div>
+{% elif no_findings and unmatched_periodicity %}
+  {{ v2.sec_head(ns.n, "Diagnosis") }}
+  <div class="finding">
+    <header><h3>Committed diagnosis: none — but this reading is not clear.</h3></header>
+    <p>No fault signature matched, and no bearing geometry was supplied — so bearing fault frequencies could not be computed and the bearing screen never ran.</p>
+    <p>{{ unmatched_periodicity.sentence | md_inline }}</p>
+    <p>That periodicity is at no shaft order this analysis models. Something in the machine is repeating at a rate this reading cannot name, and naming it needs the bearing model number, not another measurement. The following WERE screened and came back clear.</p>
+    <ul>{% for item in checked_for %}<li>{{ item | md_inline }}</li>{% endfor %}</ul>
+  </div>
+{% elif no_findings %}
+  {{ v2.sec_head(ns.n, "Diagnosis") }}
+  <div class="finding">
+    <header><h3>Committed diagnosis: none — parameters within normal range.</h3></header>
+    <p>No fault signature matched the evidence in this reading. This is a positive result, not an absence of analysis: the following were screened and came back clear.</p>
+    <ul>{% for item in checked_for %}<li>{{ item | md_inline }}</li>{% endfor %}</ul>
+  </div>
+{% else %}
+  {{ v2.sec_head(ns.n, "Finding & computed confidence") }}
+  {% for d in diagnosis %}{{ v2.finding_card(d) }}{% endfor %}
+  {{ v2.unexplained_peak(unmatched_periodicity) }}
+{% endif %}
+</section>
+
+{# ── 4 · Evidence ─────────────────────────────────────────────────────────
+   Rows are FILTERED, never fabricated: a finding with neither a computed nor an
+   observed frequency produces no row at all. #}
+{% if evidence_rows %}
+{% set ns.n = ns.n + 1 %}
+<section>
+  {{ v2.sec_head(ns.n, "Evidence") }}
+  {{ v2.evidence_table_body(evidence_rows) }}
+  {{ evidence_graphics }}
+</section>
+{% endif %}
+
+{# Session REPORT-3 (item 8) — Evidence per measurement point, in roster order.
+   Renders nothing on a single-location report, which is every job until
+   INTAKE-2 lands the intake that produces a roster. #}
+{% if locations %}
+{% set ns.n = ns.n + 1 %}
+{{ v2.location_evidence(ns.n, locations) }}
+{% endif %}
+
+{# ── 5 · Also considered — the differential ───────────────────────────────
+   The adjudication travels WHOLE. The ratio arithmetic inside it is the
+   argument, so truncating it to "Downgraded on amplitude" is a contract breach,
+   not an abbreviation. #}
+{% if not no_diagnosis %}
+{% set ns.n = ns.n + 1 %}
+<section>
+  {{ v2.sec_head(ns.n, "Also considered — differential") }}
+  {% if differential %}
+  <p class="muted">Also considered:</p>
+  <div class="diff">
+    {% for c in differential %}
+    <div class="tag">Suppressed</div>
+    <div class="body"><b>{{ c.label | md_inline }}</b> <span class="muted">({{ c.confidence }} confidence)</span> — {{ c.adjudication | md_inline }}</div>
+    {% endfor %}
+  </div>
+  {% else %}
+  {{ v2.absent("Differential empty",
+               "No competing fault was raised and set aside on this reading. The committed call above had no adjudicated alternative.") }}
+  {% endif %}
+</section>
+{% endif %}
+
+{% if damage_stage and damage_stage.fault %}{% set ns.n = ns.n + 1 %}{% endif %}
+{{ v2.damage_stage_section(ns.n, damage_stage, stage_graphic) }}
+
+{% if charts and charts.has_channel_figures %}{% set ns.n = ns.n + 1 %}{% endif %}
+{{ v2.spectral_section(ns.n, charts) }}
+
+{# ── 8 · Trend ────────────────────────────────────────────────────────── #}
+{% set ns.n = ns.n + 1 %}
+<section>
+  {{ v2.sec_head(ns.n, "Trend") }}
+{% if trend %}
+  {% if not_assessable %}
+  <p>Status: <strong>{{ trend.status }}</strong>, severity <strong>unrated (ISO severity requires velocity data)</strong> over {{ trend.n_days }} days.</p>
+  {% if trend.baseline_avg is not none %}
+  <p>Baseline (first 7 days) {{ trend.baseline_avg }} → current (last 7 days) {{ trend.current_avg }} ({{ "%+.1f"|format(trend.pct_change) }}%), in the reading's native units. {% if custom_basis %}Machine-specific alarm limit{% else %}ISO §6.5.2 alarm limit{% endif %} not applicable without velocity data.</p>
+  {% endif %}
+  <p><em>No forward ISO-boundary projection is offered without a velocity-based severity zone.</em></p>
+  {% else %}
+  <p>Status: <strong>{{ trend.status }}</strong>, severity <strong>{{ trend.severity }}</strong> over {{ trend.n_days }} days.</p>
+  {% if trend.baseline_avg is not none %}
+  <p>Baseline (first 7 days) {{ trend.baseline_avg }} mm/s → current (last 7 days) {{ trend.current_avg }} mm/s ({{ "%+.1f"|format(trend.pct_change) }}%). {% if custom_basis %}Machine-specific alarm limit{% else %}ISO §6.5.2 alarm limit{% endif %}: {{ trend.alarm_limit }} mm/s.</p>
+  {% endif %}
+  {# Three states, not two: a projection, a stated refusal, or NOTHING AT ALL.
+     A machine already in Zone D has no next boundary, and the report says
+     nothing rather than inventing one. #}
+  {% if trend.trend_note %}
+  <p><em>{{ trend.trend_note }}</em> — no forward projection is offered.</p>
+  {% elif trend.days_to_next_boundary is not none %}
+  <p>Projected ~{{ trend.days_to_next_boundary }} days to the next {% if custom_basis %}zone{% else %}ISO{% endif %} boundary at the current rate.</p>
+  {% endif %}
+  {% endif %}
+  {# Session HIST-1 — where the readings came from, when that changes what this
+     section may claim about them. Placed after the verdict and before the
+     figure: a reader meets the trend, then who supplied it. #}
+  {{ v2.history_provenance_note(history_provenance, custom_basis) }}
+  {% if charts and charts.trend %}
+  <figure><div class="plot"><img src="{{ charts.trend.rel_path }}" alt="{{ charts.trend.alt }}"></div></figure>
+  {% endif %}
+{% else %}
+  {{ v2.absent("No trend assessed",
+               "This analysis had no reading history, so no trend could be computed and no ISO-boundary projection is offered. A trend needs repeat readings on the same machine.") }}
+{% endif %}
+</section>
+
+{# ── Before / after comparison — Session HIST-2 ───────────────────────────
+   Additive and absent by default: `comparison` is None on every single-file
+   report, so the section renders nothing and consumes no section number. #}
+{% if comparison %}{% set ns.n = ns.n + 1 %}{% endif %}
+{{ v2.comparison_section(ns.n, comparison) }}
+
+{% if causes %}{% set ns.n = ns.n + 1 %}{% endif %}
+{{ v2.causes_section(ns.n, causes, cause_heading, cause_illustration) }}
+
+{# ── 10 · Recommended follow-up measurements ──────────────────────────── #}
+{% set ns.n = ns.n + 1 %}
+<section>
+  {{ v2.sec_head(ns.n, "Recommended follow-up measurements") }}
+{% if measurements %}
+  {% for m in measurements %}
+  <div class="rec">
+    <span class="chip {{ m.priority | lower }}">{{ m.priority }}</span>
+    <div><b>{{ m.technique | md_inline }}</b> — {{ m.purpose | md_inline }}<span class="trigger">Trigger: {{ m.trigger | md_inline }}</span></div>
+  </div>
+  {% endfor %}
+{% else %}
+  <p>None — the available data resolved the diagnosis without further measurement.</p>
+{% endif %}
+</section>
+
+{# ── 11 · Recommendations ─────────────────────────────────────────────── #}
+{% set ns.n = ns.n + 1 %}
+<section>
+  {{ v2.sec_head(ns.n, "Recommendations") }}
+{% if recommendations %}
+  <ol>{% for rec in recommendations %}<li>{{ rec | md_inline }}</li>{% endfor %}</ol>
+{% else %}
+  <p>No corrective action recommended at this time.</p>
+{% endif %}
+</section>
+
+{# ── 12 · Limitations ─────────────────────────────────────────────────── #}
+{% set ns.n = ns.n + 1 %}
+<section>
+  {{ v2.sec_head(ns.n, "Limitations & confidence notes") }}
+  <ul>
+  {% if limitations %}{% for note in limitations %}<li>{{ note | md_inline }}</li>{% endfor %}
+  {% else %}<li>None.</li>{% endif %}
+  </ul>
+</section>
+
+{# ── 13 · Coverage — Session REPORT-NA ────────────────────────────────────
+   What this analysis did NOT assess, one line per family with its reason
+   class. Deterministic on every path; the roster lives in report/generate.py,
+   keyed to FAULT_COVERAGE_2026-08-31.md §3. #}
+{% if coverage %}{% set ns.n = ns.n + 1 %}{% endif %}
+{{ v2.coverage_section(ns.n, coverage) }}
+
+{# ── 14 · Data quality ────────────────────────────────────────────────────
+   Verdict, then EVERY non-PASS check in full, then one line for the rest, then
+   the whole roster.
+
+   What may be summarised is ONLY `pass` and `not_applicable`. Every other
+   status appears above with its NAME, its STATUS and its REASON IN FULL. That
+   is not a convention here — tests/test_report_html.py computes it on every
+   fixture and fails if a non-PASS check is ever hidden, summarised, folded into
+   a count, or demoted into the roster. #}
+{% set ns.n = ns.n + 1 %}
+<section>
+  {{ v2.sec_head(ns.n, "Data quality") }}
+  <p class="verdict {{ gate.overall | lower }}"><b>Gate verdict: {{ gate.overall | upper }}.</b></p>
+{% if dq_notes %}
+  <p>The following checks require attention:</p>
+  <div class="attn-list">
+  {% for check in gate_attention %}
+    <div class="attn {{ check.status | lower }}">
+      <span class="st">{{ check.status | upper }}</span>
+      <div><b class="mono">{{ check.name }}</b><span>{{ (check.reason or "—") | md_inline }}</span></div>
+    </div>
+  {% endfor %}
+  </div>
+{% else %}
+  <p>All data-quality checks passed.</p>
+{% endif %}
+  <p class="muted quiet">{{ gate_counts }}</p>
+  {# A plain section, deliberately NOT a <details>. The prototype folded the
+     roster behind a disclosure and forced it open with a print rule; this
+     document is only ever rendered to PDF, where a disclosure cannot be
+     disclosed — it would either print open (a section with a pointless summary
+     line) or hide rows (a defect). See SESSION_V2WIRE.md. #}
+  <div class="roster">
+    <div class="roster-head">Full check roster — all {{ gate.checks | length }} checks</div>
+    <div class="scroll"><table>
+      <thead><tr><th>Check</th><th>Status</th><th>Reason</th></tr></thead>
+      <tbody>
+      {% for check in gate.checks %}
+        <tr class="{{ check.status | lower }}">
+          <td class="mono">{{ check.name }}</td>
+          <td class="mono">{{ check.status | upper }}</td>
+          <td>{{ (check.reason or "—") | md_inline }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+{% set ns.n = ns.n + 1 %}
+{{ v2.parameters_section(ns.n, machine_rows, analysis_parameters) }}
+
+{# Session REPORT-2: beside the parameters, as in the markdown twin. #}
+{% if fmax_adequacy %}
+{% set ns.n = ns.n + 1 %}
+{{ v2.fmax_adequacy_section(ns.n, fmax_adequacy) }}
+{% endif %}
+
+{{ v2.provenance_panel() }}
+{{ v2.signature_block() }}
+{{ v2.page_footer(deletion_footer) }}
+
+</main>
+</body>
+</html>

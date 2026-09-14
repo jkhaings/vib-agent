@@ -1,0 +1,120 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vib-agent"
+version = "0.1.0"
+description = "AI agent for vibration analysis of rotating machinery — deterministic analytics core, LLM report drafting"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Jason Khaings" }]
+license = { text = "All rights reserved" }
+classifiers = [
+    "Private :: Do Not Upload",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "anthropic>=0.40",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "scikit-learn>=1.3",
+    "pydantic>=2.5",
+    "jinja2>=3.1",
+    "typer>=0.12",
+    "pytest>=8.0",
+    # Session R2-BUILD. knowledge/causes.yaml is read on the REPORT path
+    # (vib_agent/knowledge/loader.py), so a report cannot render without a YAML
+    # parser. It has to be declared: PyYAML was reaching this venv only through
+    # `bandit`, i.e. as a side effect of the dev tooling being installed, so a
+    # runtime-only `pip install -e .` would have shipped a product that crashes
+    # on any bearing fault. Exactly the defusedxml case recorded under [web]
+    # below, found the same way and fixed the same way.
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# matplotlib renders the Session H evidence figures (report/charts.py, Agg
+# backend, no GUI toolkit). It sits in the PDF extra rather than the base
+# dependencies because a chart is only ever consumed through a rendered report:
+# render_charts() returns an empty ChartSet when matplotlib is absent and the
+# report falls back to its pre-Session-H text-only form.
+pdf = ["weasyprint>=60", "markdown>=3.5", "matplotlib>=3.8"]
+web = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "python-multipart>=0.0.9",
+    "openpyxl>=3.1",
+    "pyuff>=2.4",
+    "httpx>=0.27",
+    # openpyxl switches its XML parsing to defusedxml when this is importable
+    # (openpyxl.xml.DEFUSEDXML), which is what protects an untrusted .xlsx upload
+    # from XXE / entity-expansion bombs. openpyxl does NOT depend on it, so it must
+    # be declared here: until this line existed it arrived only transitively (via
+    # pip-audit's py-serializable), i.e. the upload path's XML hardening was a side
+    # effect of the dev tooling being installed, and a runtime-only install would have
+    # silently lost it. Pinned by tests/test_webapp_security.py.
+    "defusedxml>=0.7.1",
+]
+# Tooling not needed at runtime: the supply-chain audit (v6-A) and `requests`,
+# which the live-URL scripts (scripts/run_part_c_*.py, scripts/prod_smoke.py) use.
+#
+# SEC-1 adds pre-commit, which drives the gitleaks secret scan declared in
+# .pre-commit-config.yaml. It is the ONLY line of this session that changes what
+# a deploy installs — deploy/deploy.sh installs this extra — so it is named here
+# rather than left to be discovered: it adds a dev tool to the server's install
+# set and nothing to the running service.
+#
+# gitleaks itself is deliberately absent. It is a Go binary, not a PyPI package;
+# the operator installs it with `brew install gitleaks` (docs/SECURITY.md), and
+# .github/workflows/security.yml downloads a pinned, checksum-verified release
+# rather than trusting whatever a package index would resolve.
+dev = [
+    "pip-audit>=2.7",
+    "pre-commit>=3.7",
+    "requests>=2.32",
+]
+
+[project.scripts]
+vib = "vib_agent.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# Session V2-WIRE. Data files inside the packages, declared EXPLICITLY.
+#
+# Nothing here was declared before, so a wheel built from this project shipped
+# the Jinja templates only by whatever setuptools happened to pick up. That was
+# survivable while the report was text; it stops being survivable once the
+# document's stylesheet and its illustrations are data files too, because a
+# missing asset degrades silently — to a report with no figures rather than to
+# an error anyone would notice.
+#
+# NOTE, and it is not fixed here: `knowledge/causes.yaml` still lives at the
+# REPO ROOT and is resolved with `parents[3]` (knowledge/loader.py:52), so the
+# product already requires a git checkout rather than an installed wheel. These
+# entries do not change that; they make the report package's own data correct
+# on both paths.
+[tool.setuptools.package-data]
+"vib_agent.report" = [
+    "templates/*.j2",
+    "report.css",
+    "assets/causes/*.svg",
+    "assets/causes/INDEX.md",
+]
+"vib_agent.webapp" = [
+    "static/*.html",
+    "static/*.css",
+    "static/*.js",
+    "static/*.csv",
+    "static/*.xlsx",
+    # The report's stylesheet references these by absolute path at render time:
+    # the site self-hosts IBM Plex so that no visitor IP reaches a font CDN, and
+    # the PDF uses the same files rather than carrying a second copy.
+    "static/fonts/*.woff2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

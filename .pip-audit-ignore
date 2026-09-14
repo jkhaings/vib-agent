@@ -1,0 +1,38 @@
+# Accepted dependency vulnerabilities — SEC-1.
+#
+# pip-audit has no native ignore-file format, so this file IS the format.
+# .github/workflows/security.yml reads it in both audit steps: comments and
+# blank lines are stripped, and the first token of each remaining line becomes
+# one `--ignore-vuln <ID>` argument.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# An entry here silences a real, published vulnerability. It is not a to-do
+# list and it is not a place to park a red build. Every entry MUST carry all
+# five fields below, on the comment lines directly above it:
+#
+#   Package     name==version, exactly as pip-audit printed it
+#   Why         why this vulnerability is not reachable in THIS product —
+#               a named import path or the absence of one, not "low severity"
+#   Fix         the version that fixes it, and why we are not simply taking it
+#   Accepted    who accepted it, and on what date
+#   Review by   a date. An exception with no expiry is a permanent hole.
+#
+# Format (the ID must be the first token on the line):
+#
+#   # Package:   somepkg==1.2.3
+#   # Why:       the vulnerable code path is <module>.<func>; nothing under
+#   #            src/vib_agent/ imports it — grep confirms test-only use.
+#   # Fix:       1.2.4, blocked on <reason>.
+#   # Accepted:  <name>, 2026-09-05
+#   # Review by: 2026-12-05
+#   GHSA-xxxx-xxxx-xxxx
+#
+# Prefer, in order: upgrade the package; drop the dependency; then, only if
+# neither is possible, add it here. An accepted exception that outlives its
+# review date should be re-argued, not renewed by inertia.
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# NO ENTRIES. The file ships empty of exceptions deliberately — a pre-populated
+# ignore list is a set of holes nobody argued for. See outputs/SESSION_SEC1.md
+# for the one finding this session surfaced (pypdf in constraints.txt) and the
+# reason it was fixed at the pin rather than silenced here.

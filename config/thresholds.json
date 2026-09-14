@@ -1,0 +1,164 @@
+{
+  "_comment": "Tunable thresholds, structured as profiles so the same pdm_core functions can later run against a different data-source profile (e.g. periodic route data) without a schema change. 'streaming' carries the reference pipeline's validated constants verbatim (reference/flows.json). 'route' is for periodic/route-collected and benchmark data (Phase 3.5: CWRU).",
+  "active_profile": "streaming",
+  "_integrity_rule": "profiles.streaming is FROZEN — production-validated by the live NCD pipeline; benchmark/calibration work must never modify it. profiles.route may ONLY be tuned on this whitelist: rca.tolerance_pct, envelope band edges (config/cwru.json, not here), spectrum peak-pick prominence/height, confidence-rubric amplitude factors, quality_gate spectrum-check thresholds. Every route value that diverges from streaming must carry an inline _rationale. Detector/interaction-rule/bearing-formula/orchestration logic is shared and sacred — changes there are a written diff for review, never a silent tuning-to-pass.",
+  "profiles": {
+    "streaming": {
+      "validation_status": "production-validated (live NCD pipeline)",
+      "zscore": {
+        "watch": 2.5,
+        "flag": 3.5,
+        "min_readings": 30,
+        "window_cap": 720,
+        "half_life_days": 30
+      },
+      "isolation_forest": {
+        "_verify": true,
+        "_comment": "Not present in reference/flows.json (Layer 3 lives in an external FastAPI sidecar, not yet ported). Placeholder values only; pdm_core.anomaly currently stubs this layer to 'not_enough_history' regardless of these values.",
+        "min_history_samples": 30,
+        "contamination": 0.05,
+        "n_estimators": 100,
+        "random_state": 42
+      },
+      "trend": {
+        "min_days": 14,
+        "baseline_window_days": 7,
+        "current_window_days": 7,
+        "iso_alarm_factor": 0.25,
+        "sigma_warn": 3.0,
+        "sigma_info": 2.0,
+        "min_r_squared": 0.7,
+        "_r_squared_note": "min_r_squared and the days-to-boundary projection are additive extras not present in the reference pipeline; they never override the reference's baseline/current-window severity verdict."
+      },
+      "rca": {
+        "tolerance_pct": 5.0,
+        "min_rpm": 30,
+        "axial_radial_ratio_trigger": 0.5,
+        "axial_radial_ratio_strong": 1.0
+      },
+      "confidence": {
+        "_verify": true,
+        "_comment": "Deterministic confidence rubric (Phase 3). Each detector emits signed ConfidenceFactors; their deltas sum to a score, banded into high/medium/low. Tuned so a clean bearing match (tight freq match + a harmonic + rank-1/axis-consistent) scores high, and a lone marginal peak (loose match, no harmonic, near noise floor) scores low. No percentages exposed — ordinal only in v1.",
+        "weights": {
+          "base": 1.0,
+          "rank_one": 1.0,
+          "peak_match_tight": 1.0,
+          "harmonic_each": 1.0,
+          "sidebands_present": 1.0,
+          "axis_pattern_consistent": 0.5,
+          "trend_corroborates": 0.5,
+          "amplitude_marginal": -2.0,
+          "gate_warnings_present": -0.5,
+          "interaction_downgrade": -3.0
+        },
+        "bands": {
+          "high": 3.0,
+          "medium": 1.5
+        },
+        "peak_match_tight_pct": 1.5,
+        "harmonic_cap": 3,
+        "amplitude_marginal_ratio": 0.05
+      },
+      "quality_gate": {
+        "min_running_g": 0.010,
+        "rpm_tolerance_pct": 10,
+        "startup_transient_count": 2,
+        "startup_window_min": 15,
+        "_spectrum_checks_verify": true,
+        "min_spectrum_variance": 1e-12,
+        "clipping_repeat_max_count": 5,
+        "ski_slope_low_freq_energy_ratio": 0.5,
+        "ski_slope_low_freq_band_hz": 5.0,
+        "speed_peak_tolerance_pct": 5.0,
+        "rms_sane_min_mm_s": 0.01,
+        "rms_sane_max_mm_s": 100.0
+      }
+    },
+    "route": {
+      "_comment": "Periodic/route-collected and benchmark data (Phase 3.5: CWRU Bearing Data Center). A structural clone of 'streaming' — every pdm_core function indexes these sections directly (thresholds['rca'], thresholds['confidence'], etc.), so route cannot be sparse. Values are identical to streaming except where a whitelisted, rationale-carrying change is documented below. See _integrity_rule at the top of this file.",
+      "validation_status": "unvalidated — seeded from streaming, CWRU calibration pending",
+      "zscore": {
+        "watch": 2.5,
+        "flag": 3.5,
+        "min_readings": 30,
+        "window_cap": 720,
+        "half_life_days": 30
+      },
+      "isolation_forest": {
+        "_verify": true,
+        "min_history_samples": 30,
+        "contamination": 0.05,
+        "n_estimators": 100,
+        "random_state": 42
+      },
+      "trend": {
+        "min_days": 14,
+        "baseline_window_days": 7,
+        "current_window_days": 7,
+        "iso_alarm_factor": 0.25,
+        "sigma_warn": 3.0,
+        "sigma_info": 2.0,
+        "min_r_squared": 0.7
+      },
+      "rca": {
+        "tolerance_pct": 3.0,
+        "_rationale_tolerance_pct": "Tighter than streaming's 5% (whitelisted tunable). CWRU RCA runs on full envelope spectra (fine frequency resolution, 0-500Hz/2048-point FFT) rather than the NCD sensor's coarse onboard 3-peak-per-axis triplets, so a tighter match window is appropriate and was anticipated in the Phase 3.5 plan before any data run. Calibrated on the 12-file starter set only, then frozen for the full-set pass-bar measurement (see outputs/cwru_results.md).",
+        "_status_spectrum_peak_selection": "NOT YET CALIBRATED — reverted to safe defaults (peaks_from_spectrum's own cap=3/prominence=None) pending review. See _rationale below for the rejected attempt and the proposed next hypothesis.",
+        "_rationale_spectrum_peak_selection": "ATTEMPTED on the 12-file starter set after the OR014@6_0 miss (0/8 -> 7/8 IR/OR), REVERTED after a regression check: absolute prominence=0.0005 + cap=50 fixed OR014@6_0 (BPFO-adjacent peak, amp=0.00342, prominence=0.00329, rank 41/1673) with zero false positives on both Normal files (worst coincidental candidate near any of BPFO/BPFI/BSF/FTF: prominence <=0.00019, confirmed clean at every threshold tested 0.0005-0.0029) -- BUT it also introduced a NEW false bearing_outer_race match on IR007_0 (previously a clean, correct bearing_inner_race-only match): a coincidental BPFO-window peak at 107.76Hz, amp=0.00325, survived at rank 50/50 -- the very edge of the widened cap. Root cause: an ABSOLUTE prominence/amplitude threshold cannot distinguish the two cases, because per-file overall spectrum scale varies by ~200x (OR014 max amplitude 0.009 vs IR007 max amplitude 0.18). Reframed as a fraction of each spectrum's own peak: OR014's true target is 37% of its file's max amplitude (0.00342/0.00924); IR007's false candidate is only 1.8% of ITS file's max (0.00325/0.18104) -- a >20x separation invisible to an absolute threshold. PROPOSED NEXT STEP (not implemented, requires review): a prominence expressed as a fraction of that axis's own peak amplitude, computed per-axis inside peaks_from_spectrum's loop rather than passed as one global absolute value across all axes/files -- this is a shared-code (bearing_rca.py) change beyond the diff already reviewed, so it was not applied without a further round of approval.",
+        "min_rpm": 30,
+        "axial_radial_ratio_trigger": 0.5,
+        "axial_radial_ratio_strong": 1.0,
+        "epsilon_sync": 2.0,
+        "floor_min": 12.73,
+        "misalignment_2x_1x_min": 0.30,
+        "misalignment_axial_radial_min": 0.50,
+        "_rationale_misalignment_gate": "Session R3-DIFF shaft-order differential gate (route-only; streaming carries no key -> gate OFF -> frozen/byte-identical). The misalignment family is TRIGGERED by the mere PRESENCE of 1x/2x across axes, which every rotating machine has; presence alone therefore cannot separate misalignment from imbalance, and before this gate a 1x-dominant trio with a 0.4 mm/s 2x committed severe_misalignment (prod test B2_blower: H 4.2 / V 3.1 / axial 0.9 mm/s, 2x/1x = 0.095, axial/radial = 0.21; ground truth textbook imbalance). The gate adds the AMPLITUDE question the trigger never asked. Misalignment commits only if (a) 2x/1x amplitude ratio on the DOMINANT RADIAL axis >= misalignment_2x_1x_min, or (b) axial/radial overall velocity ratio >= misalignment_axial_radial_min WITH 1x and 2x both present axially. Otherwise the family is demoted to the differential with its adjudication and, when the 1x radial line dominates, imbalance commits instead. VALUES ARE OPERATOR-RATIFIABLE, not corpus-derived: 0.30 and 0.50 are the standard route-analyst rules of thumb (a real misalignment 2x is a substantial fraction of 1x, not a tenth of it; a real angular signature puts half the radial energy or more onto the axial axis). misalignment_axial_radial_min deliberately equals axial_radial_ratio_trigger (0.50) - the same physical bar the angular sub-type branch already used - so branch (b) restates the existing constant rather than introducing a competing one.",
+        "_rationale_floor_gate_evidence": "Session R3-DIFF: floor_min now gates DIAGNOSTIC EVIDENCE as well as bearing commits. A peak below floor_min x the axis spectrum mean is excluded from the shaft-order harmonic sets, so it cannot appear in evidence text, in a confidence factor, or in a harmonic count. Same constant, same axis reference, and the SAME LINE report/charts.py already draws on every spectrum figure (_amplitude_floor_value) - a peak the figure shows below the floor is now one the prose cannot cite. B2_blower cited rank-3 peaks at 0.020 mm/s (4.5-12.4x the axis mean, all sub-floor) as higher harmonics (5x) to reach severe_misalignment. Applies to the ctx.harmonics sets ONLY, never to ctx.peaks: the bearing path keeps its own floor treatment (_amplitude_floor demotes a sub-floor bearing match to the differential at LOW rather than hiding it), and rank ordering stays computed over the full peak list.",
+        "one_x_severity_min_zone": "B",
+        "one_x_absolute_floor_mms": 2.8,
+        "_rationale_one_x_severity_gate": "Session PDMFIX 1x-family severity gate (route-only; streaming carries neither key -> gate unarmed -> frozen/byte-identical). THE DEFECT: detect_misalignment_family and detect_imbalance are triggered by the SHAPE of the shaft-order content and never asked how loud it is. On a healthy machine the rank-1 peak is always 1x, so some 1x pattern always matches. Two live prod reproductions (Aug 27 walkthrough): a healthy single-channel upload committed rotor imbalance at HIGH and advised field balancing on a machine reading 1.25 mm/s in Zone A; a healthy trio (all axes ~0.6 mm/s, axial/radial 0.82) committed angular misalignment via the 0.5-1.0 'moderate angular' band. The FP sweep (scratchpad/fp_sweep/baseline.md) measured the disease: 24 of 28 ISO Zone-A cells committed a 1x-family fault, and every severity column of the 84-cell grid was IDENTICAL -- severity had no influence whatsoever. THE RULE: a 1x-family candidate commits only if the axis the DETECTOR ITSELF argued from (FaultMatch.axis -- the radial line for imbalance, the axial line for the angular/bent-shaft branch, the 2x-dominant radial for parallel) is at least one_x_severity_min_zone on THAT MACHINE'S OWN resolved boundaries, OR clears one_x_absolute_floor_mms. VALUES ARE OPERATOR-RATIFIED, not corpus-derived. 'B' is a zone LETTER, not a number: the bar is whatever iso_classify.resolve_thresholds returns for this machine (machine override > factory default > ISO table), so no ISO boundary is hardcoded in a detector or in this file. 2.8 mm/s only ever LOOSENS the gate, never tightens it -- it exists for machines whose own A/B boundary is high (ISO group 1 / flexible mounts, ab up to 3.5), where a 2.8 mm/s 1x line is Zone A by class but objectively worth raising; for every group-2 rigid machine (ab=1.4) it is inert, and it restates the existing 2_rigid bc boundary rather than introducing a competing constant (same move as misalignment_axial_radial_min restating axial_radial_ratio_trigger). BEARING TONES ARE NOT GATED, by ruling: a discrete BPFO at Zone A is early detection working as designed, so this gate never touches detect_bearing_faults. Gated candidates are DROPPED, not demoted to the differential -- a quiet machine is a resolved answer, not an unresolved ambiguity, and an 'Also considered: imbalance' line plus a high-priority phase-analysis recommendation on every Zone-A report would re-create the false alarm in a new costume.",
+        "imbalance_radial_dominance": 7.5,
+        "imbalance_1x_dominance": 1.0,
+        "_rationale_imbalance_gate": "Session B (J3) two-condition imbalance gate — the reviewer-bounded B5 redesign (route-only; streaming keeps the strict pre-B5 gate 'has_1x_radial and not has_1x_axial' -> frozen/byte-identical). Imbalance fires only when BOTH: (1) radial velocity dominance v_radial_max/v_axial (=1/axial_radial_ratio) >= imbalance_radial_dominance, AND (2) intra-radial 1x dominance — the strongest 1x radial peak leads the strongest higher-harmonic (2x/3x/4x/5x) radial peak by >= imbalance_1x_dominance (amplitude when present; peak RANK for amplitude-less NCD triplets, so 1.0 <=> 1x not out-ranked by any higher harmonic). BOTH constants derived from the reference FIXTURES only: T07 imbalance must fire; T05/T06/T08/T10/T15 must stay silent. Margins: r_dom window is (max-silent 3.33, T07 17.0] -> geometric mean 7.5 (T07 fires with 2.27x headroom; T15, the loudest silent case, is 2.25x below). T10 parallel-misalignment (radial dominance 11.60, ABOVE r_dom) is held silent by condition (2): its radial 2x line (60Hz) is rank-1, out-ranking the 1x (rank-2), so 1x does not dominate -> the misalignment-vs-imbalance separator. d_1x=1.0 is the physics default (imbalance = 1x is the dominant radial line). Two-condition gate reproduces the strict gate byte-identically on ALL reference fixtures; its only behavioral changes are (a) removing MAFAULDA normal 44.6464's false imbalance on tune (dominance <r_dom), and (b) making holdout imbalance with axial cross-talk reachable (verified only at the single holdout touch). See outputs/session_b_results.md J3 section.",
+        "_rationale_floor_min": "Session B (B4) amplitude-floor constant — a committed bearing match must stand out from the broadband floor: matched-peak amplitude / axis-spectrum MEAN >= floor_min, else it is demoted to the differential at LOW (resolving high-resolution envelope capture emitted via recommendations). Route-only (streaming has no key -> floor OFF -> frozen). DISTINCT from the confidence 'amplitude_marginal' factor (soft, keyed on max-of-top-N peaks); this is a hard commit gate keyed on the spectrum MEAN. Value 12.73 = geometric mean of the SEPARABLE reject/keep boundary on the TUNE set: baseline_3's near-noise-floor FP (peak/mean = 6.14) and the lowest true-positive peak/mean (MFPT inner_vload_6 = 26.39) -> sqrt(6.14*26.39) = 12.73. Clears baseline_3 with a 2.07x margin and keeps every true positive with a 2.07x margin (symmetric, holdout-safe). CWRU scored rows (all Normal + all IR/OR) are byte-identical; the only CWRU change is one BALL-fault REC row (B007_3), whose SPURIOUS inner-race match (wrong fault on a ball file, peak/mean 12.51) is correctly demoted near the floor -- not a true positive, not scored. OR014's coincidental 14.3/14.7 survive (>12.73); every correct-fault CWRU ratio is >=26 (nearest 44.9). DEVIATION from 'geo-mean over ALL normal-file FPs': the 3 residual MAFAULDA inner FPs (peak/mean 16.4-25.6) are NOT noise-floor — they are prominent near-5x shaft harmonics (4.94-5.10x = 1.04-1.91% off 5x, just outside B3's frozen 1% guard) and are amplitude-INSEPARABLE from genuine faults (max-false 25.56 vs min-true 26.39). Forcing the floor to catch them (geo-mean 25.97) would sit 1.6% below a true positive and endanger the MFPT real-world holdout (same rig) -- that is tuning-to-pass the tune set at the holdout's expense, which the calibration discipline forbids. Those 3 are a B3-boundary matter (widening epsilon_sync ~1->2-3% is the correct tool -- the nearest true positive is 5.60% off integer), flagged for review; the amplitude floor is not. See outputs/session_b_results.md B4 section.",
+        "_rationale_epsilon_sync": "Session B (B3, widened B3->J2) synchronous-collision guard constant — the reviewer-approved shared-detector logic change, NOT a tune-to-pass knob (streaming carries no epsilon_sync, so the guard is OFF there and streaming stays frozen/byte-identical). A matched bearing peak whose FUNDAMENTAL order is within this percent of an integer shaft order k (|order-k|/k, k<=6) is committed to the differential at LOW, not primary, because a bearing defect there is indistinguishable from shaft-order content; the resolving envelope/synchronous-average capture is emitted via recommendations. VALUE 2.0% (J2, widened from the initial 1.0%), verified on the TUNE set (matched-peak fundamental orders, not computed): MECHANICAL RATIONALE — it covers the observed integer-order collisions out to 1.91% with margin (MAFAULDA BPFO 3.000-3.017x = 0.000-0.556% off 3x; BPFI 4.939-5.096x = 0.142-1.913% off 5x — the 1.04-1.91% band is the 3 residual inner FPs the 1% guard missed, now caught), while the NEAREST tune true-positive FUNDAMENTAL is MFPT inner_vload at 4.720x = 5.60% off 5x, a 2.80x clearance above the 2% guard; every other TP fundamental is >=7.98% off its nearest integer. ZERO true-positive demotions at 2%. CRITICAL HARMONIC CAVEAT (why the guard checks the FUNDAMENTAL ONLY and must never check harmonics): a non-integer fundamental can have a near-integer harmonic — the 13 CWRU inner-race TPs sit at fundamental 5.40-5.41x (8.0-8.3% off 5x, safe) but their matched 2x harmonic lands at ~10.80-10.83x = 1.58-1.84% off 11x, INSIDE the 2% window; if the guard were extended to test harmonic orders it would wrongly demote all 13. _synchronous_collision keys strictly on match.freq_hz/shaft (the fundamental). baseline_3 (4.807x = 3.86% off) still correctly survives (B4's amplitude-floor target, not a collision). k capped at 6. See outputs/session_b_results.md J2 section for the full fundamental+harmonic margins table."
+      },
+      "confidence": {
+        "_verify": true,
+        "weights": {
+          "base": 1.0,
+          "rank_one": 1.0,
+          "peak_match_tight": 1.0,
+          "harmonic_each": 1.0,
+          "sidebands_present": 1.0,
+          "axis_pattern_consistent": 0.5,
+          "trend_corroborates": 0.5,
+          "amplitude_marginal": -2.0,
+          "gate_warnings_present": -0.5,
+          "interaction_downgrade": -3.0
+        },
+        "bands": {
+          "high": 3.0,
+          "medium": 1.5
+        },
+        "peak_match_tight_pct": 1.5,
+        "harmonic_cap": 3,
+        "amplitude_marginal_ratio": 0.05
+      },
+      "quality_gate": {
+        "min_running_g": 0.010,
+        "rpm_tolerance_pct": 10,
+        "startup_transient_count": 2,
+        "startup_window_min": 15,
+        "_spectrum_checks_verify": true,
+        "min_spectrum_variance": 1e-12,
+        "clipping_repeat_max_count": 5,
+        "ski_slope_low_freq_energy_ratio": 0.5,
+        "ski_slope_low_freq_band_hz": 5.0,
+        "speed_peak_tolerance_pct": 5.0,
+        "rms_sane_min_mm_s": 0.01,
+        "rms_sane_max_mm_s": 100.0
+      }
+    }
+  }
+}

@@ -1,0 +1,191 @@
+name: security
+
+# SEC-1. Two controls that ci.yml does not provide:
+#   secrets  — gitleaks over the FULL history, every push and every PR
+#   deps     — pip-audit, failing on known vulnerabilities
+#
+# A SEPARATE workflow file rather than two more jobs in ci.yml, because the
+# triggers genuinely differ. ci.yml runs `on: push: branches: [master,
+# evidence-reports]` — a secret pushed to any other branch would never be
+# scanned by it. This one has no branch filter: every push, every branch.
+#
+# Both jobs use ci.yml's capture pattern, and for the reason documented at
+# length there: a step with no `shell:` key runs under `bash -e {0}`, so an
+# unguarded failing command kills the shell before the postmortem prints,
+# producing a red X with no readable output. `set +e` keeps the shell alive;
+# the `grep -q "EXIT=0"` stays LAST so it is the step's verdict. Never through
+# a pipe — a pipeline reports the last command's status, so `cmd | tail` exits
+# 0 while cmd failed. That is a standing rule in CLAUDE.md and it has bitten
+# this repo twice.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # NOT optional. The default checkout is shallow, and gitleaks on a
+          # shallow clone scans one commit and then reports "no leaks found" —
+          # a confident green over history it never read. Every other line in
+          # this job is worthless without this one.
+          fetch-depth: 0
+
+      # A pinned release tarball verified against its published SHA256, rather
+      # than gitleaks/gitleaks-action@v2. Three reasons: ci.yml uses only
+      # first-party actions/* and this keeps that property; the action's v2
+      # licence is free for personal accounts but gated for organizations, a
+      # constraint that would bite the day this repo moves under one; and a
+      # checksum-verified binary is reproducible in a way a floating action tag
+      # is not.
+      #
+      # To upgrade: bump GITLEAKS_VERSION and replace GITLEAKS_SHA256 with the
+      # matching line from that release's gitleaks_<version>_checksums.txt.
+      # The version here is the one SEC-1's local full-history scan was run
+      # with, so CI and the operator's machine agree on the ruleset.
+      - name: Install gitleaks (pinned, checksum-verified)
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+          GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        run: |
+          set -euo pipefail
+          curl -sSfL --retry 3 -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          rm -f gitleaks.tar.gz gitleaks
+          gitleaks version
+
+      # `--log-opts=--all` scans every ref, not just the pushed branch's
+      # ancestry. Measured at SEC-1: without it the scan covers HEAD's history
+      # only, which on this repo left 4 commits on unmerged branches unread.
+      #
+      # `--redact` is more important here than locally. Without it a real leak
+      # is printed verbatim into a CI log that is retained and readable by
+      # anyone with repository access — turning the detector into a second copy
+      # of the secret. With it the log names the rule, the file and the line,
+      # which is everything needed to act.
+      - name: gitleaks — full history, all refs
+        run: |
+          set +e
+          gitleaks git . \
+            --no-banner --redact --verbose \
+            --config=.gitleaks.toml \
+            --log-opts="--all" \
+            > gitleaks.out 2>&1
+          echo "EXIT=$?" | tee gitleaks_exit.txt
+          tail -80 gitleaks.out
+          grep -q "EXIT=0" gitleaks_exit.txt
+
+      - name: Upload gitleaks log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gitleaks-log
+          path: gitleaks.out
+          if-no-files-found: warn
+
+  deps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          # Matches ci.yml and the deployment target (Ubuntu 24.04's
+          # python3-venv is 3.12).
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install the package
+        run: |
+          python -m pip install --upgrade pip
+          # Every extra, including [db] — which deploy.sh does NOT install —
+          # so that a vulnerability in a declared dependency is caught here
+          # even before the flag that activates it is flipped.
+          pip install -e ".[web,pdf,db,dev]"
+
+      # The accepted-exception list is read INSIDE each step, from the file, and
+      # never passed through a `${{ }}` expression. Interpolating repository
+      # content into a `run:` block is the standard GitHub Actions script
+      # injection vector; a shell array built in-step cannot be escaped out of.
+      #
+      # Audit 1 — the resolved environment: what a fresh install actually gets.
+      #
+      # No `--strict` here, and that is measured rather than assumed. This
+      # project's own distribution is installed editable and is not on PyPI, so
+      # `--strict` fails with "vib-agent: Dependency not found on PyPI and could
+      # not be audited", and `--strict --skip-editable` fails with "vib-agent:
+      # distribution marked as editable" — the two flags cannot both be
+      # satisfied by a project that does not publish itself. pip-audit still
+      # exits non-zero on any real vulnerability, which is what gates this step.
+      # The coverage `--strict` would have added is provided by audit 2 below,
+      # which runs over a file containing no editable entries.
+      - name: pip-audit — resolved environment
+        run: |
+          set +e
+          IGNORE=()
+          while IFS= read -r line; do
+            line="${line%%#*}"
+            line="$(echo "$line" | tr -d '[:space:]')"
+            [ -n "$line" ] && IGNORE+=(--ignore-vuln "$line")
+          done < .pip-audit-ignore
+          echo "accepted exceptions: ${#IGNORE[@]} entr(y|ies)"
+          pip-audit --skip-editable --progress-spinner=off "${IGNORE[@]}" \
+            > audit_env.out 2>&1
+          echo "EXIT=$?" | tee audit_env_exit.txt
+          tail -60 audit_env.out
+          grep -q "EXIT=0" audit_env_exit.txt
+
+      # Audit 2 — constraints.txt: the versions PRODUCTION actually resolves,
+      # since deploy/deploy.sh runs `pip install -c constraints.txt -e
+      # '.[web,pdf,dev]'`. Auditing only the environment above would miss a
+      # vulnerable PINNED version, which is the likelier production exposure of
+      # the two: the pin is what the server gets, and it does not move when
+      # PyPI does.
+      #
+      # `--strict` IS used here (constraints.txt is generated with
+      # --exclude-editable, so it holds no editable entry to trip over), which
+      # means a package whose advisories cannot be fetched fails the step
+      # instead of being silently skipped.
+      #
+      # `if: ${{ !cancelled() }}` so this runs even when the audit above failed
+      # — one run should report BOTH answers, not stop at the first.
+      - name: pip-audit — constraints.txt (what production installs)
+        if: ${{ !cancelled() }}
+        run: |
+          set +e
+          IGNORE=()
+          while IFS= read -r line; do
+            line="${line%%#*}"
+            line="$(echo "$line" | tr -d '[:space:]')"
+            [ -n "$line" ] && IGNORE+=(--ignore-vuln "$line")
+          done < .pip-audit-ignore
+          pip-audit --strict --no-deps --progress-spinner=off \
+            -r constraints.txt "${IGNORE[@]}" \
+            > audit_pins.out 2>&1
+          echo "EXIT=$?" | tee audit_pins_exit.txt
+          tail -60 audit_pins.out
+          grep -q "EXIT=0" audit_pins_exit.txt
+
+      - name: Upload audit logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pip-audit-logs
+          path: |
+            audit_env.out
+            audit_pins.out
+          if-no-files-found: warn

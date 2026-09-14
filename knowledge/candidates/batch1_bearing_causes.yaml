@@ -1,0 +1,1559 @@
+batch: batch1_bearing_causes
+description: >-
+  Session R2-B0, review edits applied in R2-B0.1, citation-check findings applied in
+  R2-B0.2 against knowledge/review/batch1_citecheck.md. Cause candidates for the three
+  bearing fault families the detectors commit (outer race / inner race / rolling element),
+  distilled from SKF #01 as primary, corroborated against Timken #02, FAG #03 (/2 ED),
+  the Noria wear-mode skeleton #04, and NASA #43 Table 4-5. Mechanisms are written in our
+  own words from the cited locators; no source table is reproduced. Under schema v1.2
+  every observation carries either its own citation or inferred:true - R2-CITECHECK read
+  all 71 checks against the pages and found that 15 of 16 vibration/oil/thermal
+  observations had no support on any cited page, because #01/#02/#04 are dismounted-bearing
+  VISUAL damage atlases. Those observations are now marked, not dressed. NOTHING HERE IS
+  PRODUCT KNOWLEDGE. Approval is entry by entry with the operator; causes.yaml does not
+  exist yet and nothing merges this session.
+status: awaiting_operator_review
+
+entries:
+
+  # ── outer race ────────────────────────────────────────────────────────
+  - cause_id: outer_race_contamination_abrasive_wear
+    fault_family: [bearing_outer_race, bearing_inner_race]
+    extends_families: >-
+      EXTENSION. #02 p.7 describes foreign-particle contamination as acting
+      across bearing types rather than on one ring, #04 pp.5-6 states three-body
+      abrasion in component-agnostic terms, and #01 pp.66-67 illustrates it on
+      both inner and outer rings. Contaminant that circulates reaches both.
+    stage: any
+    cause: Solid contaminant ingress past a failed or inadequate seal
+    mechanism: >-
+      Hard particles of roughly the oil-film thickness enter the rolling
+      contact and abrade the raceway, roughening a surface whose whole function
+      is to stay smooth. The roughened track then loses its lubricant film
+      locally, so abrasive wear develops into surface distress and eventually
+      spalling.
+    discriminating_evidence:
+      - observation: >-
+          A matt, dulled or lapped-in raceway track rather than a discrete pit,
+          with parallel furrows in the direction of motion where the particles
+          are coarser than the lubricant film.
+        stream: visual
+        how_to_collect: Dismounted inspection of the raceway under low magnification, in raking light.
+        citations:
+          - doc: "#04"
+            locator: "Abrasive Wear, pp.5-6"
+            note: >-
+              Fine particles polish to a satiny, matte or lapped-in appearance; particles
+              larger than the film thickness scratch, plough or gouge parallel furrows in
+              the direction of motion, described as like rough sanding.
+          - doc: "#01"
+            locator: "§5 Damage and actions, Abrasive wear, p.66"
+            note: >-
+              A contamination-worn raceway track described as showing a narrower load
+              pattern with a matt appearance.
+      - observation: >-
+          Wear spread around the circumference of the stationary ring rather than
+          concentrated in one arc. Weak on its own, and arguably contradicted by
+          our own source - #01 p.67 shows a STATIONARY inner ring carrying two
+          localised wear zones - so distribution does not separate contamination
+          from creep.
+        stream: visual
+        inferred: true
+        how_to_collect: Map the wear extent against the recorded ring orientation before cleaning.
+      - observation: >-
+          Rising ferrous particle counts and cutting/abrasive particle
+          morphology in the lubricant before any discrete defect tone appears.
+        stream: oil
+        inferred: true
+        how_to_collect: Oil sample from the return line or reservoir mid-level, with particle count and analytical ferrography.
+      - observation: >-
+          Broadband rise across the spectrum without a clean BPFO series, since
+          distributed roughening is not a single repeating impact.
+        stream: vibration
+        inferred: true
+        how_to_collect: Route-band velocity spectrum plus an enveloped acceleration measurement at the bearing housing.
+    typical_actions:
+      - Verify the sealing arrangement suits the actual environment, and restore it before replacing the bearing.
+      - Improve filtration and confirm lubricant cleanliness at defined intervals rather than by schedule alone.
+      - Check housing and shaft fits, since a creeping ring generates its own debris.
+    citations:
+      - doc: "#01"
+        locator: "§5 Damage and actions, Abrasive wear, pp.66-67"
+        note: >-
+          Contamination leading to inadequate lubrication and abrasive wear of the raceway
+          tracks; the listed actions name sealing, lubricant quality and fits. Note that
+          every caption on this spread that names contamination as the cause shows an
+          INNER ring.
+      - doc: "#02"
+        locator: "Wear - Abrasive Contamination, p.7"
+        note: >-
+          Foreign particle contamination causes abrasive wear, bruising and circumferential
+          grooving across bearing types.
+      - doc: "#04"
+        locator: "Abrasive Wear, pp.5-6"
+        note: >-
+          Three-body abrasion when a hard particle near the film thickness is trapped
+          between surfaces in relative motion.
+    basis: triangulated
+
+  - cause_id: outer_race_inadequate_lubricant_film
+    fault_family: [bearing_outer_race, bearing_inner_race]
+    extends_families: >-
+      EXTENSION. #01 pp.64-65 shows inadequate-film surface distress on a tapered
+      roller OUTER ring, a cylindrical roller OUTER ring and a tapered roller
+      INNER ring in the same section; #02 pp.10-11 describes the four levels
+      without naming a ring.
+    stage: any
+    cause: Lubricant film too thin to separate the rolling contact
+    mechanism: >-
+      When the film thins to a boundary or mixed regime the asperities touch,
+      and repeated contact raises microcracks at the surface rather than below
+      it. Those cracks propagate into micropitting and then spalling, so the
+      damage is surface-initiated rather than a material-life limit.
+    discriminating_evidence:
+      - observation: >-
+          Bearing temperature climbing and failing to settle at a steady state
+          in stationary operation. #03 reports temperature as the reliable
+          indicator of a lubricant-supply fault and, in its own stopped-lubrication
+          test, the shock value as the less sensitive of the two; that is a claim
+          about that comparison, not a general ranking of thermal over vibration.
+        stream: thermal
+        how_to_collect: Thermocouple at the bearing housing, trended over a run-up to steady state rather than spot-read.
+        citations:
+          - doc: "#03"
+            locator: "§1.2.1 Wide-spread damage, PDF p.6 = printed p.5 (/2 ED)"
+            note: >-
+              Normal temperature behaviour is given as reaching a steady state in stationary
+              operation; disturbed behaviour includes a sudden rise caused by lack of
+              lubricant. Fig. 7 on PDF p.7 charts temperature against shock value when
+              lubrication is stopped.
+          - doc: "#03"
+            locator: "§1.3 Urgency of bearing exchange, PDF p.8 = printed p.7 (/2 ED)"
+            note: >-
+              A fault in the lubricant supply can be reliably spotted by a temperature
+              sensor, and the shock value is far less sensitive than the temperature sensor.
+      - observation: >-
+          Dull, lustreless or frosted raceway over a broad area rather than a
+          discrete pit, sometimes with heat discolouration.
+        stream: visual
+        how_to_collect: Dismounted inspection; note discolouration separately from wear.
+        citations:
+          - doc: "#01"
+            locator: "§4 ISO failure modes classification, Surface initiated fatigue, p.44"
+            note: >-
+              Microspalls only a few microns across, with the surface simply looking dull
+              and grey and the cracks visible only under a microscope.
+          - doc: "#01"
+            locator: "§8 Appendices, glossary entry Frosting, p.100"
+            note: >-
+              Frosting defined as the dull lustreless appearance of a raceway resulting from
+              inadequate lubrication.
+          - doc: "#02"
+            locator: "Inadequate Lubrication, Level 1 - Discoloration, p.10"
+            note: >-
+              High temperatures discolour the races and the roller; Fig. 17 is captioned as
+              discoloration due to elevated operating temperatures.
+      - observation: >-
+          Abraded matter measurable in the lubricant, which #03 lists as a lab
+          route to bearing condition alongside temperature and vibration.
+        stream: oil
+        how_to_collect: Oil sample sent for wear-debris measurement, kept as a trend rather than a single reading.
+        citations:
+          - doc: "#03"
+            locator: "§1.2.1, Measuring abraded matter in lubricant, PDF p.6 = printed p.5 (/2 ED)"
+            note: >-
+              Lists measurement of abraded matter in the lubricant as one of the monitoring
+              routes to bearing condition.
+      - observation: >-
+          Viscosity out of grade, or additive depletion, in the lubricant
+          serving that bearing.
+        stream: oil
+        inferred: true
+        how_to_collect: Oil sample with viscosity at 40 C and an additive-element scan.
+    typical_actions:
+      - Confirm the lubricant grade, quantity and interval against the actual load, speed and temperature rather than the original specification.
+      - Improve the surface-separation capability of the lubricant before assuming the bearing is at end of life.
+      - Add or trend a bearing-housing temperature measurement, which #03 reports as the reliable route to lubrication state.
+    citations:
+      - doc: "#01"
+        locator: "§5 Damage and actions, Surface initiated fatigue, pp.64-65"
+        note: >-
+          A tapered roller bearing OUTER ring on p.64 and a cylindrical roller bearing
+          OUTER ring on p.65 are attributed to an inadequate lubricant film. The spherical
+          roller outer ring on the same p.64 plate is attributed to abrasive wear from
+          contamination that developed into surface distress, not to film thickness.
+      - doc: "#02"
+        locator: "Inadequate Lubrication, pp.10-11"
+        note: >-
+          Four progressive severity levels for the bearing as a whole - discolouration,
+          scoring and peeling, excessive roller end heat, total lockup. Levels 3 and 4 are
+          roller-end and whole-bearing states, so the ladder is not outer-race staging.
+      - doc: "#03"
+        locator: "§1.3 Urgency of bearing exchange, PDF p.8 = printed p.7 (/2 ED)"
+        note: >-
+          Vibration methods detect fatigue damage well but are less suitable for observing
+          lubrication condition, where temperature measurement is reliable.
+    basis: triangulated
+    related: [inner_race_excessive_axial_load]
+    disagreement: >-
+      A tension worth carrying into the product rather than resolving here.
+      #02 p.6 reports that in about 90 percent of prematurely failed bearings
+      it examines the cause is a non-fatigue factor - contamination, corrosion,
+      inadequate lubrication, handling, running conditions - while #03 PDF p.8
+      says the vibration channel is best at detecting fatigue and comparatively
+      poor at lubrication state. If both hold, the channel this product reads is
+      the one least sensitive to the most common cause class, which argues for
+      routing a thermal or oil measurement rather than raising vibration
+      confidence.
+
+  - cause_id: outer_race_housing_fit_creep
+    fault_family: [bearing_outer_race]
+    stage: any
+    cause: Housing fit inadequate for the load condition, letting the outer ring creep
+    mechanism: >-
+      An outer ring that is not held firmly enough for the direction and
+      rotation of the load turns slowly in its housing instead of staying put.
+      The relative movement polishes and wears the outside surface and shifts
+      the load zone, so the raceway damage no longer sits where the applied load
+      says it should.
+    discriminating_evidence:
+      - observation: >-
+          Polishing wear, or adhesive wear marks, on the ring outside diameter -
+          damage outside the rolling contact entirely. The appearance is not fixed
+          to one wear mode, so an unmarked OD is the negative finding, not a
+          particular finish.
+        stream: visual
+        how_to_collect: Inspect the ring OD at dismounting, before cleaning it.
+        citations:
+          - doc: "#01"
+            locator: "§5 Damage and actions, Abrasive wear, p.67, bottom-left caption"
+            note: >-
+              Spherical roller bearing outer ring, ring creep in the housing from an
+              inadequate housing fit for the load condition, giving polishing wear on the
+              outside surface.
+          - doc: "#01"
+            locator: "§5 Damage and actions, Adhesive wear, p.68, top-right caption"
+            note: >-
+              The identical cause wording one page later with a different damage class -
+              adhesive wear marks on the outside surface of a spherical roller outer ring.
+      - observation: >-
+          Matching polishing or fretting on the HOUSING BORE itself, not only on
+          the ring.
+        stream: visual
+        inferred: true
+        how_to_collect: Inspect the housing bore at dismounting, before cleaning it.
+      - observation: >-
+          A load-zone mark that has migrated, or two wear zones on one OUTER ring,
+          rather than a single arc consistent with the applied load direction.
+          #01 documents that two-zone pattern for a creeping INNER ring; the
+          outer-ring analogue is ours.
+        stream: visual
+        inferred: true
+        how_to_collect: Record the ring orientation relative to the load before removal, then map the wear arc against it.
+      - observation: >-
+          Which ring rotates and whether the load is point or circumferential,
+          recorded as operating data before any diagnosis is attempted.
+        stream: history
+        how_to_collect: Machine records - rotating ring, load direction, whether load is constant, alternating or oscillating.
+        citations:
+          - doc: "#03"
+            locator: "§2.1 Determination of operating data, PDF p.10 = printed p.9 (/2 ED)"
+            note: >-
+              The operating-data checklist records point versus circumferential load and
+              which ring is rotating, and separately lists shaft seat and housing seat fits.
+              Determining operating data is placed first in the recommended sequence, ahead
+              of dismounting.
+      - observation: >-
+          A rotating outer ring load, or a history of shaft unbalance. #01 names
+          unbalance as a cause of outer-ring creep even where the fits were
+          originally correct, which gives this cause a machine-side antecedent the
+          vibration path can detect on its own.
+        stream: history
+        how_to_collect: Balance records and 1x amplitude history for the machine, alongside the seat measurements.
+        citations:
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution code 31, p.24"
+            note: >-
+              Outer ring creeps or turns in the housing seat, with two named reasons - a worn
+              or oversized seat, and an unbalanced load, where loads from a shaft that
+              becomes unbalanced can cause outer ring creep even if the fits were originally
+              correct.
+      - observation: >-
+          Rising broadband noise and vibration level with no matching change in the
+          fault-frequency evidence. #01 gives raised noise and vibration as a
+          consequence of ring creep, so this is a corroborating level symptom, not
+          a frequency signature.
+        stream: vibration
+        how_to_collect: Overall velocity trend at the bearing housing read against the enveloped acceleration spectrum from the same visit.
+        citations:
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution code 31, p.24"
+            note: >-
+              Outer ring creep in the housing seat is stated to lead to increased noise and
+              vibration levels as well as wear.
+    typical_actions:
+      - Measure the housing bore and ring OD against the fit specified for a circumferential rather than point load.
+      - Replace the housing or restore the seat; refitting a new bearing into a worn seat reproduces the failure.
+      - Where the machine has a shaft unbalance history, correct it as part of the repair rather than treating the fit alone.
+    citations:
+      - doc: "#01"
+        locator: "§2 Inspection and troubleshooting, Table 2 solution code 31, p.24"
+        note: >-
+          The condition named outright - outer ring creeps or turns in the housing seat -
+          with a worn or oversized seat and a rotating outer ring load from unbalance as its
+          two reasons, and increased noise and vibration levels as the consequence.
+      - doc: "#01"
+        locator: "§5 Damage and actions, Abrasive wear, p.67, bottom-left caption"
+        note: >-
+          The dismounted exemplar: outer ring creep in the housing from an inadequate housing
+          fit for the load condition, producing polishing wear on the outside surface.
+      - doc: "#03"
+        locator: "§2.1 Determination of operating data, PDF p.10 = printed p.9 (/2 ED)"
+        note: >-
+          The operating-data checklist calls for point versus circumferential load and which
+          ring rotates. It lists fits separately and does not itself state that the one
+          decides the other - that bridge is ours.
+    basis: triangulated
+    related: [inner_race_creep_on_shaft_seat]
+
+  - cause_id: outer_race_oval_clamping_overload
+    fault_family: [bearing_outer_race]
+    stage: any
+    cause: Housing distortion clamping the outer ring oval
+    mechanism: >-
+      A housing bored or bolted out of round squeezes the outer ring into an
+      oval, creating two diametrically opposed high-load regions where the
+      design intended one. Fatigue then appears as spalling roughly 180 degrees
+      apart rather than in a single load arc.
+    discriminating_evidence:
+      - observation: >-
+          Two - occasionally more - opposed load zones or spalled regions roughly
+          180 degrees apart on a STATIONARY outer ring, where the applied radial
+          load is unidirectional and constant on the rotating inner ring.
+        stream: visual
+        how_to_collect: Map the spall or path-pattern positions against the recorded ring orientation before cleaning.
+        citations:
+          - doc: "#01"
+            locator: "§3 Path patterns, Inner ring rotation - oval clamping of the stationary outer ring, p.37, fig. 16"
+            note: >-
+              A unidirectional and constant radial load on the rotating inner ring reaches an
+              oval-clamped outer ring as two diametrically opposed path patterns. Where the
+              seat is out-of-round from manufacturing error there may be two or more load
+              zones, and multiple load zones raise the internal loads and the operating
+              temperature.
+          - doc: "#01"
+            locator: "§5 Damage and actions, Subsurface initiated fatigue, p.63, bottom-right caption"
+            note: >-
+              The dismounted exemplar - self-aligning ball bearing outer ring spalled 180
+              degrees apart, attributed to excessive load from oval clamping.
+      - observation: >-
+          Housing bore out of round, and the bearing seat out of round, on
+          measurement.
+        stream: visual
+        how_to_collect: Bore gauge at several angular positions with the bearing removed.
+        citations:
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution code 15 Bearing seat is out-of-round, p.19"
+            note: >-
+              The action is to check the shaft and housing seats for roundness (ovality) and
+              repair if necessary; the condition is characterised by two load zones in the
+              outer ring 180 degrees apart.
+      - observation: >-
+          Measured COLD AND UNLOADED. A real practitioner convention, but #01 gives
+          only the instruction to check the seats for roundness and states no
+          temperature or load state for the measurement.
+        stream: visual
+        inferred: true
+        how_to_collect: Take the bore readings with the machine at ambient and the bearing removed, not after a run.
+      - observation: >-
+          Operating temperature elevated against the machine's own history or its
+          sister units, from the reduced clearance or preload that pinching
+          produces. Checkable in service, without dismounting.
+        stream: thermal
+        how_to_collect: Bearing-housing temperature trended and compared against an identical unit on the same duty.
+        citations:
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution code 15, p.19"
+            note: >-
+              An outer ring in an out-of-round or distorted housing runs with reduced
+              clearance or preload and an increase in operating temperature.
+          - doc: "#01"
+            locator: "§3 Path patterns, p.37"
+            note: >-
+              Multiple load zones increase the internal loads and the bearing operating
+              temperature.
+      - observation: >-
+          Whether the housing is bolted to a flat surface, whether shims cover the
+          whole housing base, and whether a split housing's two halves fit
+          concentrically. These are the source's own named reasons and are cheap
+          field checks, unlike the spall pattern.
+        stream: history
+        how_to_collect: Inspect the mounting surface, shim coverage and split-line fit at the machine before dismounting anything.
+        citations:
+          - doc: "#01"
+            locator: "§3 Path patterns, p.37"
+            note: >-
+              A radially pinched outer ring arises from a housing mounted on a non-flat
+              surface, from the two halves of a split housing not fitting concentrically, or
+              from an out-of-round housing seat due to manufacturing errors.
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution code 15, p.19"
+            note: >-
+              The action list requires checking that the support surface is flat to avoid
+              soft foot, with any shims covering the entire area of the housing base.
+    typical_actions:
+      - Check housing roundness and bolt torque sequence before fitting a replacement.
+      - Check the support surface for flatness and the shim coverage, since soft foot is one of the three named routes to a pinched ring.
+      - Confirm adjacent components are machined and assembled to the design fit rather than replacing the bearing alone.
+    citations:
+      - doc: "#01"
+        locator: "§3 Path patterns, Inner ring rotation - oval clamping of the stationary outer ring, p.37"
+        note: >-
+          The mechanism in prose: how a unidirectional constant radial load on a rotating
+          inner ring is distributed to an oval-clamped stationary outer ring as two
+          diametrically opposed path patterns, with the three named reasons for a radially
+          pinched ring.
+      - doc: "#01"
+        locator: "§2 Inspection and troubleshooting, Table 2 solution code 15, p.19"
+        note: >-
+          The in-service condition: an out-of-round or distorted housing gives reduced
+          clearance or preload and a higher operating temperature, characterised by two load
+          zones 180 degrees apart, with roundness and soft-foot checks as the actions.
+      - doc: "#01"
+        locator: "§5 Damage and actions, Subsurface initiated fatigue, p.63, bottom-right caption"
+        note: >-
+          The dismounted exemplar - self-aligning ball bearing outer ring spalled 180 degrees
+          apart, attributed to excessive load from oval clamping.
+    basis: single_source
+    related: [inner_race_misalignment_edge_loading]
+    consider: >-
+      RING IDENTITY. Two opposed load zones 180 degrees apart is NOT specific to
+      oval clamping - #01 gives the same signature for excessive misalignment on a
+      double-row bearing. The discriminator visible in the source is which ring
+      carries it: the OUTER ring points here, a double-row INNER ring points to
+      inner_race_misalignment_edge_loading.
+    review_question: >-
+      Only #01 states this pattern, though it now states it three times over
+      (§2 code 15, §3 p.37, §5 p.63); #02 and #03 discuss fit and machining faults
+      without naming oval clamping. Keep it as a distinct cause, or fold it into
+      a broader mounting-and-fit cause until a second document is on disk?
+
+  - cause_id: outer_race_moisture_corrosion
+    fault_family: [bearing_outer_race, bearing_inner_race]
+    extends_families: >-
+      EXTENSION. #02 p.9 shows etching on a cylindrical bearing INNER ring and a
+      ball bearing OUTER race in the same passage, and #04 pp.7-8 describes
+      moisture corrosion as attacking any exposed surface with a full film.
+    stage: any
+    cause: Water or condensate reaching the raceway
+    mechanism: >-
+      Water in the bearing attacks the finished steel surface chemically, with
+      no metal-to-metal contact required, and etches or pits it. The pits then
+      act as stress raisers under rolling contact, so a corrosion problem
+      presents later as a fatigue one.
+    discriminating_evidence:
+      - observation: >-
+          Staining or pitting on the raceway, in an even and uniform pattern where
+          standing water did the work, and confined to the LOWER portion of the
+          component where water was left undrained in the sump.
+        stream: visual
+        how_to_collect: Dismounted inspection with the component's installed orientation recorded, since the localisation is the discriminator.
+        citations:
+          - doc: "#04"
+            locator: "Corrosion, p.7"
+            note: >-
+              The attack may cover the entire metal surface or just the lower portion that
+              was submerged in water not drained from the oil sump, and generally leaves an
+              even and uniform pattern of pits.
+          - doc: "#02"
+            locator: "Etching - Corrosion, p.9, figs. 12 and 16"
+            note: >-
+              Heavy corrosion on the race that may be only a surface stain without pitting,
+              or may show pits; fig. 16 shows etching and corrosion on a ball bearing outer
+              race.
+      - observation: >-
+          Whether the staining polishes out. This is a disposition boundary, not
+          just a description - staining that cleans up with fine emery or crocus
+          cloth permits reuse, pits that will not clean up condemn the bearing.
+        stream: visual
+        how_to_collect: Light polish of a stained area with fine emery or crocus cloth, then re-inspect for surviving pits.
+        citations:
+          - doc: "#02"
+            locator: "Etching - Corrosion, p.9, fig. 12"
+            note: >-
+              If the staining can be cleaned with a fine emery or crocus cloth the bearing may
+              be reused; if there are pits that cannot be cleaned with light polishing the
+              bearing should be discarded.
+      - observation: >-
+          Present without recent running. Static corrosion appears in storage or
+          after improper washing and drying at a previous inspection, before the
+          bearing is ever mounted.
+        stream: visual
+        how_to_collect: Establish from the maintenance record whether the bearing was washed, dried and stored between inspections, and in what packaging.
+        citations:
+          - doc: "#02"
+            locator: "Etching - Corrosion, p.9"
+            note: >-
+              Improperly washing and drying bearings on removal for inspection can cause
+              considerable damage; bearings new or used should be stored dry and in original
+              packaging to reduce the risk of static corrosion appearing before mounting.
+      - observation: >-
+          Free or standing water in the lubricant, including water left undrained
+          in the sump.
+        stream: oil
+        how_to_collect: Oil sample and a sump low-point drain check, taken before the system is topped up or flushed.
+        citations:
+          - doc: "#04"
+            locator: "Corrosion, p.7"
+            note: >-
+              Names water not drained from the oil sump, and excessive contamination by
+              moisture, as the route to the corroded surface.
+          - doc: "#02"
+            locator: "Etching - Corrosion, p.9"
+            note: >-
+              Condensate collecting in the bearing housing, and moisture or water entering
+              through damaged, worn or inadequate seals.
+      - observation: >-
+          A moisture level above the component-type limit, reported as dissolved,
+          emulsified or free rather than as a single number. Neither cited document
+          gives a concentration limit or uses the emulsified/dissolved split - this
+          needs a lab limit bulletin from the library before it can be relied on.
+        stream: oil
+        inferred: true
+        how_to_collect: Oil sample analysed for water content, reported as dissolved, emulsified or free rather than a single number.
+      - observation: >-
+          Temperature changes across the bearing housing, which drive the
+          condensate that collects inside it.
+        stream: history
+        how_to_collect: Housing temperature record, or the ambient and duty record that stands in for it.
+        citations:
+          - doc: "#02"
+            locator: "Etching - Corrosion, p.9"
+            note: >-
+              Etching is most often caused by condensate collecting in the bearing housing
+              from temperature changes.
+      - observation: >-
+          Repeated stop-start duty, or large ambient swings, as the specific driver
+          of those temperature changes. #02 says only temperature changes, unqualified.
+        stream: history
+        inferred: true
+        how_to_collect: Operating log - run pattern, ambient range, washdown or humidity exposure.
+    typical_actions:
+      - Trace the water route before replacing the bearing; seals, breathers and washdown practice are the usual paths.
+      - Where condensation is the mechanism, address the housing breathing arrangement rather than the seal alone.
+      - Apply the stain-versus-pit test before condemning or reusing - stains that polish out permit reuse, pits that do not clean up do not.
+    citations:
+      - doc: "#02"
+        locator: "Etching - Corrosion, p.9"
+        note: >-
+          Etching most often caused by condensate collecting in the housing from temperature
+          changes, with water entering through damaged, worn or inadequate seals. Fig. 12
+          gives the stain-versus-pit reuse boundary and fig. 14 shows advanced spalling
+          initiated at water etch marks, which is the path from this cause to a spalled
+          raceway.
+      - doc: "#04"
+        locator: "Corrosion, pp.7-8"
+        note: >-
+          Moisture corrosion as oxidative attack in the presence of water, accelerated by
+          temperature, occurring with a full fluid film and no contact needed; the attack is
+          even and uniform, and may be confined to the submerged lower portion.
+    basis: triangulated
+    consider: >-
+      COLOUR IS NOT A DISCRIMINATOR HERE. #04 p.8 assigns the reddish-brown oxide
+      colour to FRETTING corrosion - rust without water being present - which is
+      this entry's nearest differential. The colour was removed from the visual
+      observation for exactly that reason; use the pit pattern and its
+      position, not the tint.
+
+  - cause_id: outer_race_electrical_current_erosion
+    fault_family: [bearing_outer_race, bearing_inner_race, bearing_ball_spin]
+    extends_families: >-
+      EXTENSION. #01 pp.74-75 illustrates current erosion on rollers, on a deep
+      groove ball bearing inner ring AND ball, and on outer rings; p.53 fig. 30
+      shows excessive current erosion on an outer ring raceway and ball. The
+      current crosses whichever contact it finds, so the damage is not ring-specific.
+    stage: any
+    cause: Stray shaft current passing through the bearing to earth
+    mechanism: >-
+      Current crossing the lubricant film discharges through the contact and
+      melts microscopic craters in the raceway. Continuous low-level leakage
+      produces closely spaced craters that develop into axial fluting, while a
+      high-energy discharge produces isolated deep pits.
+    discriminating_evidence:
+      - observation: >-
+          Regular fluting running parallel to the rolling axis, presenting as a
+          staged progression - a dull grey zone with small shallow craters, then
+          early fluting, then advanced fluting.
+        stream: visual
+        how_to_collect: Dismounted inspection of the raceway across its width, in raking light.
+        citations:
+          - doc: "#01"
+            locator: "§4 ISO failure modes classification, Electrical erosion, pp.53-54"
+            note: >-
+              Splits the two modes by current intensity - high current gives sparking and
+              craters up to 0.5 mm and is usually a singular event, low current intensity
+              gives shallow craters - and gives the fluting orientation as parallel to the
+              rolling axis.
+          - doc: "#01"
+            locator: "§5 Damage and actions, Current leakage erosion, pp.75-76"
+            note: >-
+              p.75 captions a dull grey zone with small shallow craters and an early stage of
+              fluting; p.76 captions the advanced counterparts, an advanced stage of fluting
+              on a cylindrical roller outer ring and fluting with a dull ball surface.
+          - doc: "#02"
+            locator: "Burns from Electric Current, p.21, fig. 62"
+            note: >-
+              Fluting defined as a series of small AXIAL burns caused by current passing
+              through the bearing while it was rotating.
+      - observation: >-
+          Flute PITCH, not the presence of flutes. Fluting is not electrically
+          exclusive - #01's own glossary gives washboarding as mechanical periodic
+          transverse wear associated with abrasive wear in lightly loaded bearings,
+          used interchangeably with fluting but usually more widely spaced.
+        stream: visual
+        how_to_collect: Measure the mark pitch across the raceway rather than recording only that periodic marks are present.
+        citations:
+          - doc: "#01"
+            locator: "Appendix E, glossary entry Washboarding, p.103"
+            note: >-
+              Periodic, transverse wear parallel to the rolling axis, often associated with
+              abrasive wear in lightly loaded bearings; may be used interchangeably with
+              fluting, but washboarding wear is usually not as closely spaced.
+      - observation: >-
+          Craters massed in a bead-like or zig-zag formation rather than
+          distributed as a flute, which #01 attributes to excessive current as
+          distinct from continuous leakage.
+        stream: visual
+        how_to_collect: Inspect rollers and raceway under magnification and record the crater pattern, not just its presence.
+        citations:
+          - doc: "#01"
+            locator: "§5 Damage and actions, Excessive current erosion, p.74"
+            note: >-
+              Captions read excessive current resulting in a large number of craters in a
+              bead-like formation, and the same in a zig-zag formation, under the Excessive
+              current erosion heading.
+      - observation: >-
+          Arc pitting or small burns where the machine was STATIONARY, versus
+          axial fluting where it was ROTATING while current passed.
+        stream: history
+        how_to_collect: Establish whether the suspected current event (welding, drive fault) coincided with rotation or standstill.
+        citations:
+          - doc: "#02"
+            locator: "Burns from Electric Current, p.21, figs. 60 and 62"
+            note: >-
+              Fig. 60 is arc pitting or small burns created by arcs from improper electric
+              grounding while the bearing was stationary; fig. 62 is fluting from current
+              passing while it was rotating. The split is the captions' own.
+      - observation: >-
+          Crater spacing corresponding to the rolling element spacing. Attributed
+          to #04 only; #01 pp.74-75 describes bead-like and zig-zag formations and
+          does not make this claim. It is also NOT specific on its own - the same
+          sources give element-pitch spacing for true brinelling (#04 p.10) and
+          false brinelling (#01 p.73), so treat it as the weakest of the visual cues.
+        stream: visual
+        inferred: true
+        how_to_collect: Measure the pit pitch and compare it with the rolling element pitch for that bearing.
+      - observation: >-
+          Presence of a variable-speed drive, recent welding on the machine, or
+          degraded earthing/grounding connections. #01's case study is the caution
+          worth carrying - an insulated bearing on a frequency-converter motor
+          still failed by current leakage after a repair left the earth cable
+          disconnected, so fitted insulation is not itself the answer.
+        stream: history
+        how_to_collect: Electrical installation record - drive type, earthing brush and earth cable condition, insulated bearing fitted or not, welding history.
+        citations:
+          - doc: "#01"
+            locator: "§7 Case studies, Variable speed electric motor problem, pp.88-89"
+            note: >-
+              A 400 VAC frequency-converter motor with insulated bearings, concluded as
+              current leakage erosion caused by inadequate electrical grounding after a
+              repair left the earth cable disconnected.
+          - doc: "#02"
+            locator: "Burns from Electric Current, p.21"
+            note: >-
+              Causes of arcing given as improper grounding, welding, and inadequate or
+              defective insulation.
+          - doc: "#04"
+            locator: "Electrical Erosion, p.9"
+            note: >-
+              Damage attributed to welding in the area and inadequate grounding or insulation.
+    typical_actions:
+      - Establish whether a current path exists before replacing the bearing, since a replacement in the same path fails the same way.
+      - Where welding is the source, confirm the earth return never runs through a bearing.
+      - Confirm the earthing connections are actually made, not merely fitted - the cited case study failed on a disconnected earth cable after a repair.
+    citations:
+      - doc: "#01"
+        locator: "§4 ISO failure modes classification, Electrical erosion, pp.53-54"
+        note: >-
+          The severity split by current intensity - high current sparking with craters up to
+          0.5 mm, usually a singular event, against low current intensity with shallow
+          craters - plus fig. 30, excessive current erosion on an outer ring raceway and ball.
+      - doc: "#01"
+        locator: "§5 Damage and actions, Excessive current erosion and Current leakage erosion, pp.74-76"
+        note: >-
+          The photo signatures for both modes - bead-like and zig-zag crater formations for
+          excessive current, and the dull grey zone with early fluting on p.75 developing into
+          advanced fluting on p.76.
+      - doc: "#04"
+        locator: "Electrical Erosion, pp.9-10"
+        note: >-
+          Excessive voltage produces deep craters that may match rolling element spacing;
+          current leakage produces shallow closely spaced craters and fluting.
+      - doc: "#02"
+        locator: "Burns from Electric Current, p.21"
+        note: >-
+          Arc pitting attributed to arcing while the bearing was stationary; fluting, a series
+          of small axial burns, to current passing while it was rotating, including from
+          welding on the machine.
+      - doc: "#43"
+        locator: "Table 4-5 Cause of Motor Bearing Failure, p.4-15 (PDF page 45)"
+        note: >-
+          In the table's four-level hierarchy - Failure Mode, Mechanism, Reason, Cause -
+          Electrical is a REASON under the Surface Distress MECHANISM, with Insulation and
+          Welding as its CAUSES. Corrected in R2-B0.2; the earlier note called Electrical a
+          mechanism and Insulation/Welding reasons, which is one level off in both places.
+    basis: triangulated
+
+  # ── inner race ────────────────────────────────────────────────────────
+  - cause_id: inner_race_misalignment_edge_loading
+    fault_family: [bearing_inner_race, bearing_outer_race]
+    extends_families: >-
+      EXTENSION. #02 p.14 states the edge-loading mechanism without fixing it to a
+      ring - the load concentrates on only a portion of the rollers or balls AND
+      RACES - and its fig. 35B depicts misalignment arising at the HOUSING. #01
+      p.65 shows some misalignment producing advanced surface distress on a
+      cylindrical roller bearing OUTER ring alongside the same damage on the inner
+      ring of the same bearing type.
+    stage: any
+    cause: Shaft or seat misalignment concentrating load at the raceway edge
+    mechanism: >-
+      Misalignment tilts the rolling path so the load is carried on an edge
+      instead of across the intended contact width, raising local stress well
+      above design. Fatigue then appears on one side of the raceway only, or as
+      two opposed load zones on a double-row bearing.
+    discriminating_evidence:
+      - observation: >-
+          Spalling or a load mark confined to one side of the raceway width,
+          rather than centred across it.
+        stream: visual
+        how_to_collect: Dismounted inspection with the load-zone position recorded before cleaning.
+        citations:
+          - doc: "#01"
+            locator: "§5 Damage and actions, Subsurface initiated fatigue, p.63, third caption"
+            note: >-
+              Tapered roller bearing inner ring, spalling on one side of the raceway only,
+              resulting from misalignment and consequent edge loading, leading to higher
+              stress and failure.
+          - doc: "#02"
+            locator: "Misalignment and Inaccurate Seat and Shoulder Machining, p.14"
+            note: >-
+              Beyond the manufacturer's limit the load is concentrated on only a portion of
+              the rollers or balls and races, and under extreme misalignment is carried only
+              on the extreme ends, causing early metal fatigue.
+      - observation: >-
+          Two load zones 180 degrees apart on a DOUBLE-ROW bearing's inner ring.
+          The ring identity is the discriminator - see the collision note.
+        stream: visual
+        how_to_collect: Map both load zones and record which ring carries them before cleaning.
+        citations:
+          - doc: "#01"
+            locator: "§5 Damage and actions, Surface initiated fatigue, p.65, bottom-left caption"
+            note: >-
+              Double row angular contact ball bearing inner ring, excessive misalignment
+              resulting in excessive loads, with two load zones 180 degrees apart.
+      - observation: >-
+          Elevated axial vibration relative to radial at running speed on the
+          same machine, which is the misalignment signature the detectors
+          already use.
+        stream: vibration
+        inferred: true
+        how_to_collect: Triaxial measurement at the bearing housing with the axial direction explicitly declared, not inferred.
+      - observation: >-
+          Alignment record, shim history and soft-foot check for the machine
+          train.
+        stream: history
+        how_to_collect: Last alignment report and any change of coupling, baseplate or foundation since.
+        citations:
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution codes 15 and 19-20, pp.19-21"
+            note: >-
+              Code 15 requires the support surface to be flat to avoid soft foot, with shims
+              covering the entire housing base; codes 19-20 are offset misalignment and
+              angular misalignment of two units, with alignment using the appropriate
+              equipment as the action.
+          - doc: "#02"
+            locator: "Misalignment and Inaccurate Seat and Shoulder Machining, p.14"
+            note: >-
+              Gives the typical causes to look for in the record - inaccurate machining or
+              wear of housings or shafts, deflection from high loads, and out-of-square
+              backing shoulders.
+    typical_actions:
+      - Correct the alignment and confirm seat and shoulder machining before fitting a replacement bearing.
+      - Where the bearing type cannot accommodate the residual misalignment, review the selection rather than the fit.
+    citations:
+      - doc: "#01"
+        locator: "§5 Damage and actions, Subsurface initiated fatigue, p.63, third caption"
+        note: >-
+          Tapered roller bearing inner ring spalled on one side of the raceway only,
+          attributed to misalignment and consequent edge loading.
+      - doc: "#01"
+        locator: "§5 Damage and actions, Surface initiated fatigue, p.65, bottom-left caption"
+        note: >-
+          Double row angular contact ball bearing inner ring showing two load zones 180
+          degrees apart from excessive misalignment. Split out from the p.63 citation in
+          R2-B0.2 - p.63 also carries a 180-degrees-apart photo, but of a self-aligning ball
+          bearing OUTER ring attributed to oval clamping, which is a decoy for a checker
+          reading p.63 alone.
+      - doc: "#02"
+        locator: "Misalignment and Inaccurate Seat and Shoulder Machining, p.14"
+        note: >-
+          States the edge-loading MECHANISM outright, not merely the damage category - load
+          concentrated on only a portion of the rollers or balls and races, carried on the
+          extreme ends under extreme misalignment, causing early metal fatigue - and lists
+          the typical causes.
+      - doc: "#43"
+        locator: "Table 4-5 Cause of Motor Bearing Failure, p.4-15 (PDF page 45)"
+        note: >-
+          In the table's four-level hierarchy, Misalignment is a CAUSE under the REASON
+          Excessive Load under the MECHANISM Fatigue, alongside Mechanical imbalance, Wrong
+          Application and Poor Fit-up. Corrected in R2-B0.2; the earlier note called it a
+          reason under the fatigue mechanism, one level off.
+    basis: triangulated
+    related: [inner_race_excessive_axial_load, outer_race_oval_clamping_overload]
+    consider: >-
+      TWO COLLISIONS. (1) Both this and inner_race_excessive_axial_load can present
+      as an axially offset load mark. Misalignment tilts the path; axial overload
+      shifts it while keeping it square. Decide on the alignment record and the
+      thrust arrangement, not on the mark alone. (2) Two load zones 180 degrees
+      apart is shared with outer_race_oval_clamping_overload - #01 gives that
+      signature for an out-of-round seat at least as prominently. The discriminator
+      is ring identity: a DOUBLE-ROW INNER ring points here, a stationary OUTER ring
+      points to oval clamping.
+
+  - cause_id: inner_race_mounting_impact_brinelling
+    fault_family: [bearing_inner_race, bearing_outer_race]
+    extends_families: >-
+      EXTENSION. #04 p.10 states the impact-dent series for the bearing race
+      surface generally, without naming a ring, and defines the round-bottom dent
+      as forming in the race OR rolling element. #02 p.15 fig. 41 shows
+      installation denting on a tapered roller bearing CUP (outer ring) face from a
+      hardened driver.
+    related: [standstill_vibration_false_brinelling]
+    stage: any
+    cause: Impact during mounting, transmitted through the rolling elements
+    mechanism: >-
+      Driving a bearing onto a shaft by striking it forces the mounting load
+      through the rolling elements instead of the ring being pressed, denting
+      the raceway at each element position. The dents are permanent deformation
+      rather than wear, and their raised edges later seed surface fatigue.
+    discriminating_evidence:
+      - observation: >-
+          Dents, or later spalls, spaced at exactly the rolling element pitch.
+        stream: visual
+        how_to_collect: Measure the mark pitch and compare it with the rolling element pitch; equality is close to conclusive.
+        citations:
+          - doc: "#04"
+            locator: "Plastic Deformation, Overload or true brinelling, p.10"
+            note: >-
+              In roller bearings, impact causes the rollers to create a series of dents in
+              the bearing race surface at intervals that match the roller spacing exactly.
+          - doc: "#01"
+            locator: "§5 Damage and actions, Surface initiated fatigue, p.65, bottom-right caption"
+            note: >-
+              Deep groove ball bearing inner ring, impact during mounting resulting in
+              spalling at ball spacing.
+          - doc: "#02"
+            locator: "Handling and Installation Damage, p.15, fig. 42"
+            note: >-
+              Tapered roller spaced nicking caused by the roller edges hitting the race
+              during installation.
+      - observation: >-
+          The bearing was STATIONARY when the load was applied, so the marks record
+          the element positions at that one moment; a rotating bearing cannot
+          reproduce that pattern because its elements do not hold station. The
+          sources give the pitch-exact pattern but never state this reasoning.
+        stream: visual
+        inferred: true
+        how_to_collect: Establish from the maintenance record whether an impact event occurred with the machine stopped.
+      - observation: >-
+          STAGE-DEPENDENT SIGNATURE. Fresh dents early, spalls at element spacing
+          later - #01's own exemplar for this cause sits under Surface initiated
+          fatigue and shows spalls, not dents, so an inspection that finds no dents
+          does not clear mounting impact.
+        stream: visual
+        how_to_collect: Record whether the marks are unbroken depressions or broken-out spalls, and read that as stage rather than as a different cause.
+        citations:
+          - doc: "#01"
+            locator: "§5 Damage and actions, Surface initiated fatigue, p.65"
+            note: >-
+              The mounting-impact exemplar is classified under Surface initiated fatigue and
+              its caption reads spalling at ball spacing; the photo shows torn spalled
+              patches, not fresh dents.
+          - doc: "#04"
+            locator: "Plastic Deformation, p.10"
+            note: >-
+              The dents often have a raised lip which increases stresses and leads to
+              surface-initiated fatigue and eventual pit formation - the mechanism that turns
+              the dent stage into the spall stage.
+      - observation: >-
+          Machining marks still visible in the bottom of the dent, showing metal
+          flow rather than material removal.
+        stream: visual
+        how_to_collect: Inspect a dent under magnification for surviving original finish.
+        citations:
+          - doc: "#04"
+            locator: "Plastic Deformation, p.10"
+            note: >-
+              Under the parent Plastic Deformation paragraph - the surface metal flows,
+              causing irreversible deformation rather than wear, and the machining marks are
+              still visible in the bottom of the dent.
+      - observation: >-
+          A raised lip or raised edges around the dent, which is what makes a
+          mounting dent a future fatigue site rather than a cosmetic mark.
+        stream: visual
+        how_to_collect: Inspect the dent rim under magnification, and record it separately from the dent itself.
+        citations:
+          - doc: "#04"
+            locator: "Plastic Deformation, p.10"
+            note: >-
+              The dents often have a raised lip which increases stresses and leads to surface
+              cracks and eventual pit formation.
+          - doc: "#02"
+            locator: "Handling and Installation Damage, p.15, fig. 42"
+            note: >-
+              These nicks and dents have raised edges that can lead to excessive noise,
+              vibration, or act as points of stress concentration.
+      - observation: >-
+          Roughness, vibration and noise reported immediately after an installation,
+          rather than as a gradual change.
+        stream: history
+        how_to_collect: Compare the first post-maintenance vibration reading with the pre-removal baseline.
+        citations:
+          - doc: "#02"
+            locator: "Handling and Installation Damage, p.15"
+            note: >-
+              The immediate effect of these gouges and deep nicks will be roughness,
+              vibration and noise in the bearing.
+      - observation: >-
+          Time-since-intervention used as the discriminator - damage present from
+          the first run after work, rather than developing over time. No cited page
+          frames it that way or contrasts it with gradual development.
+        stream: history
+        inferred: true
+        how_to_collect: Line the damage up against the maintenance dates, not only against running hours.
+    typical_actions:
+      - Mount with a press or induction heater and a force path through the fitted ring only.
+      - Treat any bearing that has been hammered as scrap, since the dents are already present.
+    citations:
+      - doc: "#01"
+        locator: "§5 Damage and actions, Surface initiated fatigue, p.65, bottom-right caption"
+        note: >-
+          Deep groove ball bearing inner ring spalled at ball spacing, attributed to impact
+          during mounting. Note the classification - the exemplar sits under Surface initiated
+          fatigue and shows the spalled stage, not fresh dents.
+      - doc: "#04"
+        locator: "Plastic Deformation, p.10"
+        note: >-
+          The element-pitch dent series belongs to the Overload or true brinelling
+          subcategory and is stated for ROLLER bearings specifically; the surviving machining
+          marks and the raised lip belong to the parent Plastic Deformation paragraph. The
+          same page records that hammering damage is classed by some as overload and by others
+          as indentation from handling, so the label this entry uses is not settled.
+      - doc: "#02"
+        locator: "Handling and Installation Damage, p.15, figs. 41 and 42"
+        note: >-
+          Fig. 42 is the entry's core signature as a captioned photo - tapered roller spaced
+          nicking from the roller edges hitting the race during installation, with raised
+          edges. Fig. 41 shows cup-face denting from a hardened driver. Re-pointed in R2-B0.2
+          from the earlier taxonomy claim, which the page does not carry.
+    basis: triangulated
+
+  - cause_id: inner_race_creep_on_shaft_seat
+    fault_family: [bearing_inner_race]
+    stage: any
+    cause: Inner ring turning on its shaft seat under a rotating load
+    mechanism: >-
+      An inner ring that should rotate with the shaft instead slips against it,
+      wearing the bore and the seat and moving the load zone as it goes. The
+      result is more than one wear zone on a ring that should carry a single
+      circumferential load path.
+    discriminating_evidence:
+      - observation: >-
+          Creep marks, or fretting corrosion, on the inner ring BORE and on the
+          shaft seat - damage away from the raceway entirely.
+        stream: visual
+        how_to_collect: Inspect the bore and shaft seat at dismounting, before cleaning either.
+        citations:
+          - doc: "#01"
+            locator: "§3 Path patterns, p.30"
+            note: >-
+              Lists creep marks on the inner ring bore, and fretting corrosion on the inner
+              ring bore, among the dismounting signatures.
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution code 30 Inner ring creeps (turns) on the shaft seat, p.24"
+            note: >-
+              An inner ring can creep or turn on its shaft seat if the seat is undersized or
+              worn; the action is to metalize and regrind the shaft seat to size.
+      - observation: >-
+          Two distinct wear zones on one inner ring, the second following the ring
+          creeping to a new position.
+        stream: visual
+        how_to_collect: Map both wear zones against the recorded ring orientation before cleaning.
+        citations:
+          - doc: "#01"
+            locator: "§5 Damage and actions, Abrasive wear, p.67, middle-left caption"
+            note: >-
+              Spherical roller bearing inner ring, stationary, heavy abrasive wear in two
+              zones - one with heavy wear, then creep of the inner ring with a subsequent
+              second wear zone.
+      - observation: >-
+          Whether the ring load is rotating or stationary. The asymmetry is the
+          diagnostic - a rotating inner ring load requires a tight shaft fit, while
+          a stationary outer ring load under most conditions does not.
+        stream: history
+        how_to_collect: Operating data - which ring rotates, load direction, whether the load is constant, alternating or oscillating.
+        citations:
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution codes 30-31, p.24"
+            note: >-
+              Most applications have a rotating shaft with a unidirectional load, which is a
+              rotating inner ring load and requires a tight fit on the shaft to prevent
+              relative movement; a stationary outer ring load under most conditions does not.
+      - observation: >-
+          Rising noise and vibration levels alongside the wear. This is the only
+          statement in the cited set that ties inner-ring creep to a symptom this
+          product can measure without dismounting.
+        stream: vibration
+        how_to_collect: Overall velocity trend at the bearing housing, read as a level change rather than a fault-frequency match.
+        citations:
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution code 30, p.24"
+            note: >-
+              Inner ring creep on the shaft seat is stated to lead to increased noise and
+              vibration levels as well as wear.
+    typical_actions:
+      - Measure the shaft seat and restore it; an interference fit chosen for a point load will creep under a circumferential one.
+      - Do not rely on a locknut to arrest creep that the fit should prevent.
+    citations:
+      - doc: "#01"
+        locator: "§2 Inspection and troubleshooting, Table 2 solution code 30, p.24"
+        note: >-
+          The condition named outright - inner ring creeps or turns on the shaft seat if the
+          seat is undersized or worn - with the rotating-inner-ring-load fit rule, the
+          noise-and-vibration consequence, and metalize-and-regrind as the action. Added as
+          primary in R2-B0.2; the strings shaft, seat, bore and fit do not occur on p.67.
+      - doc: "#01"
+        locator: "§3 Path patterns, p.30"
+        note: >-
+          Creep marks and fretting corrosion on the inner ring bore, listed as the teardown
+          signatures of relative movement.
+      - doc: "#01"
+        locator: "§5 Damage and actions, Abrasive wear, p.67, middle-left caption"
+        note: >-
+          Spherical roller inner ring, stationary, with heavy abrasive wear in two zones, the
+          second following creep of the inner ring. The caption is specified because p.67
+          carries five unrelated captions, one of which is an OUTER ring creep case.
+    basis: single_source
+    related: [outer_race_housing_fit_creep]
+    review_question: >-
+      Still single-source (#01), though now on three pages rather than one photo
+      caption. Is this distinct enough from outer_race_housing_fit_creep to stand
+      as its own entry, or should the two be merged into a single fit-and-creep
+      cause parameterised by which ring moved? #43 Table 4-5 lists Poor Fit-up as a
+      Cause under Fatigue / Excessive Load and could be read as a second source -
+      recorded in b03_queue.md rather than applied, because a two-word table cell
+      is thin ground for claiming corroboration.
+
+  - cause_id: inner_race_excessive_axial_load
+    fault_family: [bearing_inner_race]
+    stage: any
+    cause: Axial load beyond what the bearing arrangement was selected to carry
+    mechanism: >-
+      Excessive axial load shifts and narrows the contact, thinning the
+      lubricant film where the contact pressure is highest. The film loss
+      produces surface distress in a band that does not match the radial load
+      zone.
+    discriminating_evidence:
+      - observation: >-
+          The path pattern displaced ALONG the groove profile towards the ring
+          edge, rather than centred in the middle of the raceway, and running the
+          full circumference on the rotating ring.
+        stream: visual
+        how_to_collect: Map the path pattern's position across the raceway width AND its circumferential extent, against the known radial load direction.
+        citations:
+          - doc: "#01"
+            locator: "§3 Path patterns, Radial bearings - axial load unidirectional and constant, p.34, figs. 9 and 10a/10b"
+            note: >-
+              Under axial load the bearing operates with a contact angle and the contact area
+              moves along the groove profile towards the ring edge; the rotating ring carries
+              a laterally displaced path pattern around its entire circumference, against a
+              contact ellipse centred in the middle of the raceway under pure radial load.
+      - observation: >-
+          Surface distress in that displaced band, with the contact ellipse partly
+          unsupported by the raceway under too heavy axial load.
+        stream: visual
+        how_to_collect: Inspect the displaced band for distress and note whether it reaches the ring edge.
+        citations:
+          - doc: "#01"
+            locator: "§5 Damage and actions, Surface initiated fatigue, p.65, middle-right caption"
+            note: >-
+              Deep groove ball bearing inner ring, excessive axial load resulting in too thin
+              a lubricant film and surface distress.
+          - doc: "#01"
+            locator: "§3 Path patterns, p.34"
+            note: >-
+              Under too heavy axial loads or misalignment, part of the contact ellipse is no
+              longer supported by the raceway.
+      - observation: >-
+          Axial vibration dominant over radial at the same location, sustained
+          rather than transient.
+        stream: vibration
+        inferred: true
+        how_to_collect: Triaxial measurement with the axial direction declared explicitly at collection.
+      - observation: >-
+          Thrust arrangement, locating and non-locating bearing assignment, and the
+          thermal growth allowance.
+        stream: history
+        how_to_collect: Machine arrangement drawing plus any modification record.
+        citations:
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 solution codes 23-24, p.22"
+            note: >-
+              Code 23 requires the radial bearing to be non-locating (axially free) and the
+              thrust bearing to be radially free in the housing; code 24 warns that
+              cross-located bearings with shaft expansion too restricted induce internal axial
+              loads in both, and calls for the expected expansion to be determined.
+      - observation: >-
+          A recent change to the coupling. No cited or adjacent page ties a coupling
+          change to bearing axial overload - #01's coupling material is under the
+          angular-misalignment codes, which is a different cause.
+        stream: history
+        inferred: true
+        how_to_collect: Modification record for the coupling and its spacer, alongside the arrangement drawing.
+    typical_actions:
+      - Confirm which bearing is intended to locate axially and that the other is genuinely free to float.
+      - Review thermal growth allowance before concluding the bearing was undersized.
+    citations:
+      - doc: "#01"
+        locator: "§3 Path patterns, Radial bearings - axial load unidirectional and constant, p.34"
+        note: >-
+          The mechanism in prose rather than in a caption - contact angle, contact area moving
+          along the groove profile towards the ring edge, laterally displaced path pattern
+          around the whole circumference of the rotating ring, and loss of ellipse support
+          under too heavy axial load.
+      - doc: "#01"
+        locator: "§5 Damage and actions, Surface initiated fatigue, p.65, middle-right caption"
+        note: >-
+          Deep groove ball bearing inner ring, excessive axial load producing too thin a
+          lubricant film and surface distress.
+      - doc: "#01"
+        locator: "§2 Inspection and troubleshooting, Table 2 solution codes 23-24, p.22"
+        note: >-
+          The arrangement checks - non-locating radial bearing and radially free thrust
+          bearing, and the internal axial loads induced when cross-located bearings restrict
+          shaft expansion.
+    basis: single_source
+    related: [inner_race_misalignment_edge_loading, outer_race_inadequate_lubricant_film]
+    review_question: >-
+      Single source, and the mechanism overlaps
+      outer_race_inadequate_lubricant_film - the proximate cause of the damage
+      is film loss either way. Keep axial overload as a separate cause because
+      the corrective action differs, or demote it to a contributing factor?
+
+  # ── rolling element ───────────────────────────────────────────────────
+  - cause_id: rolling_element_debris_denting
+    fault_family: [bearing_ball_spin, bearing_outer_race, bearing_inner_race]
+    extends_families: >-
+      EXTENSION, resting on the body text rather than the figures. #02 p.8's
+      opening sentence names the rolling elements AND races together, and #04 p.10
+      defines the round-bottom dent as forming in the race OR rolling element -
+      the subcategory is defined by the trapped particle, not by which surface
+      receives the dent. Every captioned component on #02 p.8 is in fact a race.
+    stage: any
+    cause: Hard debris over-rolled between element and raceway
+    mechanism: >-
+      A particle trapped in the contact is rolled over and pressed into the
+      surface, leaving a round-bottomed dent with a raised rim rather than
+      removing material. The rim concentrates stress on subsequent passes, so a
+      contamination event becomes a fatigue initiation site.
+    discriminating_evidence:
+      - observation: >-
+          Round-bottomed dents with a raised lip, where the raised metal acts as a
+          surface-stress riser rather than as material loss.
+        stream: visual
+        how_to_collect: Inspect elements and raceway under magnification, recording the dent profile and its rim.
+        citations:
+          - doc: "#04"
+            locator: "Plastic Deformation, Indentation from debris, p.10"
+            note: >-
+              A particle trapped within the dynamic clearances and over-rolled causes a
+              round-bottom dent to form in the race or rolling element, and the dents often
+              have a raised lip.
+          - doc: "#02"
+            locator: "Wear - Pitting and Bruising, p.8"
+            note: >-
+              Raised metal around the dents acts as surface-stress risers to cause premature
+              spalling and reduce bearing life.
+      - observation: >-
+          Dents distributed WITHOUT regular spacing. The contrast is ours and the
+          attribution needs care: #04 p.10 assigns the exact-roller-spacing dent
+          series to Overload / true brinelling, and defines Indentation from
+          handling as a separate subcategory with no spacing pattern at all.
+        stream: visual
+        inferred: true
+        how_to_collect: Record whether dent spacing is regular or random, and compare any regular pitch with the rolling element pitch.
+      - observation: >-
+          Metal chips or large particles of dirt in the lubricant, and a source for
+          them - wear from gears, splines, seals, clutches, brakes or joints, an
+          improperly cleaned housing, or a damaged or spalled component elsewhere.
+        stream: oil
+        how_to_collect: Filter residue and magnetic plug inspection alongside a particle count, kept as history rather than a single reading.
+        citations:
+          - doc: "#02"
+            locator: "Wear - Pitting and Bruising, p.8"
+            note: >-
+              Metal chips or large particles of dirt left in improperly cleaned housings, and
+              an enumerated list of internal debris sources - wear from gears, splines, seals,
+              clutches, brakes, joints, and damaged or spalled components.
+      - observation: >-
+          Angular particle morphology specifically. No cited page describes particle
+          SHAPE; the sources speak only of size and origin.
+        stream: oil
+        inferred: true
+        how_to_collect: Analytical ferrography reporting particle morphology, not a particle count alone.
+      - observation: >-
+          A BSF-matched carrier rather than BPFO or BPFI. Sidebands alone do NOT
+          point to a rolling-element fault: the detector adds +/-1x shaft
+          sidebands to every committed bearing family alike, so the specificity
+          is in which fault frequency the carrier matches, not in the presence of
+          modulation.
+        stream: vibration
+        inferred: true
+        how_to_collect: Enveloped acceleration spectrum resolved finely enough to separate the carrier from its sidebands, with the running speed measured rather than assumed.
+    typical_actions:
+      - Find the debris source before replacing the bearing; a cleaned housing that is refilled from the same system re-contaminates immediately.
+      - Flush the circuit and verify cleanliness against a target code rather than by appearance.
+    citations:
+      - doc: "#02"
+        locator: "Wear - Pitting and Bruising, p.8"
+        note: >-
+          Hard particles rolling through the bearing cause pitting and bruising of rolling
+          elements and races; chips left in improperly cleaned housings initiate early
+          fatigue; and the raised metal around the dents acts as surface-stress risers to
+          cause premature spalling - which is the entry's mechanism, stated on the page.
+      - doc: "#04"
+        locator: "Plastic Deformation, Indentation from debris, p.10"
+        note: >-
+          Indentation from debris as a distinct subcategory, a round-bottom dent formed by a
+          particle trapped in the dynamic clearance and over-rolled.
+      - doc: "#01"
+        locator: "§5 Damage and actions, Indentations from particles, pp.79-80"
+        note: >-
+          Particle indentation treated as its own damage mode with its own corrective actions.
+    basis: triangulated
+
+  - cause_id: rolling_element_cage_wear_grooving
+    fault_family: [bearing_cage]
+    stage: any
+    cause: Debris embedding in the cage and cutting the rolling elements
+    mechanism: >-
+      Metal chips work into the softer cage material and act as fixed cutting
+      edges against the elements passing through the pockets. The elements are
+      grooved rather than dented, which changes the rolling geometry itself and
+      accelerates everything downstream of it.
+    discriminating_evidence:
+      - observation: >-
+          Circumferential grooves cut into the rolling elements, with contaminants
+          wedged in the soft cage material.
+        stream: visual
+        how_to_collect: Inspect cage pockets and element surfaces together; the pairing is the diagnostic, not either alone.
+        citations:
+          - doc: "#02"
+            locator: "Wear - Grooving, p.8, and fig. 10"
+            note: >-
+              Contaminants become wedged in the soft cage material and cut grooves in the
+              rolling elements, generating improper rolling contact geometry and reducing
+              service life; fig. 10 shows large particle contamination embedded in the soft
+              cage material producing grooving and circumferential lining of the rollers and
+              raceways.
+          - doc: "#02"
+            locator: "Wear - Abrasive Contamination, p.7"
+            note: >-
+              Defines grooving as circumferential lining, which is where the word
+              circumferential in this observation comes from.
+      - observation: >-
+          Cage material in the debris - bronze or brass where the cage is
+          non-ferrous - which ferrous-only screening will miss entirely.
+        stream: oil
+        inferred: true
+        how_to_collect: Elemental analysis covering non-ferrous wear metals, not a PQ or ferrous-density reading alone.
+      - observation: >-
+          FTF-matched content, which the detector explicitly downgrades when a
+          looseness subharmonic is present because the two overlap. A cage call
+          on vibration alone is therefore weak by construction and needs the
+          visual or oil evidence above to stand. This is a statement about OUR
+          code (pdm_core/bearing_rca.py), not about any cited source.
+        stream: vibration
+        inferred: true
+        how_to_collect: Enveloped acceleration spectrum; check for a looseness subharmonic in the same reading before weighting the FTF match.
+    typical_actions:
+      - Treat cage grooving as evidence of improper rolling contact geometry and reduced service life, which is as far as the source goes.
+      - Identify the chip source; cage grooving implies debris large enough to have come from a failing component elsewhere.
+    citations:
+      - doc: "#02"
+        locator: "Wear - Grooving, p.8"
+        note: >-
+          Chips or metal particles wedge in the soft cage material and cut grooves in the
+          rolling elements, producing improper rolling contact geometry and reducing service
+          life.
+      - doc: "#02"
+        locator: "Wear - Abrasive Contamination, p.7"
+        note: >-
+          Foreign particle contamination causes abrasive wear, bruising or circumferential
+          lining (grooving) - the source of the word circumferential.
+    basis: single_source
+    review_question: >-
+      Downgraded from triangulated in R2-B0.2. #01 p.67 was removed from the
+      citations: its caption attributes angular contact ball bearing CAGE POCKET
+      WEAR to inadequate lubrication and vibration, with cage bars worn away - a
+      DIFFERENT CAUSE of cage damage, not a second source for debris embedding.
+      Should that become its own sibling entry (cage wear from inadequate
+      lubrication), or does it belong inside outer_race_inadequate_lubricant_film?
+      Related and unapplied: #01 p.66 shows cage pocket wear cutting a groove into
+      the INNER RING on either side, which would extend this entry's visual
+      observation beyond the rolling elements - recorded in b03_queue.md.
+
+  - cause_id: rolling_element_subsurface_fatigue_normal_life
+    fault_family: [bearing_ball_spin, bearing_outer_race, bearing_inner_race]
+    extends_families: >-
+      EXTENSION. #04 p.3 states subsurface fatigue as typical in all rolling
+      bearing elements and races. The extension is if anything overdue - all four
+      of #01 p.63's illustrations are RINGS (deep groove ball IR, spherical roller
+      IR, tapered roller IR, self-aligning ball OR) and none is a rolling element,
+      so the original bearing_ball_spin-only keying was the narrower claim.
+    stage: any
+    cause: Subsurface fatigue reaching the surface at the end of rating life
+    mechanism: >-
+      Repeated stress cycles nucleate cracks at inclusions below the contact
+      surface, and those cracks grow until a piece of the surface detaches.
+      This is the mechanism the bearing rating life describes, so it is the one
+      cause on this list that is not a defect in installation or operation.
+    discriminating_evidence:
+      - observation: >-
+          A spall with NO contamination-dent and NO handling signature anywhere on
+          the bearing - the two competing surface-damage sources the source names
+          explicitly.
+        stream: visual
+        how_to_collect: Full dismounted inspection covering the competing damage categories before attributing anything to normal fatigue.
+        citations:
+          - doc: "#04"
+            locator: "Surface-initiated Fatigue, p.4"
+            note: >-
+              Contaminant particles in the oil cause some form of surface damage - a dent -
+              and improper handling of bearings can cause surface damage; these are the
+              exclusions that must be checked before normal fatigue is called.
+          - doc: "#04"
+            locator: "Subsurface Fatigue, p.3"
+            note: >-
+              Subsurface fatigue proceeds with a full oil film and no metal-to-metal contact
+              or surface damage needed - which is why a surface signature argues against it.
+      - observation: >-
+          And no CORROSION or ELECTRICAL signature either. Those two exclusions are
+          on neither cited page; they are ours, carried over from the six-category
+          taxonomy rather than from a statement in the sources.
+        stream: visual
+        inferred: true
+        how_to_collect: Inspect for etching, staining, craters and fluting as part of the same dismounted pass.
+      - observation: >-
+          Achieved running hours compared against the calculated rating life for
+          the ACTUAL duty, not the design duty. Read this as WEAK positive evidence
+          only: L10 is the point at which 10 percent of a set of identical bearings
+          have failed, not an expiry date, so reaching it leaves 90 percent expected
+          still running - and failing well short of it argues actively against this
+          cause.
+        stream: history
+        how_to_collect: Operating hours, load history and any duty change since commissioning, with the rating life recalculated for the duty actually run.
+        citations:
+          - doc: "#04"
+            locator: "Subsurface Fatigue, p.3"
+            note: >-
+              A bearing living out its normal life span based on the load, speed and lubricant
+              film thickness it is exposed to; an estimate of the L10 life can be calculated,
+              providing a rating life, defined as the average time to fail 10 percent of a set
+              of identical bearings.
+          - doc: "#01"
+            locator: "§5 Damage and actions, Subsurface initiated fatigue, p.63, Actions bullet 1"
+            note: >-
+              The first action is to select the right bearing for the ACTUAL application
+              conditions and their variations - load, temperature, speed, misalignment,
+              mounting - which is the actual-versus-design duty distinction.
+    typical_actions:
+      - Confirm the bearing selection still matches the actual load, speed and temperature before treating this as unavoidable.
+      - Where life is consistently short, review the selection rather than the maintenance.
+    citations:
+      - doc: "#01"
+        locator: "§5 Damage and actions, Subsurface initiated fatigue, p.63"
+        note: >-
+          An ISO SUB-MODE section, not a category of its own - p.62 states the illustrations
+          are classified per sub-mode following the ISO classification, and Material fatigue
+          is only the root-cause caption on two of the four photos. Its Actions are entirely
+          selection, quality, adjacent components and correct mounting, with no operational
+          item. Note that two of its four captions are premature failures, from misalignment
+          and from oval clamping.
+      - doc: "#04"
+        locator: "Subsurface Fatigue, p.3"
+        note: >-
+          Subsurface microcracks from repeated load cycles propagating to the surface as
+          spalling, with a full oil film and no metal-to-metal contact. The same page reports
+          it is not a common issue where better quality metals are used and that most bearings
+          will fail by another mechanism first, and defines L10 as the time to fail 10 percent
+          of a set of identical bearings.
+      - doc: "#04"
+        locator: "Surface-initiated Fatigue, p.4"
+        note: >-
+          The competing surface-damage sources - contaminant dents and handling damage - that
+          have to be absent before a spall is attributed to normal subsurface fatigue.
+    basis: triangulated
+    consider: >-
+      LAST. Weigh every other cause in this batch before this one. It is the only
+      entry that concludes nothing was done wrong, so reaching it early ends the
+      investigation that the other thirteen entries exist to run. #04 p.3 puts a
+      number on the prior: subsurface fatigue is not a common issue where better
+      quality metals are used, and most bearings will fail by another mechanism
+      first.
+    disagreement: >-
+      #02 p.6 reports that roughly half the bearings it receives never reached
+      calculated life and that about 90 percent of those failed for non-fatigue
+      reasons. Read with #01, which presents subsurface fatigue first, the two
+      sources differ in emphasis rather than fact - #01 describes the mode, #02
+      reports its observed frequency. The practical consequence is that normal
+      fatigue should be the LAST cause considered, not the first, and this entry
+      is deliberately ordered last for that reason.
+
+  # ── standstill (both rings) ───────────────────────────────────────────
+  - cause_id: standstill_vibration_false_brinelling
+    fault_family: [bearing_outer_race, bearing_inner_race]
+    extends_families: >-
+      EXTENSION. #01 p.73 illustrates false brinelling marks at roller or ball
+      spacing on a double row tapered roller OUTER ring, a CARB toroidal INNER
+      ring, a thrust ball shaft washer, a spherical roller OUTER ring, and a
+      cylindrical roller bearing's INNER AND OUTER rings together. The mechanism
+      is the element oscillating against whichever race it rests on.
+    stage: any
+    cause: Vibration or oscillation while the bearing is stationary
+    mechanism: >-
+      A bearing that is not turning still carries its load on a few elements, and
+      external vibration makes each element rub a few microns back and forth on
+      the same spot. That repeated micro-movement wears the surface away where a
+      static load alone would have left it untouched.
+    discriminating_evidence:
+      - observation: >-
+          Marks at the rolling element spacing, in the loaded zone, worn
+          TRANSVERSELY across the race width by slight AXIAL movement of the
+          element rather than merely sitting on one spot.
+        stream: visual
+        how_to_collect: Measure the mark pitch against the rolling element pitch, and record the mark's orientation across the race width.
+        citations:
+          - doc: "#01"
+            locator: "§4 ISO failure modes classification, Frictional corrosion - False brinelling, p.52"
+            note: >-
+              When stationary the marks fall at rolling element spacing; when rotating they
+              appear as parallel flutes.
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 condition 36, p.26"
+            note: >-
+              Vibrations from other machines while a machine is not rotating can lead to false
+              brinelling on the raceways; the damage typically occurs in the loaded zone and
+              is characterised by depressions in the raceways that match the distance between
+              the rolling elements.
+          - doc: "#02"
+            locator: "False Brinelling, p.20, and fig. 59"
+            note: >-
+              Fretting wear caused by slight AXIAL rolling-element movements while the bearing
+              is stationary - vibration makes the rolling element slide back and forth across
+              the race, wearing a groove into it.
+      - observation: >-
+          THE DISCRIMINATOR against mounting impact - the original surface
+          texture is WORN AWAY in a false-brinell mark, whereas a true brinell
+          dent is deformation and still shows the grinding marks in its bottom.
+        stream: visual
+        how_to_collect: Inspect the bottom of a mark under magnification and record whether the machining finish survives in it.
+        citations:
+          - doc: "#02"
+            locator: "False Brinelling, p.20, with Brinell and Impact Damage, p.19"
+            note: >-
+              False brinelling will actually wear away the surface texture, whereas the
+              original surface texture will remain in the depression of a true brinell.
+      - observation: >-
+          Mark SHAPE follows the element - sphered depressions in ball bearings,
+          longitudinal depressions in roller bearings - and parallel flutes rather
+          than discrete depressions mean it happened while ROTATING, which is a
+          different condition.
+        stream: visual
+        how_to_collect: Record the depression shape and whether the marks are discrete or continuous flutes, alongside the pitch.
+        citations:
+          - doc: "#01"
+            locator: "§4 ISO failure modes classification, Frictional corrosion - False brinelling, p.52"
+            note: >-
+              Sphered depressions for ball bearings and longitudinal depressions for roller
+              bearings; parallel flutes when the damage occurs while rotating.
+      - observation: >-
+          A standby, spared or seasonally idle duty, a period of road, rail or sea
+          transport, or a machine left standing beside running plant.
+        stream: history
+        how_to_collect: Operating log covering idle periods, transport, and whether nearby plant ran while this machine stood.
+        citations:
+          - doc: "#01"
+            locator: "§2 Inspection and troubleshooting, Table 2 condition 36, p.26"
+            note: >-
+              Names vibrations from OTHER machines while this machine is not rotating - the
+              idle-beside-running-plant duty - as the route to false brinelling.
+          - doc: "#01"
+            locator: "§5 Damage and actions, False brinelling, p.73, Actions"
+            note: >-
+              The Actions bullet names standby machines explicitly.
+          - doc: "#02"
+            locator: "False Brinelling, p.20"
+            note: >-
+              Bearings shipped by rail, truck or ocean freight, and damage occurring during
+              shipment or storage.
+      - observation: >-
+          The mark pitch is the SAME signature as mounting impact, from a different
+          event. No cited page states that mounting-impact brinell marks fall at
+          rolling element pitch - the claim leans on the sibling entry, not on this
+          entry's own sources.
+        stream: visual
+        inferred: true
+        how_to_collect: Read the pitch alongside the surface-texture test above, which is the clause that actually separates the two.
+    typical_actions:
+      - Rotate standby machines at intervals so the elements do not rest on the same spot.
+      - Isolate the machine from neighbouring vibration at standstill, by damping pads or by separation.
+      - Where the duty cannot be changed, review the lubricant for anti-brinelling properties and the bearing choice for vibratory service.
+    citations:
+      - doc: "#01"
+        locator: "§4 ISO failure modes classification, Frictional corrosion - False brinelling, p.52"
+        note: >-
+          The mechanism text rather than the photo plate - stationary gives marks at rolling
+          element spacing, rotating gives parallel flutes, with sphered depressions for ball
+          bearings and longitudinal depressions for roller bearings.
+      - doc: "#01"
+        locator: "§5 Damage and actions, False brinelling, p.73"
+        note: >-
+          Exposure to vibration at standstill producing marks at roller or ball spacing across
+          five bearing types; the listed actions name rotating standby machines and damping
+          the vibration.
+      - doc: "#01"
+        locator: "§2 Inspection and troubleshooting, Table 2 condition 36, p.26"
+        note: >-
+          Vibrations from other machines while a machine is not rotating, damage in the loaded
+          zone, depressions matching the rolling element spacing. Condition 35 is the
+          mounting-impact counterpart.
+      - doc: "#02"
+        locator: "False Brinelling, p.20, with Brinell and Impact Damage, p.19"
+        note: >-
+          Defines it as fretting wear from slight AXIAL element movement while stationary,
+          names transport as a common cause, and gives the surface-texture test that separates
+          it from a true brinell dent. The axial qualifier was restored in R2-B0.2 - it
+          predicts marks worn across the race width, not merely on one spot.
+    basis: triangulated
+    related: [inner_race_mounting_impact_brinelling]

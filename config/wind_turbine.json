@@ -1,0 +1,31 @@
+{
+  "_comment": "Adapter-level DSP/parsing config for the wind-turbine high-speed-shaft bearing run-to-failure dataset (Phase 7B). Consumed only by src/vib_agent/adapters/wind_turbine.py — never by pdm_core. Not a pdm_core tunable, so it is not subject to the profiles.route whitelist; it configures signal preprocessing (envelope demodulation) and dataset provenance, not detector/gate/confidence logic. Mirrors config/mfpt.json's structure and discipline.",
+
+  "_attribution": "Data: github.com/mathworks/WindTurbineHighSpeedBearingPrognosis-Data, sourced from http://data-acoustics.com/measurements/bearing-faults/bearing-3/. Owner: Eric Bechhoefer (eric@gpms-vt.com). Licensed CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/). Kept in data/ (gitignored), NEVER redistributed. Attribution required in any results doc — see outputs/wind_turbine_results.md.",
+
+  "_envelope_band_note": "Reused VERBATIM from config/cwru.json's envelope_band_hz/envelope_region_hz, exactly as config/mfpt.json did — same rig-agnostic bandpass-then-envelope technique, ZERO new DSP tuning for this phase (INVARIANT 1, frozen constants). Empirically appropriate here rather than merely inherited: this rig's bearing-resonance energy sits at ~3900-4100 Hz (probed on data-20130307T015746Z.mat, peaks 0.10-0.13 vs a 0.002 noise floor), comfortably inside the 1500-5500 Hz passband. The 0-500 Hz envelope region likewise spans the plausible BPFO/BPFI range for a ~30 Hz shaft (a typical 8-20 element bearing puts BPFO/BPFI at roughly 3-12x shaft = 90-360 Hz).",
+  "envelope_band_hz": [1500, 5500],
+  "envelope_region_hz": [0, 500],
+
+  "_fs_note": "Not stated in the repo README. 97656 Hz is the value the Phase 7B spec states, and it is corroborated exactly by the data: every one of the 50 files holds 585936 vibration samples, and 585936 / 97656 = 6.0000 s exactly — matching the spec's stated 6 s record length to 5 significant figures. Asserted at parse time (see adapters/wind_turbine.py::load_wt_mat), never assumed silently.",
+  "sample_rate_hz": 97656,
+  "record_seconds": 6.0,
+
+  "_tach_note": "Each file's 'tach' field is a monotonically-increasing vector of tachometer PULSE TIMES in seconds (not a sampled waveform, and not RPM). Its span (~40 s) is LONGER than the 6 s vibration record, so it is a separate acquisition merged in by the dataset authors (see README 'Modification of the original data') — it is used ONLY to derive an average shaft rate, never sample-aligned to the vibration.",
+
+  "_pulses_per_rev_note": "DERIVED AT RUNTIME AND CROSS-CHECKED, not assumed — the repo documents no shaft speed, so this is the one inference the whole phase's shaft rate rests on. Evidence for 2 pulses/rev (probe on data-20130307T015746Z.mat, median noise floor 0.00206 over 5-500 Hz): (1) tach pulse rate = 60.0885 Hz, extremely regular (inter-pulse std 0.00002 s); (2) the raw spectrum's 1x candidate at tach/2 = 30.044 Hz shows a clear peak at 30.00 Hz at 8.9x noise, whereas the 1-pulse/rev candidate at 60.089 Hz sits at 1.5x noise — i.e. no 1x peak there at all; (3) DECISIVE: the spec states a 20-tooth pinion drives this shaft, and 20 x 30.044 = 600.88 Hz predicted gear-mesh lands on an observed 600.33 Hz peak at 17.6x noise (0.09% delta), while the 1-pulse/rev prediction (20 x 60.089 = 1201.77 Hz) sits at 2.1x noise. Two independent lines of evidence (1x presence and gear-mesh geometry) agree on 2 pulses/rev.",
+  "tach_pulses_per_rev": 2,
+
+  "_shaft_cross_check_note": "Spec: 'cross-check against the 1x peak of an early file's raw spectrum; flag >3% disagreement'. Observed on data-20130307T015746Z.mat: tach-derived 30.0442 Hz vs raw-spectrum 1x at 30.00 Hz = 0.15% disagreement — well inside tolerance, no flag. The shaft rate is re-derived per file from that file's own tach (this is a real variable-speed turbine: rates range ~60.07-62.47 Hz tach / ~30.03-31.23 Hz shaft across the 50 files), never hardcoded.",
+  "shaft_cross_check_tolerance_pct": 3.0,
+  "one_x_search_pct": 10.0,
+
+  "_gear_note": "Spec work-item 3, GEAR-CONTENT HONESTY: a 20-tooth pinion drives this shaft, so gear-mesh content IS expected and we have NO gear detector. Gear-mesh frequency = 20 x shaft (~600 Hz) plus harmonics. This is logged as unexplained-but-expected content in the results doc and queued as Phase 9 motivation. NOTE: the 0-500 Hz envelope region excludes the ~600 Hz fundamental GMF from the RCA's candidate window anyway, so no detector can force-fit it; it is reported from the RAW spectrum for honesty, not fed to a detector.",
+  "gear_pinion_teeth": 20,
+
+  "_bearing_note": "BLOCKED — see BLOCKED_phase7b_bearing_geometry.md. The machine's bearing is an SKF 32222 J2 tapered roller, but its roller count (Z) and roller mean diameter (Dw) are not stated in the repo, not present in any of the 50 .mat files, and not derivable from the '32222' designation (which fixes only bore 110mm / OD 200mm / T 56mm, hence pitch diameter ~155mm, and a 322-series contact angle of ~14deg). RULE 7 bars the catalog lookup that would resolve it. Because BPFI scales directly with Z (Z=17 vs Z=20 moves BPFI ~18%, six times the route profile's 3% match tolerance), an invented Z yields a MEANINGLESS BPFI, not a slightly-wrong one — so no value is supplied here rather than a fabricated one. bearing_key stays null: MachineMeta.bearing is then None, which pdm_core.bearing_rca handles by design (bearing_rca.py:332 'if machine.bearing is not None'), so the bearing detectors simply do not fire and no false bearing call is manufactured. Set this to a real bearings.json key to unblock the RCA progression; nothing else needs to change.",
+  "bearing_key": null,
+
+  "_validation_scope_note": "Spec work-item 1: acceleration units (g) mean ISO zones and the velocity-based trend alarm limit are OUT of scope; slope/R2/pct-change and z-scores are unit-relative and IN scope. Emitted on every case.",
+  "validation_scope": ["rca", "trend_relative", "anomaly"]
+}

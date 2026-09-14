@@ -1,0 +1,41 @@
+{
+  "_comment": "Adapter-level DSP/parsing config for the CWRU Bearing Data Center 12kHz Drive-End dataset (Phase 3.5). Consumed only by src/vib_agent/adapters/cwru.py — never by pdm_core. Not a pdm_core tunable, so it is not subject to the profiles.route whitelist; it configures signal *preprocessing* (envelope demodulation), not detector/gate/confidence logic.",
+  "fs_hz": 12000,
+  "envelope_band_hz": [1500, 5500],
+  "envelope_region_hz": [0, 500],
+  "rpm_by_load_suffix": {
+    "0": 1797,
+    "1": 1772,
+    "2": 1750,
+    "3": 1730
+  },
+  "bearing_key": "SKF_6205",
+  "starter_files": {
+    "_comment": "Starter set (12 files): filename -> CWRU Bearing Data Center file number, for scripts/fetch_cwru.py. Normal baseline + 12k Drive-End fault data only (v1 scope). Verified: all 12 files' internal *_DE_time key numbers match their assigned file number (see tests/test_cwru_adapter.py investigation notes / Phase 3.5 close-out).",
+    "Normal_0": 97,
+    "Normal_3": 100,
+    "OR007@6_0": 130,
+    "OR007@6_3": 133,
+    "OR014@6_0": 197,
+    "OR021@6_0": 234,
+    "IR007_0": 105,
+    "IR007_3": 108,
+    "IR014_0": 169,
+    "IR021_0": 209,
+    "B014_0": 189,
+    "B021_0": 222
+  },
+  "full_de_files": {
+    "_comment": "Full 12k Drive-End set, v1 scope (Normal + IR + OR@6-centered + Ball, diameters 0.007/0.014/0.021in, all 4 loads = 40 files). Load suffix -> rpm via rpm_by_load_suffix. OR@3/OR@12 clock positions and 0.028in+ diameters remain out of v1 scope (never independently verified; not authorized). Each block's starting file number verified against the 12-file starter set (see starter_files); the load-1/2 extensions within an already-verified block are a direct, low-risk adjacency inference. B007 (0.007in ball) has NO verified anchor in this project — flagged accordingly in cwru_results.md if fetched.",
+    "Normal_0": 97, "Normal_1": 98, "Normal_2": 99, "Normal_3": 100,
+    "IR007_0": 105, "IR007_1": 106, "IR007_2": 107, "IR007_3": 108,
+    "B007_0": 118, "B007_1": 119, "B007_2": 120, "B007_3": 121,
+    "OR007@6_0": 130, "OR007@6_1": 131, "OR007@6_2": 132, "OR007@6_3": 133,
+    "IR014_0": 169, "IR014_1": 170, "IR014_2": 171, "IR014_3": 172,
+    "B014_0": 189, "B014_1": 190, "B014_2": 191, "B014_3": 192,
+    "OR014@6_0": 197, "OR014@6_1": 198, "OR014@6_2": 199, "OR014@6_3": 200,
+    "IR021_0": 209, "IR021_1": 210, "IR021_2": 211, "IR021_3": 212,
+    "B021_0": 222, "B021_1": 223, "B021_2": 224, "B021_3": 225,
+    "OR021@6_0": 234, "OR021@6_1": 235, "OR021@6_2": 236, "OR021@6_3": 237
+  }
+}

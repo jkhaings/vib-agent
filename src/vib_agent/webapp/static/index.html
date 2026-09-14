@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vib-agent — Vibration Analysis</title>
+<meta name="contact-email" content="{{contact_email}}">
+{{account_head}}
+<link rel="stylesheet" href="/style.css">
+</head>
+<!-- Session UX-4, RULED by the operator: this is a web application first, so
+     the app surfaces get room and the reading surfaces keep their measure.
+     This class is what tells the stylesheet which page it is on. It is a
+     STATIC class on the one page that carries the app, not a runtime one:
+     /privacy, /login, /validation and the four marketing pages all
+     render the same shell without it and stay at the 880px reading column. -->
+<body class="app">
+
+<header>
+  <div class="wrap">
+    <div class="mast">
+      <div class="mark">VIB-AGENT<span>VIBRATION ANALYSIS</span></div>
+      <nav>
+        <a href="/#/">Machines</a>
+        <a href="/validation">Validation</a>
+        <a href="/privacy">Privacy</a>
+        {{account_nav}}
+      </nav>
+    </div>
+  </div>
+  <svg class="spectrum" viewBox="0 0 880 64" preserveAspectRatio="none" aria-hidden="true">
+    <polyline fill="none" stroke="#C9D2CD" stroke-width="1"
+      points="0,58 40,56 60,57 80,54 95,57 110,55 120,20 128,55 150,56 170,53 190,56 215,54 235,57
+              255,50 262,34 270,52 290,55 310,53 330,56 350,54 368,44 375,26 383,50 400,55 420,53
+              440,56 460,54 480,57 495,40 502,30 510,52 530,55 550,54 570,56 590,53 610,55 625,46
+              632,38 640,53 660,55 680,54 700,56 720,55 740,57 760,55 780,56 800,54 820,57 850,56 880,57"/>
+    <g class="sig-lb">
+      <text x="112" y="14">1&#215;</text>
+      <text x="252" y="28">BPFO</text>
+      <text x="362" y="20">2&#215;BPFO</text>
+      <text x="487" y="24">3&#215;BPFO</text>
+    </g>
+    <line x1="0" y1="59" x2="880" y2="59" stroke="#D8DCD7" stroke-width="1"/>
+  </svg>
+</header>
+
+<main class="wrap">
+
+  <!-- ══ machines: the front door (Session UX-1) ══
+       Both view containers are REAL markup rather than nodes app.js creates,
+       for two reasons. tests/js/harness.js backs an element with the classes
+       index.html gives it and REFUSES to answer "is this visible?" about an id
+       the page does not define -- so a view built at runtime could not be
+       proved hidden. And an empty section costs nothing to a reader who never
+       leaves the upload form. Both are hidden here and revealed by route(). -->
+  <section id="view-machines" hidden>
+    <!-- Session UX-4: both actions live here, once. "Add a machine" used to
+         be rendered into #machines-body by app.js -- twice, in fact: once
+         under the card list and once inside the empty state -- so the panel
+         had a header with one action and a footer with another. One row,
+         title left, both actions right, same height. -->
+    <div class="mhead">
+      <h2 class="eyebrow" id="machines-head" tabindex="-1">Machines</h2>
+      <div class="mhead-actions">
+        <a class="btn-ghost" href="/#/m/new">Add a machine</a>
+        <a class="cta" href="/#/new">New reading</a>
+      </div>
+    </div>
+    <div id="machines-body"></div>
+  </section>
+
+  <section id="view-machine" hidden>
+    <a class="backlink" href="/#/">&#8592; All machines</a>
+    <h2 class="eyebrow" id="machine-head" tabindex="-1"></h2>
+    <div id="machine-body"></div>
+  </section>
+
+  <!-- Session UX-2: ONE container for both create and edit. The fields inside
+       it are rendered by app.js rather than written here, and that is a
+       requirement rather than a style: `bearing_model`, `iso_support` and
+       `detection_type` are pinned to appear under the More options disclosure
+       and NOWHERE BEFORE IT in this file (tests/test_session_f2.py,
+       tests/test_intake_honest.py). A second static copy of those names above
+       the form would turn both pins red while changing nothing an analyst
+       sees. The container itself is real markup for the usual reason: the node
+       harness refuses to answer "is this visible?" about an id the page does
+       not define. -->
+  <section id="view-machine-edit" hidden>
+    <a class="backlink" href="/#/">&#8592; All machines</a>
+    <h2 class="eyebrow" id="machine-edit-head" tabindex="-1"></h2>
+    <div id="machine-edit-body"></div>
+  </section>
+
+  <!-- ══ hero ══ -->
+  <section class="hero" id="hero">
+    <h1>Analyst-grade vibration reports in minutes.</h1>
+    <p class="sub">Upload route data. <b>Tested deterministic code computes every number</b> —
+      ISO 20816 classification, bearing fault identification, computed confidence. An AI drafts the
+      narrative; a verifier checks every claim against the math. <b>You review and sign.</b></p>
+    <div class="hero-actions">
+      <a class="cta" href="/#/new">Upload route data</a>
+      <a class="btn-ghost" href="#showcase">See the report it makes</a>
+    </div>
+    <figure class="hero-viz">
+      <div class="hv-stage" id="hv-stage">
+      <svg class="hv-svg" viewBox="0 0 880 230" preserveAspectRatio="xMidYMid meet" role="img"
+           aria-label="Velocity spectrum of the bundled example file: a 6206 bearing at 1800 rpm with an outer-race fault. The tallest peak is BPFO at 107.0 Hz, with 2&#215; and 3&#215; harmonics, above an amplitude floor of 0.3002 mm/s.">
+        <line class="hv-fl" x1="0" y1="174.9" x2="880" y2="174.9"/>
+        <text class="hv-fll" x="876" y="161.9" text-anchor="end">Amplitude floor 0.3002 (12.73&#215; mean)</text>
+        <line class="hv-g hv-gs hv-g1" x1="66.0" y1="196" x2="66.0" y2="145.3"/>
+        <line class="hv-g hv-gd hv-g2" x1="235.5" y1="196" x2="235.5" y2="22.0"/>
+        <line class="hv-g hv-gd hv-g3" x1="470.9" y1="196" x2="470.9" y2="96.0"/>
+        <line class="hv-g hv-gd hv-g4" x1="706.4" y1="196" x2="706.4" y2="140.3"/>
+        <polyline class="hv-tr" pathLength="1" points="0.0,194.6 1.1,194.6 2.2,194.6 3.3,194.6 4.4,194.6 5.5,194.6 6.6,194.6 7.7,194.6 8.8,194.6 9.9,194.6 11.0,195.0 12.1,195.0 13.2,195.0 14.3,195.0 15.4,195.0 16.5,195.0 17.6,195.0 18.7,195.0 19.8,195.0 20.9,195.0 22.0,195.0 23.1,195.0 24.2,195.0 25.3,195.0 26.4,195.0 27.5,195.0 28.6,195.0 29.7,195.0 30.8,195.0 31.9,195.0 33.0,195.0 34.1,195.0 35.2,195.0 36.3,195.0 37.4,195.0 38.5,195.0 39.6,195.0 40.7,195.0 41.8,195.0 42.9,195.0 44.0,195.0 45.1,195.0 46.2,195.0 47.3,195.0 48.4,195.0 49.5,195.0 50.6,195.0 51.7,195.0 52.8,195.0 53.9,195.0 55.0,195.0 56.1,195.0 57.2,195.0 58.3,195.0 59.4,195.0 60.5,195.0 61.6,195.1 62.7,195.1 63.8,192.5 64.9,185.2 66.0,157.3 67.1,185.2 68.2,192.5 69.3,195.1 70.4,195.1 71.5,195.1 72.6,195.1 73.7,195.1 74.8,195.1 75.9,195.1 77.0,195.1 78.1,195.1 79.2,195.1 80.3,195.1 81.4,195.1 82.5,195.1 83.6,195.1 84.7,195.1 85.8,195.1 86.9,195.1 88.0,195.1 89.1,195.1 90.2,195.1 91.3,195.1 92.4,195.1 93.5,195.1 94.6,195.1 95.7,195.1 96.8,195.1 97.9,195.1 99.0,195.1 100.1,195.1 101.2,195.1 102.3,195.1 103.4,195.1 104.5,195.1 105.6,195.1 106.7,195.1 107.8,195.1 108.9,195.1 110.0,195.1 111.1,195.1 112.2,195.1 113.3,195.1 114.4,195.1 115.5,195.1 116.6,195.1 117.7,195.1 118.8,195.1 119.9,195.1 121.0,195.1 122.1,195.1 123.2,195.1 124.3,195.1 125.4,195.1 126.5,195.1 127.6,195.1 128.7,195.1 129.8,194.6 130.9,191.7 132.0,180.5 133.1,191.7 134.2,194.6 135.3,195.1 136.4,195.1 137.5,195.1 138.6,195.1 139.7,195.1 140.8,195.1 141.9,195.1 143.0,195.1 144.1,195.1 145.2,195.1 146.3,195.1 147.4,195.1 148.5,195.1 149.6,195.1 150.7,195.1 151.8,195.1 152.9,195.1 154.0,195.1 155.1,195.1 156.2,195.1 157.3,195.1 158.4,195.1 159.5,195.1 160.6,195.1 161.7,195.1 162.8,195.1 163.9,195.1 165.0,195.1 166.1,195.1 167.2,193.1 168.3,187.1 169.4,164.3 170.5,187.1 171.6,193.1 172.7,195.1 173.8,195.1 174.9,195.1 176.0,195.1 177.1,195.1 178.2,195.1 179.3,195.1 180.4,195.1 181.5,195.1 182.6,195.1 183.7,195.1 184.8,195.1 185.9,195.1 187.0,195.1 188.1,195.1 189.2,195.1 190.3,195.1 191.4,195.1 192.5,195.1 193.6,195.1 194.7,195.1 195.8,195.1 196.9,194.2 198.0,189.7 199.1,194.2 200.2,195.1 201.3,195.1 202.4,195.1 203.5,195.1 204.6,195.1 205.7,195.1 206.8,195.1 207.9,195.1 209.0,195.1 210.1,195.1 211.2,195.1 212.3,195.1 213.4,195.1 214.5,195.2 215.6,195.2 216.7,195.2 217.8,195.2 218.9,195.2 220.0,195.2 221.1,195.2 222.2,195.2 223.3,195.2 224.4,195.2 225.5,195.2 226.6,195.2 227.7,195.2 228.8,195.2 229.9,195.2 231.0,195.2 232.1,195.2 233.2,181.4 234.3,150.6 235.4,34.0 236.5,150.6 237.6,181.4 238.7,195.2 239.8,195.2 240.9,195.2 242.0,195.2 243.1,195.2 244.2,195.2 245.3,195.2 246.4,195.2 247.5,195.2 248.6,195.2 249.7,195.2 250.8,195.2 251.9,195.2 253.0,195.2 254.1,195.2 255.2,195.2 256.3,195.2 257.4,195.2 258.5,195.2 259.6,195.2 260.7,195.2 261.8,195.2 262.9,195.2 264.0,195.2 265.1,195.2 266.2,195.2 267.3,195.2 268.4,195.2 269.5,195.2 270.6,195.2 271.7,195.2 272.8,195.2 273.9,195.2 275.0,195.2 276.1,195.2 277.2,195.2 278.3,195.2 279.4,195.2 280.5,195.2 281.6,195.2 282.7,195.2 283.8,195.2 284.9,195.2 286.0,195.2 287.1,195.2 288.2,195.2 289.3,195.2 290.4,195.2 291.5,195.2 292.6,195.2 293.7,195.2 294.8,195.2 295.9,195.2 297.0,195.2 298.1,195.2 299.2,193.0 300.3,186.7 301.4,162.9 302.5,186.7 303.6,193.0 304.7,195.2 305.8,195.2 306.9,195.2 308.0,195.2 309.1,195.2 310.2,195.2 311.3,195.2 312.4,195.2 313.5,195.2 314.6,195.2 315.7,195.2 316.8,195.2 317.9,195.2 319.0,195.2 320.1,195.2 321.2,195.2 322.3,195.2 323.4,195.2 324.5,195.2 325.6,195.2 326.7,195.2 327.8,195.2 328.9,195.2 330.0,195.2 331.1,195.2 332.2,195.2 333.3,195.2 334.4,195.2 335.5,195.2 336.6,195.2 337.7,195.2 338.8,195.2 339.9,195.2 341.0,195.2 342.1,195.2 343.2,195.2 344.3,195.2 345.4,195.2 346.5,195.2 347.6,195.2 348.7,195.2 349.8,195.2 350.9,195.2 352.0,195.2 353.1,195.2 354.2,195.2 355.3,195.2 356.4,195.2 357.5,195.2 358.6,195.2 359.7,195.2 360.8,195.2 361.9,195.2 363.0,195.2 364.1,195.2 365.2,195.2 366.3,195.2 367.4,195.2 368.5,195.3 369.6,195.3 370.7,195.3 371.8,195.3 372.9,195.3 374.0,195.3 375.1,195.3 376.2,195.3 377.3,195.3 378.4,195.3 379.5,195.3 380.6,195.3 381.7,195.3 382.8,195.3 383.9,195.3 385.0,195.3 386.1,195.3 387.2,195.3 388.3,195.3 389.4,195.3 390.5,195.3 391.6,195.3 392.7,195.3 393.8,195.3 394.9,195.3 396.0,195.3 397.1,195.3 398.2,195.3 399.3,195.3 400.4,195.3 401.5,195.3 402.6,194.2 403.7,190.5 404.8,176.3 405.9,190.5 407.0,194.2 408.1,195.3 409.2,195.3 410.3,195.3 411.4,195.3 412.5,195.3 413.6,195.3 414.7,195.3 415.8,195.3 416.9,195.3 418.0,195.3 419.1,195.3 420.2,195.3 421.3,195.3 422.4,195.3 423.5,195.3 424.6,195.3 425.7,195.3 426.8,195.3 427.9,195.3 429.0,195.3 430.1,195.3 431.2,195.3 432.3,195.3 433.4,195.3 434.5,195.3 435.6,195.3 436.7,195.3 437.8,195.3 438.9,195.3 440.0,195.3 441.1,195.3 442.2,195.3 443.3,195.3 444.4,195.3 445.5,195.3 446.6,195.3 447.7,195.3 448.8,195.3 449.9,195.3 451.0,195.3 452.1,195.3 453.2,195.3 454.3,195.3 455.4,195.3 456.5,195.3 457.6,195.3 458.7,195.3 459.8,195.3 460.9,195.3 462.0,195.3 463.1,195.3 464.2,195.3 465.3,195.3 466.4,195.3 467.5,195.3 468.6,188.1 469.7,171.3 470.8,108.0 471.9,171.3 473.0,188.1 474.1,195.3 475.2,195.3 476.3,195.3 477.4,195.3 478.5,195.3 479.6,195.3 480.7,195.3 481.8,195.3 482.9,195.3 484.0,195.3 485.1,195.3 486.2,195.3 487.3,195.3 488.4,195.3 489.5,195.3 490.6,195.3 491.7,195.3 492.8,195.3 493.9,195.3 495.0,195.3 496.1,195.3 497.2,195.3 498.3,195.3 499.4,195.3 500.5,195.3 501.6,195.3 502.7,195.3 503.8,195.3 504.9,195.3 506.0,195.3 507.1,195.3 508.2,195.3 509.3,195.3 510.4,195.3 511.5,195.3 512.6,195.3 513.7,195.3 514.8,195.3 515.9,195.3 517.0,195.3 518.1,195.3 519.2,195.3 520.3,195.3 521.4,195.3 522.5,195.4 523.6,195.4 524.7,195.4 525.8,195.4 526.9,195.4 528.0,195.4 529.1,195.4 530.2,195.4 531.3,195.4 532.4,195.4 533.5,195.4 534.6,194.1 535.7,190.1 536.8,174.9 537.9,190.1 539.0,194.1 540.1,195.4 541.2,195.4 542.3,195.4 543.4,195.4 544.5,195.4 545.6,195.4 546.7,195.4 547.8,195.4 548.9,195.4 550.0,195.4 551.1,195.4 552.2,195.4 553.3,195.4 554.4,195.4 555.5,195.4 556.6,195.4 557.7,195.4 558.8,195.4 559.9,195.4 561.0,195.4 562.1,195.4 563.2,195.4 564.3,195.4 565.4,195.4 566.5,195.4 567.6,195.4 568.7,195.4 569.8,195.4 570.9,195.4 572.0,195.4 573.1,195.4 574.2,195.4 575.3,195.4 576.4,195.4 577.5,195.4 578.6,195.4 579.7,195.4 580.8,195.4 581.9,195.4 583.0,195.4 584.1,195.4 585.2,195.4 586.3,195.4 587.4,195.4 588.5,195.4 589.6,195.4 590.7,195.4 591.8,195.4 592.9,195.4 594.0,195.4 595.1,195.4 596.2,195.4 597.3,195.4 598.4,195.4 599.5,195.4 600.6,195.4 601.7,195.4 602.8,195.4 603.9,195.4 605.0,195.4 606.1,195.4 607.2,195.4 608.3,195.4 609.4,195.4 610.5,195.4 611.6,195.4 612.7,195.4 613.8,195.4 614.9,195.4 616.0,195.4 617.1,195.4 618.2,195.4 619.3,195.4 620.4,195.4 621.5,195.4 622.6,195.4 623.7,195.4 624.8,195.4 625.9,195.4 627.0,195.4 628.1,195.4 629.2,195.4 630.3,195.4 631.4,195.4 632.5,195.4 633.6,195.4 634.7,195.4 635.8,195.4 636.9,195.4 638.0,195.4 639.1,195.4 640.2,195.4 641.3,195.4 642.4,195.4 643.5,195.4 644.6,195.4 645.7,195.4 646.8,195.4 647.9,195.4 649.0,195.4 650.1,195.4 651.2,195.4 652.3,195.4 653.4,195.4 654.5,195.4 655.6,195.4 656.7,195.4 657.8,195.4 658.9,195.4 660.0,195.4 661.1,195.4 662.2,195.4 663.3,195.4 664.4,195.4 665.5,195.4 666.6,195.4 667.7,195.4 668.8,195.4 669.9,195.4 671.0,195.4 672.1,195.4 673.2,195.4 674.3,195.4 675.4,195.4 676.5,195.5 677.6,195.5 678.7,195.5 679.8,195.5 680.9,195.5 682.0,195.5 683.1,195.5 684.2,195.5 685.3,195.5 686.4,195.5 687.5,195.5 688.6,195.5 689.7,195.5 690.8,195.5 691.9,195.5 693.0,195.5 694.1,195.5 695.2,195.5 696.3,195.5 697.4,195.5 698.5,195.5 699.6,195.5 700.7,195.5 701.8,195.5 702.9,195.5 704.0,192.1 705.1,183.8 706.2,152.3 707.3,183.8 708.4,192.1 709.5,195.5 710.6,195.5 711.7,195.5 712.8,195.5 713.9,195.5 715.0,195.5 716.1,195.5 717.2,195.5 718.3,195.5 719.4,195.5 720.5,195.5 721.6,195.5 722.7,195.5 723.8,195.5 724.9,195.5 726.0,195.5 727.1,195.5 728.2,195.5 729.3,195.5 730.4,195.5 731.5,195.5 732.6,195.5 733.7,195.5 734.8,195.5 735.9,195.5 737.0,195.5 738.1,195.5 739.2,195.5 740.3,195.5 741.4,195.5 742.5,195.5 743.6,195.5 744.7,195.5 745.8,195.5 746.9,195.5 748.0,195.5 749.1,195.5 750.2,195.5 751.3,195.5 752.4,195.5 753.5,195.5 754.6,195.5 755.7,195.5 756.8,195.5 757.9,195.5 759.0,195.5 760.1,195.5 761.2,195.5 762.3,195.5 763.4,195.5 764.5,195.5 765.6,195.5 766.7,195.5 767.8,195.5 768.9,195.5 770.0,195.5 771.1,195.5 772.2,195.5 773.3,195.5 774.4,195.5 775.5,195.5 776.6,195.5 777.7,195.5 778.8,195.5 779.9,195.5 781.0,195.5 782.1,195.5 783.2,195.5 784.3,195.5 785.4,195.5 786.5,195.5 787.6,195.5 788.7,195.5 789.8,195.5 790.9,195.5 792.0,195.5 793.1,195.5 794.2,195.5 795.3,195.5 796.4,195.5 797.5,195.5 798.6,195.5 799.7,195.5 800.8,195.5 801.9,195.5 803.0,195.5 804.1,195.5 805.2,195.5 806.3,195.5 807.4,195.5 808.5,195.5 809.6,195.5 810.7,195.5 811.8,195.5 812.9,195.5 814.0,195.5 815.1,195.5 816.2,195.5 817.3,195.5 818.4,195.5 819.5,195.5 820.6,195.5 821.7,195.5 822.8,195.5 823.9,195.5 825.0,195.5 826.1,195.5 827.2,195.5 828.3,195.5 829.4,195.5 830.5,195.5 831.6,195.5 832.7,195.5 833.8,195.5 834.9,195.5 836.0,195.5 837.1,195.5 838.2,195.5 839.3,195.5 840.4,195.5 841.5,195.6 842.6,195.6 843.7,195.6 844.8,195.6 845.9,195.6 847.0,195.6 848.1,195.6 849.2,195.6 850.3,195.6 851.4,195.6 852.5,195.6 853.6,195.6 854.7,195.6 855.8,195.6 856.9,195.6 858.0,195.6 859.1,195.6 860.2,195.6 861.3,195.6 862.4,195.6 863.5,195.6 864.6,195.6 865.7,195.6 866.8,195.6 867.9,195.6 869.0,195.6 870.1,195.6 871.2,195.6 872.3,195.6 873.4,195.6 874.5,195.6 875.6,195.6 876.7,195.6 877.8,195.6 878.9,195.6 880.0,195.6"/>
+        <line class="hv-ax" x1="0" y1="196" x2="880" y2="196"/>
+        <text class="hv-ax-t" x="0.0" y="212" text-anchor="start">0</text>
+        <text class="hv-ax-t" x="220.0" y="212" text-anchor="middle">100</text>
+        <text class="hv-ax-t" x="440.0" y="212" text-anchor="middle">200</text>
+        <text class="hv-ax-t" x="660.0" y="212" text-anchor="middle">300</text>
+        <text class="hv-ax-t" x="880.0" y="212" text-anchor="end">400 Hz</text>
+        <text class="hv-lb hv-l1" x="36.0" y="138.3" text-anchor="start">1&#215; 30.0 Hz</text>
+        <text class="hv-lb hv-l2" x="235.5" y="15.0" text-anchor="middle">BPFO 107.0 Hz &#183; computed 107.03</text>
+        <text class="hv-lb hv-l3" x="470.9" y="89.0" text-anchor="middle">2&#215;BPFO 214.0 Hz</text>
+        <text class="hv-lb hv-l4" x="706.4" y="133.3" text-anchor="middle">3&#215;BPFO 321.0 Hz</text>
+      </svg>
+      </div>
+      <figcaption class="hv-legend">0–400 Hz · Δf 0.5 Hz · mm/s · 6206 bearing @ 1800 rpm — <b>the
+        file the example button uploads</b>, drawn bin for bin.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ══ how a report is made ══ -->
+  <section class="landing hiw" id="how">
+    <h2 class="eyebrow">1 · How a report is made</h2>
+
+    <div class="step-row rv">
+      <span class="sn">01</span>
+      <div class="sc">
+        <h3>Upload route data.</h3>
+        <p>Spectrum or raw waveform, straight off the collector. WAV, UFF and MAT have their FFT
+          computed here — you do not have to export a spectrum first.</p>
+      </div>
+      <div class="sv sv-fmt" aria-hidden="true">
+        <span class="fmt">CSV</span><span class="fmt">XLSX</span><span class="fmt">UFF/UNV</span>
+        <span class="fmt">WAV</span><span class="fmt">.MAT</span><span class="fmt">TXT/DAT/ASC</span>
+        <span class="fmt-n">max 25 MB · up to three channels</span>
+      </div>
+    </div>
+
+    <div class="step-row rv">
+      <span class="sn">02</span>
+      <div class="sc">
+        <h3>Confirm how we read it.</h3>
+        <p>An unfamiliar layout is worked out, shown back to you in the reading it produced, and
+          waits for your OK. Nothing is analysed before you agree.</p>
+      </div>
+      <div class="sv sv-confirm" aria-hidden="true">
+        <div class="readas">
+          <div class="lbl">Read as</div>
+          <p><b>in/s peak spectrum</b>, frequency axis in <code>Hz</code>.</p>
+        </div>
+        <p class="sv-q">Running speed <code>1785 rpm</code> from the file header — correct?</p>
+      </div>
+    </div>
+
+    <div class="step-row rv">
+      <span class="sn">03</span>
+      <div class="sc">
+        <h3>Review and sign.</h3>
+        <p>Every claim in the draft is checked against the computed result before issue. You get a
+          DRAFT to review and sign. The signature stays human.</p>
+      </div>
+      <div class="sv sv-pages" aria-hidden="true">
+        <img class="pgm pgm-a" src="/assets/report-p01.png" width="1191" height="1684" alt="" loading="lazy">
+        <img class="pgm pgm-b" src="/assets/report-p08.png" width="1191" height="1684" alt="" loading="lazy">
+      </div>
+    </div>
+
+    <p class="creed">Agentic where it helps. Deterministic where it matters. Honest where it can’t assess — every limitation is stated, with the measurement that resolves it.</p>
+  </section>
+
+  <!-- ══ benchmarked in public ══ -->
+  <section class="landing proof rv" id="proof">
+    <h2 class="eyebrow">2 · Benchmarked in public</h2>
+    <div class="chips">
+      <span class="chip"><a href="/validation">BENCHMARKED IN PUBLIC · CWRU · MFPT · 2 MW WIND TURBINE</a></span>
+      <span class="chip">NO ACCOUNT · PROCESSED &amp; DELETED</span>
+      <span class="chip">DRAFT — ANALYST REVIEW REQUIRED</span>
+    </div>
+    <p class="proof-line">Scored against the CWRU and MFPT laboratory corpora and a 2 MW wind
+      turbine’s high-speed shaft. Every number is measured, and every miss is stated as a miss.
+      <a href="/validation">Read the validation record</a>.</p>
+  </section>
+
+  <!-- ══ the report is the product ══ -->
+  <section class="landing showcase" id="showcase">
+    <h2 class="eyebrow">3 · The report is the product</h2>
+    <p class="sh-lead">Three pages from the sample report — a synthetic compressor with a seeded
+      outer-race fault, drafted by the same path your own file takes.</p>
+    <div class="shelf">
+      <figure class="pg rv">
+        <div class="pgw"><img src="/assets/report-p01.png" width="1191" height="1684" loading="lazy"
+          alt="Report page 1: masthead, DRAFT badge, ISO Zone D — unacceptable, and the severity and committed-diagnosis cards."></div>
+        <figcaption><span class="pn">p.1</span> The verdict up front: <b>ISO Zone D — unacceptable</b>,
+          one committed finding, and the gate verdict in words.</figcaption>
+      </figure>
+      <figure class="pg rv rv-d1">
+        <div class="pgw"><img src="/assets/report-p08.png" width="1191" height="1684" loading="lazy"
+          alt="Report page 8: the envelope spectrum for the Y axis with computed fault frequencies marked and the matched peak labelled."></div>
+        <figcaption><span class="pn">p.8</span> The evidence plotted from the data:
+          <b>matched — bearing outer race at 107.2 Hz</b>, against the computed frequencies.</figcaption>
+      </figure>
+      <figure class="pg rv rv-d2">
+        <div class="pgw"><img src="/assets/report-p22.png" width="1191" height="1684" loading="lazy"
+          alt="Report page 22: the provenance panel and the review and approval signature block."></div>
+        <figcaption><span class="pn">p.22</span> Where it came from, and where you sign.
+          <b>Not a certified condition assessment until reviewed and signed.</b></figcaption>
+      </figure>
+    </div>
+    <p class="sh-cta"><a class="btn-ghost" href="/sample-report.pdf">See a sample report</a>
+      <span class="sh-note">the full 22 pages, as issued</span></p>
+  </section>
+
+  <!-- ══ start ══ -->
+  <section class="landing start rv" id="start">
+    <h2 class="eyebrow">4 · Start</h2>
+    <p class="start-line">No account. Your raw file is deleted as soon as it has been read.</p>
+    <div class="hero-actions">
+      <button class="cta" type="button" id="run-example">Run the example analysis</button>
+      <a class="btn-ghost" href="/#/new">Upload your own file</a>
+    </div>
+    <p class="hero-note" id="example-note">The example is a real outer-race bearing fault — 6206 bearing, 1800 rpm,
+      radial spectrum. One tap fills the form and runs it through the same pipeline, the same drafting pass and the same
+      verification as your own file. Nothing about it is canned. You need only an invite code.</p>
+  </section>
+
+  <!-- ══ upload form ══ -->
+  <section class="card" id="form-card">
+    <h2 class="eyebrow" id="new-head" tabindex="-1">Upload · one machine per report</h2>
+    <ol class="rail steps" id="step-rail">
+      <li class="s now" id="rail-1"><b>1</b> Machine</li>
+      <li class="s pending" id="rail-2"><b>2</b> Measurement</li>
+      <li class="s pending" id="rail-3"><b>3</b> Details</li>
+      <li class="s pending" id="rail-4"><b>4</b> Review</li>
+    </ol>
+    <form id="upload-form">
+      <section class="step" id="step-1">
+        <h3 class="step-h" id="step-1-head" tabindex="-1">Which machine is this?</h3>
+        <p class="step-lede">Pick one you have analysed before and everything you told us comes back, or describe a new one. Nothing here leaves this browser unless you ask it to.</p>
+      <fieldset>
+        <span class="eyebrow">Machine</span>
+        <div class="saved-row" id="saved-row" hidden>
+          <label for="saved">Saved machines <span class="opt">(this browser only)</span></label>
+          <div class="saved-controls">
+            <select id="saved">
+              <option value="">Choose a saved machine…</option>
+            </select>
+            <button type="button" class="btn-mini" id="delete-saved">Delete…</button>
+          </div>
+        </div>
+        <!-- Session HIST-1: what this browser already holds for the machine
+             being uploaded, said BEFORE the analyst submits rather than after.
+             Filled and shown by app.js::refreshTrendNote; empty and hidden
+             until there is something to send. -->
+        <div class="help" id="trend-note" hidden></div>
+        <!-- Session UX-5 (STRANGER C4). What came back with the saved machine,
+             named on the step that loaded it. The analyst filled these in on
+             another screen and could otherwise only find them by opening a
+             collapsed disclosure two steps later. Filled by app.js::renderCarried;
+             empty and hidden until a card has actually been applied. -->
+        <div class="help" id="carried" hidden></div>
+        <div class="grid">
+          <!-- Session INTAKE-2 (PARTC F-2). A list, and REQUIRED, with no
+               pre-selected kind. Until this session the upload lane recorded
+               "motor" for every machine an analyst uploaded, which put "Type
+               motor" on a compressor's report and told
+               pdm_core/recommendations.py the machine was motor-driven. A
+               pre-selected default here would rebuild exactly that: the
+               placeholder is valueless and `required`, so the browser will not
+               submit until somebody has actually answered. POSITIONING §6 —
+               "a field that says so must be required". -->
+          <div><label for="mtype">Machine type</label>
+            <select name="machine_type" id="mtype" required>
+              <option value="" selected disabled>Choose…</option>
+              <option value="motor">Motor</option>
+              <option value="pump">Pump</option>
+              <option value="fan">Fan</option>
+              <option value="compressor">Compressor</option>
+              <option value="gearbox">Gearbox</option>
+              <option value="blower">Blower</option>
+              <option value="other">Other</option>
+            </select>
+            <div class="help">Named on the report, and it decides which
+              recommendations apply. We never guess it.</div></div>
+          <div><label for="rpm">Running speed (RPM)</label>
+            <input type="number" name="rpm" id="rpm" step="any" placeholder="1780" required>
+            <div class="help">The driver's speed.</div></div>
+          <div><label for="driven-rpm">Driven speed (RPM) <span class="opt">(optional — only if it differs)</span></label>
+            <input type="number" name="driven_rpm" id="driven-rpm" step="any" placeholder="1180"></div>
+          <!-- Session INTAKE-2. Rated power picks the ISO 20816-3 group, so the
+               analyst states what they know (the nameplate) and the group
+               follows, rather than being asked for a standard's section number.
+               The select below stays, and stays editable: it is what an analyst
+               who knows the group but not the rating still uses. `app.js`
+               recomputes it from this field as it is typed, with the same two
+               boundaries the server derives from. -->
+          <div><label for="rated-kw">Rated power (kW) <span class="opt">(optional)</span></label>
+            <input type="number" name="rated_kw" id="rated-kw" step="any" min="0" placeholder="90">
+            <div class="help" id="kw-help">From the nameplate. Sets the ISO group below.</div></div>
+          <div><label for="grp">ISO machine group</label>
+            <select name="iso_group" id="grp">
+              <option value="1">Group 1 — large (&gt;300 kW)</option>
+              <option value="2" selected>Group 2 — medium (15–300 kW)</option>
+            </select>
+            <div class="help" id="grp-help">Assumed Group 2 unless you state a rated power.</div></div>
+          <!-- Session LIMITS-1c. The machine's OWN severity limits, which outrank
+               the ISO table when all three are given (pdm_core/iso_classify.py
+               tier 1). Machine-level and not per-location, because that is what
+               `MachineThresholds` is -- "Machine-level ISO zone override" -- and
+               because the machine card remembers machine-level fields; the
+               per-location template has no rated-spec block to put them in.
+               Optional: blank is the ISO table, byte-identical to before this
+               session. The server refuses a partial, non-positive or
+               non-increasing trio with `_thresholds_422`, which is
+               MachineThresholds' own validator wearing a sentence. -->
+          <div class="full"><label>Machine-specific severity limits <span class="opt">(optional)</span></label>
+            <div class="grid">
+              <div><label for="lim-ab">Zone A/B (mm/s RMS)</label>
+                <input type="number" name="limit_ab" id="lim-ab" step="any" min="0" placeholder="5"
+                       autocomplete="off"></div>
+              <div><label for="lim-bc">Zone B/C (mm/s RMS)</label>
+                <input type="number" name="limit_bc" id="lim-bc" step="any" min="0" placeholder="8"
+                       autocomplete="off"></div>
+              <div><label for="lim-cd">Zone C/D (mm/s RMS)</label>
+                <input type="number" name="limit_cd" id="lim-cd" step="any" min="0" placeholder="12"
+                       autocomplete="off"></div>
+            </div>
+            <div class="help" id="lim-help">Leave blank to judge against ISO 20816-3.</div>
+            <p class="help stop" id="lim-error" hidden></p></div>
+          <div><label for="alias">Machine alias <span class="opt">(optional)</span></label>
+            <input type="text" name="machine_alias" id="alias" maxlength="120" placeholder="Pump A"
+                   autocomplete="off">
+            <div class="help">Use an alias — we don’t need the real name.</div>
+            <p class="help stop" id="alias-error" hidden></p></div>
+          <div><label for="unit">Velocity unit</label>
+            <select name="velocity_unit" id="unit" required>
+              <option value="mm_s" selected>mm/s</option>
+              <option value="in_s">in/s</option>
+            </select>
+            <div class="help">Stated, never assumed — the #1 severity error. Required, and it
+              shows what we will use: change it if your export is in in/s.</div></div>
+          <label class="consent full"><input type="checkbox" id="remember">
+            <span>Remember this machine in this browser — its details are stored on this device only,
+            never on our servers, and your invite code is never stored (<a href="/privacy">Privacy</a>).</span></label>
+        </div>
+      </fieldset>
+        <div class="step-nav"><button type="button" class="cta" data-step="2">Next: the measurement</button></div>
+      </section>
+
+      <section class="step" id="step-2" hidden>
+        <h3 class="step-h" id="step-2-head" tabindex="-1">What did you measure?</h3>
+        <p class="step-lede">Drop the file and we draw it here, in this browser, before anything is uploaded — so you can see you picked the right point before you spend a run on it.</p>
+      <fieldset id="measurements">
+        <span class="eyebrow">Measurements</span>
+
+        <div class="drop">
+          <label for="file">Drop a data file here, or choose one below</label>
+          <div class="f" id="file-name">CSV · XLSX · UFF/UNV · WAV · .MAT · TXT/DAT/ASC — max 25 MB</div>
+          <input type="file" name="file" id="file" accept=".csv,.xlsx,.uff,.unv,.wav,.mat,.txt,.dat,.asc" required>
+          <p class="drop-loud">Raw waveform is welcome — <b>WAV, UFF, or MAT: we do the FFT ourselves.</b>
+            You do not have to export a spectrum first.<br>
+            <b>Plain text export? Send that too.</b> For .txt, .dat and .asc we work out the layout,
+            show you how we read it, and wait for your OK before analysing anything.<br>
+            <b>Odd layout? We’ll read it and ask you to confirm.</b> That goes for a CSV or XLSX
+            that doesn’t match our template too — and for two or three files at once, one channel each.</p>
+        </div>
+        <ul class="export-hints">
+          <li><b>AMS Machinery Manager</b> — export the point as UFF/UNV (dataset 58).</li>
+          <li><b>@ptitude Analyst</b> — export the measurement to UFF or CSV.</li>
+          <li><b>System 1</b> — export the spectrum or trend plot to CSV.</li>
+        </ul>
+        <div class="spx-mount" id="spx-1" hidden></div>
+        <div style="margin-top:10px" id="direction_row">
+          <label for="direction">Direction</label>
+          <select name="direction" id="direction">
+            <option value="" selected>Not given — read as radial – horizontal</option>
+            <option value="radial_h">Radial – horizontal</option>
+            <option value="radial_v">Radial – vertical</option>
+            <option value="axial">Axial</option>
+          </select>
+          <div class="help">Direction is where the sensor was pointed. It is not the frequency axis
+            of your data — that is read from the file. Most route points are radial–horizontal;
+            <b>choose it and the report says you stated it</b>. Left as it is, the analysis reads the
+            file as radial–horizontal and the report says the direction was not given.</div>
+        </div>
+        <button type="button" class="btn-link" id="add-channels">+ Add a channel</button>
+        <div class="extra-channels" hidden>
+          <span class="eyebrow" id="slots-eyebrow">Additional channels · same machine, same session</span>
+          <div class="grid">
+            <div><label for="file_2" id="file_2_label">Second file <span class="opt">(optional)</span></label>
+              <input type="file" name="file_2" id="file_2" accept=".csv,.xlsx,.uff,.unv,.wav,.mat,.txt,.dat,.asc">
+              <div class="slot-h"><span class="f" id="file-name-2"></span><button type="button" class="btn-mini slot-clear" data-slot="2" hidden id="clear-2">Remove</button></div></div>
+            <div class="full spx-mount" id="spx-2" hidden></div>
+            <div id="direction_2_row"><label for="direction_2">Direction</label>
+              <select name="direction_2" id="direction_2">
+                <option value="radial_v" selected>Radial – vertical</option>
+                <option value="radial_h">Radial – horizontal</option>
+                <option value="axial">Axial</option>
+              </select></div>
+          </div>
+          <div class="grid" style="margin-top:10px" id="slot_3_row">
+            <div><label for="file_3">Third file <span class="opt">(optional)</span></label>
+              <input type="file" name="file_3" id="file_3" accept=".csv,.xlsx,.uff,.unv,.wav,.mat,.txt,.dat,.asc">
+              <div class="slot-h"><span class="f" id="file-name-3"></span><button type="button" class="btn-mini slot-clear" data-slot="3" hidden id="clear-3">Remove</button></div></div>
+            <div class="full spx-mount" id="spx-3" hidden></div>
+            <div id="direction_3_row"><label for="direction_3">Direction</label>
+              <select name="direction_3" id="direction_3">
+                <option value="axial" selected>Axial</option>
+                <option value="radial_h">Radial – horizontal</option>
+                <option value="radial_v">Radial – vertical</option>
+              </select></div>
+          </div>
+          <div class="help" style="margin-top:10px" id="slots-help">Upload what you measured — one channel is fine; three enables full directional analysis.</div>
+        </div>
+        <div class="help" id="channels-help">Three directions let the analysis separate misalignment from imbalance. One channel is
+          fine on its own — the report says which directions it had.</div>
+
+        <!-- Session INTAKE-2 — the other measurement locations.
+             A machine is not one point: a motor has a drive end and a non-drive
+             end, a gearbox an input and an output. Each location below is
+             analysed on its own, with its own bearing and its own speed, and
+             gets its own trend.
+
+             One location — this one — is always present and costs no extra
+             clicks, so the three-file flow that shipped before this session is
+             untouched. `app.js::addLocation` clones the template and renumbers
+             it; the empty file inputs of an untouched block are deleted before
+             the post, exactly as `clearSlot` does for the slots above. -->
+        <div id="locations"></div>
+        <div style="margin-top:14px">
+          <button type="button" class="btn-mini" id="add-location">+ Add a measurement location</button>
+          <div class="help" id="locations-help">Same machine, another point — motor DE and NDE, or a
+            gearbox input and output. Each point is analysed separately, against its own bearing and
+            speed, and keeps its own trend. Up to 8 in one run.</div>
+        </div>
+
+        <template id="location-template">
+          <!-- `lane` is the shipped bordered-block pattern (style.css:108), so
+               this block needs no new CSS rule, no new class and no fixed
+               dimension -- law #16's 375px requirement is met by the same
+               `@media (max-width:640px)` that already collapses `grid` to one
+               column. `style.css` is untouched by this session. -->
+          <div class="lane" data-loc="">
+            <div class="grid">
+              <div><label>Measurement location <span class="loc-n"></span></label>
+                <input type="text" data-field="label" maxlength="60" placeholder="Motor NDE"
+                       autocomplete="off">
+                <div class="help">Name the point. The report and its trend are filed under this.</div></div>
+              <div><label>Running speed (RPM) <span class="opt">(optional — if it differs)</span></label>
+                <input type="number" data-field="rpm" step="any" placeholder="same as the machine">
+                <div class="help">A gearbox output does not turn at its input's speed. Blank uses the
+                  machine speed.</div></div>
+              <div><label>Bearing model <span class="opt">(optional)</span></label>
+                <select data-field="bearing_model">
+                  <option value="" selected>Not listed</option>
+                  <option value="6205">6205</option>
+                  <option value="6206">6206</option>
+                  <option value="6309">6309</option>
+                  <option value="22220 EK">22220 EK</option>
+                  <option value="NU216">NU216</option>
+                </select></div>
+              <div><label>Mounting note <span class="opt">(optional)</span></label>
+                <input type="text" data-field="mount_note" maxlength="120" placeholder="stud, gearbox housing"
+                       autocomplete="off"></div>
+              <div class="full"><label>Files for this point</label>
+                <div class="grid">
+                  <div><input type="file" data-field="file"
+                              accept=".csv,.xlsx,.uff,.unv,.wav,.mat">
+                    <select data-field="direction">
+                      <option value="radial_h" selected>Radial – horizontal</option>
+                      <option value="radial_v">Radial – vertical</option>
+                      <option value="axial">Axial</option>
+                    </select></div>
+                  <div><input type="file" data-field="file_2"
+                              accept=".csv,.xlsx,.uff,.unv,.wav,.mat">
+                    <select data-field="direction_2">
+                      <option value="radial_v" selected>Radial – vertical</option>
+                      <option value="radial_h">Radial – horizontal</option>
+                      <option value="axial">Axial</option>
+                    </select></div>
+                  <div><input type="file" data-field="file_3"
+                              accept=".csv,.xlsx,.uff,.unv,.wav,.mat">
+                    <select data-field="direction_3">
+                      <option value="axial" selected>Axial</option>
+                      <option value="radial_h">Radial – horizontal</option>
+                      <option value="radial_v">Radial – vertical</option>
+                    </select></div>
+                </div>
+                <div class="help">.txt/.dat/.asc need their columns confirmed, which is a
+                  conversation about one point at a time — upload those on their own.</div></div>
+              <div class="full"><button type="button" class="btn-mini" data-remove-loc>Remove this location</button></div>
+            </div>
+          </div>
+        </template>
+
+        <div class="lane"><b>Your format isn’t listed? Send it anyway.</b>
+          Email the raw export to <a href="mailto:{{contact_email}}">{{contact_email}}</a> — we add most
+          instrument formats within days, and we’ll tell you exactly what we need. Nothing to reformat by hand.</div>
+      </fieldset>
+        <div class="step-nav"><button type="button" class="btn-ghost" data-step="1">Back</button> <button type="button" class="cta" data-step="3">Next: what else you know</button></div>
+      </section>
+
+      <section class="step" id="step-3" hidden>
+        <h3 class="step-h" id="step-3-head" tabindex="-1">What else do you know about it?</h3>
+        <p class="step-lede">Every answer here turns a check on. Nothing is required, and anything you leave blank is reported as not assessed rather than quietly skipped.</p>
+        <div id="unlocks"></div>
+      <details class="more" id="more-options">
+        <summary>More options<span class="opt"> — extra channels, bearing model, machine geometry, support type, detection type, acquisition settings</span></summary>
+        <div class="more-body">
+
+
+          <div class="grid">
+            <div><label for="brg">Bearing model <span class="opt">(optional — turns on the bearing screen)</span></label>
+              <select name="bearing_model" id="brg">
+                <option value="" selected>Not listed</option>
+                <option value="6205">6205</option>
+                <option value="6206">6206</option>
+                <option value="6309">6309</option>
+                <option value="22220 EK">22220 EK</option>
+                <option value="NU216">NU216</option>
+              </select>
+              <div class="help">A list, not a box, because the screen only runs for bearings
+                whose geometry we hold. <b>Not listed</b> is the honest answer for most route
+                bearings, and it is no longer the end of it — enter the four numbers below and
+                the screen runs on those instead. Leave both blank and the report says the
+                bearing family was not assessed, and why. Send us a designation at
+                <a href="mailto:{{contact_email}}">{{contact_email}}</a> and we add it to the
+                list.</div></div>
+
+            <!-- Session GEOM-1 (STRANGER B5). The catalogue holds five route bearings; a
+                 route holds thousands, so "Not listed" was silently turning the headline
+                 screen off for nearly every real machine. `pdm_core` never needed a
+                 catalogue — BearingSpec has always taken these four numbers — so this is
+                 the missing front door, not a new capability.
+
+                 It is a REVEALED block rather than a sixth option in the select above,
+                 for two reasons. The select means "a bearing whose geometry we hold" and
+                 its options are diffed against config/bearings.json by
+                 tests/test_ux2_bearings.py; a sentinel option would have to be excused
+                 from that diff, which is the pin that stops the form offering a screen the
+                 analysis cannot run. And a value that is not a bearing has no business
+                 travelling in a field called `bearing_model`. app.js hides AND CLEARS this
+                 block when a catalogue bearing is chosen, so the two can never both post. -->
+            <div class="full" id="brg-geometry">
+              <div class="help"><b>Not on the list? Enter the bearing's geometry.</b>
+                BPFO, BPFI, BSF and FTF are computed from these four numbers, not from the
+                name — so a bearing we have never heard of is screened exactly like one we
+                hold. They are printed in the report as you entered them, so you can check
+                them against your own catalogue. The match still reads the radial channels,
+                so an axial, thrust-loaded fault is reported as not assessed either way.</div>
+              <div class="grid">
+                <div><label for="brgn">Rolling elements</label>
+                  <input type="number" name="bearing_n_balls" id="brgn" step="1" min="1"
+                         placeholder="9" autocomplete="off">
+                  <div class="help">Balls or rollers in one row.</div></div>
+                <div><label for="brgball">Ball / roller diameter <span class="opt">(mm)</span></label>
+                  <input type="number" name="bearing_ball_dia_mm" id="brgball" step="any" min="0"
+                         placeholder="7.94" autocomplete="off"></div>
+                <div><label for="brgpitch">Pitch diameter <span class="opt">(mm)</span></label>
+                  <input type="number" name="bearing_pitch_dia_mm" id="brgpitch" step="any" min="0"
+                         placeholder="39.04" autocomplete="off">
+                  <div class="help">Bore plus outside diameter, halved, if the datasheet does
+                    not give it directly.</div></div>
+                <div><label for="brgangle">Contact angle <span class="opt">(degrees)</span></label>
+                  <input type="number" name="bearing_contact_angle_deg" id="brgangle" step="any"
+                         min="0" max="90" placeholder="0" autocomplete="off">
+                  <div class="help">Blank for a deep-groove bearing — blank is taken as 0°, the
+                    same assumption our catalogue entries carry.</div></div>
+              </div>
+              <!-- Said, not hidden. `MEMORY_FIELDS` in app.js is diffed tuple-for-tuple
+                   against the `machines` table's columns (tests/test_db1_schema.py), so
+                   remembering these four means four new columns and a migration — which is
+                   a schema decision this session was not given. The analyst re-enters them
+                   per run until then, and is told that here rather than discovering it. -->
+              <div class="help">These four are used for this run and are <b>not</b> saved with
+                the machine yet, so you will be asked for them again next time. A bearing on the
+                list above is remembered.</div>
+            </div>
+            <div><label for="sup">Support type</label>
+              <select name="iso_support" id="sup">
+                <option value="rigid" selected>Rigid</option>
+                <option value="flexible">Flexible</option>
+              </select></div>
+            <div><label for="det">Detection type</label>
+              <select name="detection_type" id="det">
+                <option value="rms" selected>RMS</option>
+                <option value="peak">Peak</option>
+                <option value="peak_to_peak">Peak-to-peak</option>
+              </select></div>
+            <div><label for="wav">WAV sensitivity / scale <span class="opt">(WAV only)</span></label>
+              <input type="number" name="wav_sensitivity" id="wav" step="any"></div>
+            <div class="full"><label for="mode">Analysis mode</label>
+              <select name="mode" id="mode">
+                <option value="spectrum">Spectrum (freq_hz, amplitude)</option>
+                <option value="trend">Trend history (timestamp, overall_rms)</option>
+                <option value="compare">Compare two readings — before / after</option>
+              </select>
+              <div class="help">Spectrum and Trend name the CSV/XLSX layout and are ignored for UFF, WAV
+                and .MAT. <b>Compare</b> reads exactly two spectrum files of the same measurement point —
+                the earlier reading first — and reports what changed. Multi-channel is spectrum-only.</div>
+            </div>
+
+            <div class="full"><div class="help"><b>Machine geometry — all optional, and this is
+              the section that changes what we can check.</b> A blade or vane count lets us test the
+              blade-pass frequency; pulley sizes let us work out the belt frequency and test for a
+              belt fault; telling us the machine is uncoupled routes an axial 1× to bent shaft
+              instead of misalignment. Tooth, rotor-bar and pole counts have no detector yet — we
+              record them, print them in the report, and say plainly that they are on file awaiting
+              one. Anything left blank is reported as not provided, never guessed.</div></div>
+            <div><label for="mloc">Measurement location <span class="opt">(optional)</span></label>
+              <input type="text" name="measurement_location" id="mloc" maxlength="60"
+                     placeholder="Motor DE, Pump NDE, …" autocomplete="off">
+              <div class="help">Where on the machine the sensor sat — printed with the bearing
+                model, so the report says which bearing the geometry belongs to.</div></div>
+            <div><label for="coupling">Coupling</label>
+              <select name="coupling" id="coupling">
+                <option value="" selected>Not stated</option>
+                <option value="coupled">Coupled to a driven load</option>
+                <option value="uncoupled">Not coupled (direct-driven fan, standalone rotor)</option>
+              </select>
+              <div class="help">An axial 1× reads as misalignment on a coupled machine and as a
+                bent shaft on an uncoupled one. Left unstated we assume coupled and say so.</div></div>
+            <div><label for="blades">Blade / vane count</label>
+              <input type="number" name="blades" id="blades" step="1" min="1" placeholder="6">
+              <div class="help">Impeller vanes or fan blades — enables the blade-pass check.</div></div>
+            <div><label for="drivetype">Drive type</label>
+              <select name="drive_type" id="drivetype">
+                <option value="" selected>Not stated</option>
+                <option value="direct_on_line">Direct on line</option>
+                <option value="vfd">Variable-frequency drive</option>
+                <option value="soft_starter">Soft starter</option>
+              </select></div>
+            <div><label for="poles">Motor poles</label>
+              <input type="number" name="poles" id="poles" step="2" min="2" placeholder="4">
+              <div class="help">Even numbers only — machines are wound in pole pairs.</div></div>
+            <div><label for="linefreq">Line frequency <span class="opt">(Hz)</span></label>
+              <input type="number" name="line_freq_hz" id="linefreq" step="any" min="0"
+                     placeholder="60"></div>
+            <div><label for="rotorbars">Rotor bars</label>
+              <input type="number" name="rotor_bars" id="rotorbars" step="1" min="1"></div>
+            <div><label for="teethdriving">Gear teeth — driving</label>
+              <input type="number" name="gear_teeth_driving" id="teethdriving" step="1" min="1"></div>
+            <div><label for="teethdriven">Gear teeth — driven</label>
+              <input type="number" name="gear_teeth_driven" id="teethdriven" step="1" min="1"></div>
+            <div class="full"><div class="help">Belt drive — all three together, or leave all three
+              blank. From them and the running speed we compute the belt frequency and print the
+              formula in the report.</div></div>
+            <div><label for="pdrive">Drive pulley Ø <span class="opt">(mm)</span></label>
+              <input type="number" name="drive_pulley_mm" id="pdrive" step="any" min="0"
+                     placeholder="150">
+              <div class="help">The pulley on the shaft whose running speed you entered.</div></div>
+            <div><label for="pdriven">Driven pulley Ø <span class="opt">(mm)</span></label>
+              <input type="number" name="driven_pulley_mm" id="pdriven" step="any" min="0"
+                     placeholder="300"></div>
+            <div><label for="pcentres">Centre distance <span class="opt">(mm)</span></label>
+              <input type="number" name="pulley_center_distance_mm" id="pcentres" step="any" min="0"
+                     placeholder="600"></div>
+
+            <div class="full"><div class="help">Acquisition settings — all optional. Whatever you
+              declare is recorded in the report as declared; anything left blank is reported as
+              “not provided”, never guessed.</div></div>
+            <div><label for="sens">Sensor sensitivity <span class="opt">(mV/g)</span></label>
+              <input type="number" name="sensor_sensitivity_mv_per_g" id="sens" step="any" min="0"></div>
+            <div><label for="fmaxd">Fmax <span class="opt">(Hz)</span></label>
+              <input type="number" name="fmax_hz" id="fmaxd" step="any" min="0"></div>
+            <div><label for="lines">Spectral lines</label>
+              <input type="number" name="spectral_lines" id="lines" step="1" min="1"></div>
+            <div><label for="wint">FFT window</label>
+              <select name="window_type" id="wint">
+                <option value="" selected>Not stated</option>
+                <option value="hanning">Hanning</option>
+                <option value="flattop">Flat-top</option>
+                <option value="rectangular">Rectangular (none)</option>
+                <option value="other">Other</option>
+              </select></div>
+            <div><label for="avgs">Averages</label>
+              <input type="number" name="averages" id="avgs" step="1" min="1"></div>
+            <div><label for="integ">Integration before export</label>
+              <select name="integration" id="integ">
+                <option value="" selected>Not stated</option>
+                <option value="none">None — data as sensed</option>
+                <option value="hardware">In the instrument</option>
+                <option value="software">In software</option>
+              </select></div>
+          </div>
+
+
+        </div>
+      </details>
+        <div class="step-nav"><button type="button" class="btn-ghost" data-step="2">Back</button> <button type="button" class="cta" data-step="4">Next: review and run</button></div>
+      </section>
+
+      <section class="step" id="step-4" hidden>
+        <h3 class="step-h" id="step-4-head" tabindex="-1">Review, then run</h3>
+        <p class="step-lede">This is what we will analyse.</p>
+        <div id="review-body"></div>
+        <div id="dup-notice" hidden></div>
+      <fieldset>
+        {{csrf_field}}
+        <div class="grid">
+          <div class="full"><label for="code">Invite code</label>
+            <input type="text" name="invite_code" id="code" placeholder="your invite code" required autocomplete="off"></div>
+          <label class="consent full"><input type="checkbox" name="retain_trace">
+            <span>Keep a pseudonymized trace of this analysis to help improve accuracy. Off by default —
+            raw data is deleted either way (<a href="/privacy">Privacy</a>).</span></label>
+        </div>
+      </fieldset>
+      <div class="cta-row">
+        <button class="cta" type="submit" id="submit">Analyze file</button>
+        <span class="note" id="submit-note">Deterministic analysis in seconds; drafted report in about a minute. Your raw file is deleted as soon as it has been read.</span>
+      </div>
+        <div class="step-nav"><button type="button" class="btn-ghost" data-step="3">Back</button></div>
+      </section>
+    </form>
+  </section>
+
+  <!-- ══ live state card (rendered by JS) ══ -->
+  <section class="card" id="state" hidden aria-live="polite"></section>
+
+</main>
+
+<footer>
+  <div class="wrap row">
+    <span>vib-agent — a prototype vibration-analysis agent · <a href="mailto:{{contact_email}}">{{contact_email}}</a></span>
+    <span><a href="/validation">Validation record</a> · <a href="/privacy">Privacy</a> · Reports are drafts pending review by a qualified analyst.</span>
+  </div>
+</footer>
+
+<!-- Session UX-4 (STRANGER U12). ONE confirmation surface for every
+     lifecycle action. Real markup rather than a node app.js creates, for the
+     reason index.html:46-52 gives about the view containers: tests/js/harness.js
+     refuses to answer "is this visible?" about an id the page does not define,
+     so a runtime-built region could not be proved to exist at all.
+
+     `role="status"` is an implicit aria-live="polite" — declared explicitly
+     alongside it because the two are read differently by different screen
+     readers, and this is the surface that tells a blind analyst their delete
+     actually happened. It is EMPTY at rest: a live region has to be in the
+     document before its first mutation or the first announcement is swallowed
+     as an unhide, which is the same reason show() defers its first write. -->
+<div id="toasts" class="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<script src="/app.js" defer></script>
+
+</body>
+</html>

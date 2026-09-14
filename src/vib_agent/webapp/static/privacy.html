@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy — vib-agent</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="mast">
+      <div class="mark">VIB-AGENT<span>VIBRATION ANALYSIS</span></div>
+      <nav>
+        <a href="/#/">Machines</a>
+        <a href="/validation">Validation</a>
+        <a href="/privacy">Privacy</a>
+      </nav>
+    </div>
+  </div>
+  <svg class="spectrum" viewBox="0 0 880 64" preserveAspectRatio="none" aria-hidden="true">
+    <polyline fill="none" stroke="#C9D2CD" stroke-width="1"
+      points="0,58 40,56 60,57 80,54 95,57 110,55 120,20 128,55 150,56 170,53 190,56 215,54 235,57
+              255,50 262,34 270,52 290,55 310,53 330,56 350,54 368,44 375,26 383,50 400,55 420,53
+              440,56 460,54 480,57 495,40 502,30 510,52 530,55 550,54 570,56 590,53 610,55 625,46
+              632,38 640,53 660,55 680,54 700,56 720,55 740,57 760,55 780,56 800,54 820,57 850,56 880,57"/>
+    <g font-family="IBM Plex Mono, monospace" font-size="9" fill="#5A6662">
+      <text x="112" y="14">1&#215;</text>
+      <text x="252" y="28">BPFO</text>
+      <text x="362" y="20">2&#215;BPFO</text>
+      <text x="487" y="24">3&#215;BPFO</text>
+    </g>
+    <line x1="0" y1="59" x2="880" y2="59" stroke="#D8DCD7" stroke-width="1"/>
+  </svg>
+</header>
+
+<main class="wrap">
+  <section class="prose">
+    <h1>Privacy</h1>
+
+    <h2>What is processed</h2>
+    <p>The data file you upload, and the machine details you type into the form (alias,
+    machine type, running speed, driven speed, rated power, ISO group/support, bearing model,
+    unit selections, the optional
+    acquisition settings — sensor sensitivity, Fmax, spectral lines, window, averages,
+    integration — any machine-specific severity limits you set, and the optional machine geometry — measurement location, coupling state, blade/vane count, gear tooth counts, rotor bars, motor poles, line frequency, drive type and pulley dimensions). We ask you to use an
+    alias for the machine name — we don’t need the real one. Whatever you type as the alias is
+    included when we draft your report, so it is worth choosing one that means something to you and
+    nothing to anyone else. Leave it blank and we send the words “Unnamed machine”.</p>
+
+    <h2>What is deleted, and when</h2>
+    <p>Your uploaded file is unlinked as soon as it has been read, before the analysis has
+    even finished. Everything else we computed from it is deleted when the analysis
+    completes, leaving only the finished report in a temporary per-job directory; the report
+    stays available for 60 minutes, then it is deleted too. Nothing is kept longer than that
+    by default.</p>
+    <p><b>One case where the file is held longer, named because the sentence above would
+    otherwise be misleading.</b> If we cannot tell how your file is laid out from its headers, we
+    ask you to confirm the layout before analysing it &mdash; and your file stays on disk for as
+    long as that question is open, because we have not read it yet. If you answer, it is unlinked
+    at that moment like any other. If you close the page and never answer, it is deleted with the
+    rest of that job within the hour.</p>
+    <p><b>If a job fails or is stopped before it finishes</b>, its working files are cleared by
+    a cleanup sweep instead — within the hour rather than at completion. We do not delete a
+    stopped job's directory immediately, because the process that was working on it may still
+    be writing to it, and cutting that out from under it is how files get orphaned rather than
+    removed.</p>
+
+    <h2>What is logged</h2>
+    <p>Only: a timestamp, your invite code’s label (not the code itself), the file type and
+    size, how long processing took, the token cost of drafting, and the outcome
+    (success / gate-fail / degraded / error). We never log file contents or machine names.
+    <b>That line is kept for 14 days</b> and then deleted when the log rotates.</p>
+    <p><b>The application keeps no request logs containing visitor IP addresses.</b> There is no
+    web-server access log and no proxy access log — nothing writes a visitor address to disk, so
+    there is no address to keep. Abuse limits are enforced in memory only: to count your requests
+    the limiter necessarily holds your address in the running process for the length of the window
+    it is counting over (up to an hour for uploads), and never beyond a restart. (System-level security logs on the host, such as SSH and
+    firewall logs, are outside this application and are not covered by that statement. If
+    targeted abuse ever forced us to log requests, we would say so here first.)</p>
+
+    <h2>What stays in your browser</h2>
+    <p><b>Saved machines are stored only in your browser, never on our servers.</b> If you tick
+    “Remember this machine in this browser”, the machine card (alias, machine type, running speed, driven speed,
+    rated power, ISO
+    group/support, bearing model, unit selections, the optional acquisition settings —
+    sensor sensitivity, Fmax, spectral lines, window, averages, integration — and
+    any machine-specific severity limits you set, and the optional machine geometry — measurement location, coupling state, blade/vane count, gear tooth counts, rotor bars, motor poles, line frequency, drive type and pulley dimensions) is written to that
+    browser’s local storage on
+    your own device. It is never transmitted to us, there is no account it could belong to, and
+    the “Delete” button deletes it. Your invite code is never stored. Cards saved before the
+    geometry fields existed are read and kept as they are; nothing is filled in for you.</p>
+
+    <p><b>Trend readings are also stored only in your browser — but unlike the machine card, they
+    are sent back.</b> When an analysis finishes you can save that reading to the machine’s trend:
+    its overall value in mm/s, the ISO zone we computed for it, the axis it was strongest on, and
+    the time we analysed it. That is written to your own device’s local storage, under its own key,
+    separate from the saved machine card, and you can keep one without keeping the other. On your
+    next upload for the same machine and measurement location, those saved readings are
+    <b>sent with your next upload</b> so the report can assess the trend — they are used for that
+    one analysis and deleted with the rest of that job, exactly like the file you upload. We keep
+    no copy between uploads, there is no account they could belong to, and clearing this browser’s
+    site data removes them. Readings are grouped by the machine alias and the measurement location,
+    so a machine you have not named keeps no trend. The report says plainly that the history came
+    from you and that we could not check it.</p>
+
+    <p><b>Your reports are kept in this browser too — and unlike the readings above, they never
+    leave it.</b> When an analysis finishes, the PDF we produced is copied into this browser’s own
+    storage and filed with the reading it belongs to. That copy includes the written narrative,
+    which exists nowhere else once our copy is deleted. It is never uploaded, never sent anywhere,
+    and there is no account it could belong to. Our copy is deleted 60 minutes after the analysis,
+    on exactly the schedule described above; yours is kept until you delete the reading, or the
+    machine, from the machine’s page — and clearing this browser’s site data removes it. If your
+    browser will not let us keep a copy — private browsing, or storage that is full or switched
+    off — the analysis, the report and the saved reading are unaffected, and the page says so
+    plainly.</p>
+
+
+    <h2>Analysis trace (retained on opt-in only)</h2>
+    <p>While a report is being drafted, a working trace of that pass (model calls, timing,
+    token counts, and the intermediate look-ups the drafting step performed — peak frequencies,
+    computed bearing frequencies, trend summary statistics — keyed only by an internal job ID,
+    never your alias, and never the text we sent or the text we got back) exists in the job's
+    temporary directory. <b>It is deleted with the rest of the working files</b> unless two
+    things are both true: trace retention is enabled on this server, <em>and</em> you ticked
+    the consent checkbox on the upload form. Ticking the box is what allows a trace to be
+    <em>kept</em>; it is not what causes one to be written.</p>
+    <p>Retention is off by default. On a job that fails or is stopped, any working trace goes
+    with the working files on the same cleanup sweep described above, within the hour. Your
+    uploaded file is deleted on the same schedule either way.</p>
+
+    <h2>Files whose layout we have to work out</h2>
+    <p>Some exports have no fixed layout, so we work one out before reading them. This applies to
+    .txt, .dat and .asc files always, and to a .csv or .xlsx <b>when it doesn’t match our
+    template</b> — if our template reads it, nothing below happens. A short excerpt is sent to the
+    Anthropic API, which replies with a description of the file’s layout — a fixed set of choices
+    such as the delimiter, which column is which, and the units. The excerpt is bounded: <b>the
+    first 8 KB and at most 100 lines</b> of a text file, or <b>the first worksheet’s first 100 rows
+    of cell text</b> from a spreadsheet. That description is then executed by our own tested code
+    over the full file: the model never sees the rest of your data,
+    never produces a measured value, and never takes part in the analysis.
+    Nothing is analysed until you confirm the
+    interpretation, and the report says the format was interpreted this way.</p>
+    <p><b>What that means for a file header.</b> We can only remove what we can already read, and on
+    this path we are still working out how to read the file. So if the top of your export carries a
+    plant name, a point ID, an operator’s name or a route name, that text is inside the excerpt and
+    is sent. If that matters for a particular file, delete the header rows before uploading, or send
+    us the file and we’ll add support for its format so it never takes this path again.</p>
+    <p>If you tick “Help us support this format”, we keep the file’s <b>structure fingerprint</b>
+    (a hash in which every digit and letter has been replaced, so no reading, machine name or date
+    survives it) and the layout description — never the file, never a value from it. This is off by
+    default.</p>
+
+    <h2>Where this runs, and where your data goes</h2>
+    <p>We are a British Columbia business and this page is written to Canadian privacy law &mdash;
+    PIPEDA, and BC&rsquo;s Personal Information Protection Act.</p>
+    <p><b>Your data is processed outside Canada.</b> The server that runs this service is hosted at
+    DigitalOcean, New York (NYC1), United States, and every external service named below is operated
+    from the United States. That means your uploaded measurement, and the analysis computed from
+    it, are processed on computers outside Canada and are subject to the laws of the country they
+    are in, including lawful access by that country&rsquo;s authorities. We cannot promise
+    otherwise, so we tell you instead. What limits the exposure is how little there is and how
+    briefly it exists: the file is deleted as soon as it is read, the report after an hour, and
+    what reaches the drafting service is the computed result rather than your measurement.</p>
+
+    <h2>Third parties</h2>
+    <p><b>{{external_services}}</b> Nothing else — no analytics, no
+    error-reporting service, no font CDN. Fonts are self-hosted; this page loads nothing from a
+    third-party CDN.</p>
+    <p><b>What is sent when we draft your report.</b> The finished analysis — the numbers our own
+    code computed — and the machine details you typed into the form: the alias, machine type, running speed, driven speed, rated power, ISO
+    group and support, bearing model, unit selections, any machine-specific severity limits you set, and the optional machine geometry — measurement location, coupling state, blade/vane count, gear tooth counts, rotor bars, motor poles, line frequency, drive type and pulley dimensions.
+    Your report is written from that.
+    <b>What is not sent: your data file, its contents, its name, the spectrum or waveform itself,
+    your trend history, your invite code, and your IP address.</b> The model is given the computed
+    peaks and results, never the measurement arrays they came from, and it does no arithmetic —
+    every number in your report was computed by our code before the model was called.</p>
+    <p><b>What is sent when we have to work out a file’s layout.</b> Only in the case described
+    above, and only the bounded excerpt described there.</p>
+    <p><b>When nothing at all is sent.</b> If your reading fails our data-quality checks, if the
+    channels you uploaded disagree with each other, or if our daily processing budget is spent, the
+    report is produced entirely on our own server and no external call is made at all.</p>
+    <p><b>Retention and training.</b> On our side, your raw data is not stored beyond the processing
+    window described above. On Anthropic’s side we can only tell you what their terms say and when
+    we last read them: their <a href="https://www.anthropic.com/legal/commercial-terms">Commercial
+    Terms of Service</a>, which we checked in August 2026 and re-check annually, state that customer
+    inputs and outputs submitted through the API are not used to train their models. We do not
+    control Anthropic’s own retention of API requests — their published terms and privacy policy are
+    authoritative on that, and this page describes only what we do.</p>
+    {{third_party_details}}
+
+    <h2>Questions, and who is accountable</h2>
+    <p>Email <a href="mailto:{{contact_email}}">{{contact_email}}</a>.</p>
+    <p>That address reaches the person accountable for privacy here &mdash; under Canadian law
+    somebody has to be named, and for a business this size it is the operator rather than a
+    department. Write there to ask what we hold about you, to have it corrected, to have it
+    deleted, or to complain about how it was handled; we answer within 30 days. If our answer does
+    not satisfy you, you can take it to the Office of the Privacy Commissioner of Canada or to the
+    Office of the Information and Privacy Commissioner for British Columbia.</p>
+
+    <p><a href="/">← Back to upload</a></p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap row">
+    <span>vib-agent — a prototype vibration-analysis agent · <a href="mailto:{{contact_email}}">{{contact_email}}</a></span>
+    <span><a href="/validation">Validation record</a> · <a href="/privacy">Privacy</a> · Reports are drafts pending review by a qualified analyst.</span>
+  </div>
+</footer>
+
+</body>
+</html>

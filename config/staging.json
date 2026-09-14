@@ -1,0 +1,31 @@
+{
+  "_comment": "Session R1 — bearing damage staging constants. Read by pdm_core/staging.py. Separate from thresholds.json deliberately: that file holds production-validated detector calibration (the frozen `streaming` profile among it), and these are new, unvalidated staging rules that should not sit inside it. Same per-profile shape so the threshold-profile doctrine in CLAUDE.md still applies — every entry point names its profile explicitly.",
+  "_doctrine": "route ONLY. The `streaming` (NCD) profile deliberately has NO staging block: it is production-validated and frozen, and its triplet data carries no sideband or amplitude-floor evidence, so the stage-3 discriminators are structurally unavailable there. classify_bearing_stage() falls through to its documented defaults for any profile without a block, and the NCD path is unchanged.",
+  "_source_of_record": "references/INDEX.md — every rationale below cites a document and section by INDEX number. See docs/staging.md for the full derivation and for what the library does NOT contain.",
+  "profiles": {
+    "route": {
+      "staging": {
+        "_verify": true,
+        "_verify_note": "TRUE for every constant here. No document in the reference library publishes numeric vibration criteria for the four-stage model — searched and empty across SKF #01, Timken #02, FAG #03, NASA #43 (472 pp), NASA #44 (314 pp) and AGH #56. These are engineering rules anchored on the cited QUALITATIVE progression, not values transcribed from a published table. The closest missing source is #47 (DTIC AD-A291123, free and still undownloaded — GAPS.md §7). Do not present these as sourced numbers.",
+
+        "harmonics_advanced_min": 3,
+        "_rationale_harmonics_advanced_min": "A defect frequency carrying >=3 harmonic orders on a SINGLE axis is a harmonic series rather than a single impact — the defect is being struck repeatedly per revolution, which is the transition from a freshly detectable spall to a developed one. Per-axis and not pooled: three orders on one axis is a series, one order on each of three axes is not.",
+        "_source_harmonics_advanced_min": "INDEX #01 — SKF, Bearing Damage and Failure Analysis (PUB BU/I3 14219/3 EN), section 2 'Inspection and troubleshooting', Fig. 1 / Diagram 1 p.8, explained p.9: point 3 'Spalling has developed to an extent that the damage can be detected by standard vibration monitoring' progressing to point 4 'Advanced spalling causes high vibration and noise levels'.",
+
+        "sidebands_advanced_min": 2,
+        "_rationale_sidebands_advanced_min": "Shaft-rate sidebands mean the defect amplitude is modulated by shaft rotation — the defect is passing through the load zone rather than sitting outside it. A PAIR (+/-1x) is the minimum that distinguishes genuine modulation from a single incidental neighbouring peak, which is why the threshold is 2 and not 1.",
+        "_source_sidebands_advanced_min": "INDEX #01 — SKF, section 2 Fig. 1, point 3 -> 4. Sideband extraction itself is bearing_rca.enrich_with_sidebands (unchanged this session).",
+
+        "stage4_zones": ["C", "D"],
+        "_rationale_stage4_zones": "SKF point 4 is characterised by 'high vibration and noise levels and an increase in operating temperature'. ISO 20816-3 zones C and D are this repo's existing anchor for elevated overall vibration, so staging ties to the severity layer instead of inventing a second amplitude scale that could disagree with it.",
+        "_source_stage4_zones": "INDEX #01 — SKF, section 2 p.9, point 4. Zone boundaries themselves come from config/iso_zones.json (untouched).",
+
+        "_rule_stage4_requires_corroboration": "Stage 4 additionally requires a corroborating spectral marker — amplitude-floor marginality OR >= sidebands_advanced_min sidebands — so that a rich harmonic series on a QUIET machine is never called stage 4 on ISO zone alone. Enforced in staging.classify_bearing_stage, not configurable: it is a correctness rule, not a tunable.",
+
+        "_rule_stage4_is_never_asserted": "Stage 4 is only ever reported as SUSPECTED. Its defining marker is that discrete defect frequencies fade into a rising broadband floor; this module only sees tones that still matched, so a spectrum that still resolves a discrete tone cannot demonstrate that the tone is disappearing. The vocabulary encodes the limit rather than hiding it.",
+
+        "_rule_honesty_floor": "Stages 1-2 are invisible to route-band spectra: below stage-3 evidence, output not_determinable and route 'early-stage detection requires HF/ultrasonic trending' to recommendations. Per INDEX #01 Fig. 1, point 2 ('First spall') is detected by SKF ENVELOPED ACCELERATION TECHNOLOGY, and only point 3 is detected by STANDARD VIBRATION MONITORING. A route-band spectrum is the latter. Absence of stage-3 evidence is therefore an absence of resolving power, never an early stage and never a clean bill."
+      }
+    }
+  }
+}

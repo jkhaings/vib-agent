@@ -1,0 +1,62 @@
+{# The deterministic evidence appendix spliced into an AGENT-DRAFTED narrative.
+   The model never authors a figure, a parameter value, or the signature block —
+   they are rendered here from the AnalysisResult, exactly as the deterministic
+   report renders them. Sections the draft already carries are suppressed by the
+   caller (report/generate.py::_drafted_evidence_block). #}
+{% import "_evidence.md.j2" as ev %}
+{% if want_parameters %}
+
+{{ ev.analysis_parameters_table(analysis_parameters) }}
+{% endif %}
+{# Session REPORT-2: no want_* flag — the reference report the model is handed
+   omits the Fmax-adequacy block, so the model never writes one and there is no
+   draft copy to suppress. Spliced deterministically on every drafted report. #}
+{% if fmax_adequacy %}
+
+{{ ev.fmax_adequacy(fmax_adequacy) }}
+{% endif %}
+{% if want_stage %}
+{{ ev.damage_stage(damage_stage) }}
+{% endif %}
+{# Session REC-1 — the markdown twin of drafted.html.j2's call. The drafted
+   report had lost the Recommendations heading altogether: the model is free not
+   to write one, and on the 2 kHz sample it did not, leaving the corrective
+   action as a stray sentence pair under the follow-up MEASUREMENTS section
+   (outputs/PARTC_2026-09-11.md E2 item 5). Spliced deterministically, from the
+   same macro and the same sentences as the deterministic report, and suppressed
+   when the draft did write the heading — the want_stage/want_causes pattern. #}
+{% if want_recommendations %}
+
+{{ ev.recommendations_section(recommendations) }}
+{% endif %}
+{# Session REPORT-3 (item 4) — PARTC F-10's other half. Suppressed only when the
+   draft's own table already carries BOTH order columns, byte for byte; probing
+   the "## Evidence" heading would suppress it on exactly the drafts that need
+   it, since a model writes that heading routinely. #}
+{% if want_evidence_table %}
+{{ ev.evidence_table(evidence_rows) }}
+{% endif %}
+{% if charts and charts.trend %}
+
+## Trend Chart
+{{ ev.trend_figure(charts) }}
+{% endif %}
+{# Session HIST-1 — the markdown twin of drafted.html.j2's call. Spliced on
+   every drafted report whose history came from the analyst's browser, chart or
+   no chart; no want_* flag, the REPORT-NA way. #}
+{{ ev.history_provenance_note(history_provenance, custom_basis) }}
+{{ ev.spectral_evidence(charts) }}
+{% if causes and want_causes %}
+{{ ev.cause_hypotheses(causes, cause_heading) }}
+{% endif %}
+{# Session REPORT-NA: no want_* flag — the reference report the model is handed
+   omits the coverage roster, so the model never writes one and there is no
+   draft copy to suppress. Spliced deterministically on every drafted report. #}
+{% if coverage %}
+
+{{ ev.coverage_roster(coverage) }}
+{% endif %}
+{% if want_signature %}
+
+{{ ev.signature_block() }}
+{% endif %}

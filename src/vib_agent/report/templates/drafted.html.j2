@@ -1,0 +1,145 @@
+{# The agent-drafted survey report — the v2 document, with a model-written
+   narrative in place of the deterministic prose.
+
+   Session V2-WIRE (WIRING.md slice W5). This mirrors, exactly, what the
+   markdown path has always done: the model drafts PROSE, and the evidence layer
+   is rendered deterministically from the same AnalysisResult and spliced around
+   it. `drafted_evidence.md.j2` is that splice for markdown; this is it for the
+   v2 page, and both use the same suppression flags, computed in the same place
+   (`generate.py::_drafted_evidence_block`'s caller).
+
+   WHAT IS DETERMINISTIC HERE, and it is the point:
+
+     * the masthead, the status line, the GATE RIBBON, the meta strip, the
+       webapp's notes, and the severity/diagnosis card pair;
+     * the analysis parameters, the damage stage, the spectral figures, the
+       cause hypotheses with their illustrations and every citation;
+     * the provenance panel, the blank signature rules and the footer.
+
+   The model writes the narrative between them and nothing else. In particular
+   the gate ribbon is deterministic on THIS path too, so every non-PASS check
+   still reaches the reader verbatim, above the diagnosis, on a document whose
+   prose a language model wrote.
+
+   Sections the draft already carries are suppressed rather than duplicated —
+   `want_parameters`, `want_causes`, `want_signature` — which is the same rule,
+   and the same flags, the markdown appendix has used since Session H.
+
+   The appendix headings carry NO section numbers here. The narrative supplies
+   the document's structure and its own headings are unnumbered, so a numbered
+   appendix restarting at 1 underneath them read as a second document rather
+   than as the end of this one. #}
+{% import "_v2.html.j2" as v2 %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vibration Survey Report — {{ machine.name }}</title>
+<style>{{ stylesheet }}</style>
+</head>
+<body>
+<main class="doc">
+
+{{ v2.masthead(machine) }}
+{{ v2.status_banner(status_line, status_colour) }}
+{{ v2.gate_ribbon(gate, dq_notes) }}
+{{ v2.notes_panel(notes) }}
+
+{# ── PAGE 1 · the fault sheet ──────────────────────────────────────────────
+   DETERMINISTIC on the drafted path too, and the same macro the deterministic
+   page renders: it carries the health line, the fault, the decision, the
+   recommendation in its three parts and the escalation trigger, none of which
+   the model authors. The model's narrative starts on page 2 with the rest of
+   the Evidence. #}
+{{ v2.fault_sheet(fault_sheet, charts, sheet_figure) }}
+
+<h2 class="evidence-head">Evidence</h2>
+{{ v2.meta_strip(machine, result, analysis_parameters) }}
+{{ v2.cards(ctx) }}
+
+{# ── the drafted narrative ────────────────────────────────────────────────
+   The model's own markdown, converted. Its headings become the document's
+   prose headings; every number in it has already been re-checked against the
+   computed result, and a draft that failed any of those checks never reaches
+   this template — the job degrades to the deterministic report instead. #}
+<section class="narrative">
+{{ narrative }}
+</section>
+
+{% if want_parameters %}
+{{ v2.parameters_section(none, machine_rows, analysis_parameters) }}
+{% endif %}
+
+{# Session REPORT-2: no want_* flag — the reference report the model is handed
+   omits the Fmax-adequacy block, so there is no draft copy to suppress.
+   Rendered deterministically on every drafted page. #}
+{{ v2.fmax_adequacy_section(none, fmax_adequacy) }}
+
+{# Session REC-1 — the HTML twin of drafted_evidence.md.j2's call. Suppressed
+   when the draft wrote its own Recommendations heading, exactly as want_stage
+   suppresses the damage-stage block. #}
+{% if want_recommendations %}
+{{ v2.recommendations_section(none, recommendations) }}
+{% endif %}
+
+{# Session REPORT-3 (item 4) — PARTC F-10's other half, byte-for-byte guarded.
+   See drafted_evidence.md.j2 for why the probe is the order COLUMNS and not
+   the "Evidence" heading. #}
+{% if want_evidence_table %}
+{{ v2.evidence_table(none, evidence_rows) }}
+{% endif %}
+
+{% if want_stage %}
+{{ v2.damage_stage_section(none, damage_stage, stage_graphic) }}
+{% elif stage_graphic %}
+{# The draft wrote its own damage-stage prose, so rendering the deterministic
+   block too would put a second section under the same heading — which is what a
+   shipped sample did. The LADDER is not a duplicate of that prose: it is the
+   only place the reading's position on the product's own three-rung scale is
+   drawn, and its caption explains itself. So it renders alone. #}
+<section>{{ stage_graphic }}</section>
+{% endif %}
+
+{% if charts and charts.trend %}
+<section>
+  <h2>Trend chart</h2>
+  <figure><div class="plot"><img src="{{ charts.trend.rel_path }}" alt="{{ charts.trend.alt }}"></div></figure>
+</section>
+{% endif %}
+
+{# Session HIST-1: no want_* flag, for the REPORT-NA reason — the reference
+   report the model is handed says the history was analyst-supplied, but a
+   caveat about the EVIDENCE is not the model's to write or to omit, so it is
+   spliced deterministically. Guarded on the provenance rather than on the
+   chart: the claim is about the data, not about the picture of it, and a render
+   with figures off must still carry it. #}
+{% if history_provenance %}
+<section>
+  {{ v2.history_provenance_note(history_provenance, custom_basis) }}
+</section>
+{% endif %}
+
+{{ v2.spectral_section(none, charts) }}
+
+{# Session HIST-2: no want_* flag, for the REPORT-NA reason — the reference
+   report the model is handed omits the comparison entirely, so there is no
+   draft copy to suppress and no delta the model could have narrated. #}
+{{ v2.comparison_section(none, comparison) }}
+
+{{ v2.causes_section(none, causes if want_causes else none, cause_heading, cause_illustration) }}
+
+{# Session REPORT-NA: no want_* flag — the reference report the model is handed
+   omits the coverage roster, so there is no draft copy to suppress. Rendered
+   deterministically on every drafted page. #}
+{{ v2.coverage_section(none, coverage) }}
+
+{{ v2.provenance_panel() }}
+{% if want_signature %}
+{{ v2.signature_block() }}
+{% endif %}
+{{ v2.page_footer(deletion_footer) }}
+
+</main>
+</body>
+</html>

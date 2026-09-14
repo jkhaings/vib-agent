@@ -1,0 +1,251 @@
+{# Deterministic survey report. Every number here comes from a pdm_core tool
+   result via the AnalysisResult — nothing is computed in this template. #}
+{% import "_evidence.md.j2" as ev %}
+# Vibration Survey Report — {{ machine.name }}
+
+{# Session REPORTFIX-1 — on a route the badge IMAGE is location 1's own, drawn
+   in the child process from that point's result, and on FIXTURE-1's set it read
+   "ISO ZONE A — GOOD" above a Zone D health line. The image cannot be redrawn
+   here (matplotlib must never be imported in this process), so a multi-location
+   report takes the TEXT status instead, which build_context has already made
+   the machine's. #}
+{{ ev.status_badge(none if locations else charts, status_line) }}
+{# Session REPORT-3 (item 1). The fault sheet leads the document. In the
+   MARKDOWN it is purely ADDITIVE: every section below keeps its place and
+   its words, which is what lets report.md stay the reference document the
+   drafting model has always been handed. The reordering, the page break
+   and the Evidence grouping are the HTML page's, because "page 1" is a
+   property of the paginated PDF and the PDF is rendered from the HTML. The
+   {% if %} wrapper follows the R2-BUILD note below. #}
+{% if fault_sheet %}
+{{ ev.fault_sheet(fault_sheet, charts) }}
+{% endif %}
+
+## Executive Summary
+
+{{ executive_summary }}
+
+## Machine Details
+
+| Field | Value |
+|---|---|
+| Machine | {{ machine.name }} |
+| Type | {{ machine.type | default("—", true) }} |
+| Location | {{ machine.location | default("—", true) }} |
+| ISO group / support | {{ machine.iso_group | default("—") }} / {{ machine.iso_support | default("—") }} |
+{% if result.rca and result.rca.rpm %}
+| Running speed | {{ result.rca.rpm }} rpm |
+{% endif %}
+{% if iso and not not_assessable %}
+| Overall vibration | {{ "%.2f"|format(iso.severity_rms) }} mm/s ({{ axis_phrase(iso.dominant_axis) }}), {{ "Zone" if iso.zone_basis == "custom" else "ISO Zone" }} {{ iso.iso_zone }} |
+{% elif not_assessable %}
+| Overall vibration | Not assessable — {{ not_assessable_reason }}{% if iso.severity_rms is not none %} (measured {{ "%.2f"|format(iso.severity_rms) }} mm/s — outside the plausible range){% endif %} |
+{% endif %}
+{% if machine.bearing %}
+| Bearing | {{ machine.bearing.model | default("(geometry supplied)") }}{% if machine.location %} (at {{ machine.location }}){% endif %} |
+{% endif %}
+
+{{ ev.analysis_parameters_table(analysis_parameters) }}
+{# Session REPORT-2. The {% if %} wrapper follows the R2-BUILD note below: the
+   agent-reference render (include_causes=False) nulls `fmax_adequacy`, and an
+   unconditional expression call would leave a blank line behind there. #}
+{% if fmax_adequacy %}
+
+{{ ev.fmax_adequacy(fmax_adequacy) }}
+{% endif %}
+{% if not_assessable %}
+
+## Severity & Coverage
+
+**What was assessed:** fault detection from the spectral/envelope evidence{% if history_ran %}, plus the vibration trend over the reading history (unit-relative){% endif %}. Any findings above stand on that evidence alone.
+
+**What was not assessed:** ISO 20816 severity — the severity rating that places the machine in a vibration band. {{ not_assessable_reason | capitalize }}, and severity is a velocity judgement, so it is left unrated. A velocity measurement (mm/s RMS, per ISO 20816) is required to establish it — see *Recommended Follow-up Measurements*.
+{% endif %}
+
+## Data Quality
+
+**Gate verdict: {{ gate.overall | upper }}.**
+{% if dq_notes %}
+
+The following checks require attention:
+{% for note in dq_notes %}
+- {{ note }}
+{% endfor %}
+{% else %}
+
+All data-quality checks passed.
+{% endif %}
+
+## Diagnosis
+{% if insufficient %}
+
+**Insufficient data — no diagnosis made.** The reading did not pass quality
+checks, so no fault assessment is possible. See *Recommended Follow-up
+Measurements* for exactly what to collect next.
+{% elif analysis_failed %}
+
+**Analysis failed — no diagnosis made.** The fault screen did not complete on
+this reading, so no fault family was assessed and nothing was ruled out. The
+measurement itself passed the data-quality checks: this is a failure of the
+analysis, not of the data. Re-submit the reading. **The absence of findings
+below is not evidence that this machine is healthy.**
+{% elif no_findings and unmatched_periodicity %}
+
+**Committed diagnosis: none — but this reading is not clear.**
+
+No fault signature matched, and no bearing geometry was supplied — so bearing
+fault frequencies could not be computed and the bearing screen never ran.
+
+{{ unmatched_periodicity.sentence }}
+
+That periodicity is at no shaft order this analysis models. Something in the
+machine is repeating at a rate this reading cannot name, and naming it needs the
+bearing model number, not another measurement. The following WERE screened and
+came back clear.
+{% for item in checked_for %}
+- {{ item }}
+{% endfor %}
+{% elif no_findings %}
+
+**Committed diagnosis: none — parameters within normal range.**
+
+No fault signature matched the evidence in this reading. This is a positive
+result, not an absence of analysis: the following were screened and came back
+clear.
+{% for item in checked_for %}
+- {{ item }}
+{% endfor %}
+{% else %}
+{% for d in diagnosis %}
+
+### {{ d.label }} — {{ d.tag }}
+{% if d.lead %}
+
+{{ d.lead }}
+{% endif %}
+
+{{ d.reason }}
+{% if d.factors %}
+
+Evidence:
+{% for factor in d.factors %}
+- {{ factor }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% if differential %}
+
+**Also considered:**
+{% for c in differential %}
+- _{{ c.label }}_ ({{ c.confidence }} confidence) — {{ c.adjudication }}
+{% endfor %}
+{% endif %}
+{{ ev.unexplained_peak(unmatched_periodicity) }}
+{% endif %}
+{{ ev.damage_stage(damage_stage) }}
+{# Session REPORT-3 — the same macro the drafted appendix splices, so the two
+   documents' evidence tables are the same bytes. #}
+{{ ev.evidence_table(evidence_rows) }}
+{# Session REPORT-3 (item 8). Renders nothing on a single-location report. #}
+{% if locations %}
+{{ ev.location_evidence(locations) }}
+{% endif %}
+
+{{ ev.spectral_evidence(charts) }}
+{% if trend %}
+
+## Trend Summary
+{% if not_assessable %}
+
+Status: **{{ trend.status }}**, severity **unrated (ISO severity requires velocity data)** over {{ trend.n_days }} days.
+{% if trend.baseline_avg is not none %}
+Baseline (first 7 days) {{ trend.baseline_avg }} → current (last 7 days) {{ trend.current_avg }} ({{ "%+.1f"|format(trend.pct_change) }}%), in the reading's native units. {% if custom_basis %}Machine-specific alarm limit{% else %}ISO §6.5.2 alarm limit{% endif %} not applicable without velocity data.
+{% endif %}
+_No forward ISO-boundary projection is offered without a velocity-based severity zone._
+{% else %}
+
+Status: **{{ trend.status }}**, severity **{{ trend.severity }}** over {{ trend.n_days }} days.
+{% if trend.baseline_avg is not none %}
+Baseline (first 7 days) {{ trend.baseline_avg }} mm/s → current (last 7 days) {{ trend.current_avg }} mm/s ({{ "%+.1f"|format(trend.pct_change) }}%). {% if custom_basis %}Machine-specific alarm limit{% else %}ISO §6.5.2 alarm limit{% endif %}: {{ trend.alarm_limit }} mm/s.
+{% endif %}
+{% if trend.trend_note %}
+_{{ trend.trend_note }}_ — no forward projection is offered.
+{% elif trend.days_to_next_boundary is not none %}
+Projected ~{{ trend.days_to_next_boundary }} days to the next {% if custom_basis %}zone{% else %}ISO{% endif %} boundary at the current rate.
+{% endif %}
+{% endif %}
+{# Session HIST-1 — the markdown twin of survey.html.j2's call, in the same
+   place. The macro emits nothing at all when `history_provenance` is None, so
+   every existing trend report keeps its bytes (the R2-BUILD rule the HIST-2
+   comment below restates). #}
+{{ ev.history_provenance_note(history_provenance, custom_basis) }}
+{{ ev.trend_figure(charts) }}
+{% endif %}
+{# Session HIST-2. Placed after the trend for the same reason the trend sits
+   where it does: both answer "how has this changed over time", and a reader
+   who has just met this reading's condition meets its history next. The
+   {% if %} wrapper follows the R2-BUILD note below -- an unconditional
+   expression call would leave a blank line behind on every ordinary
+   single-file report, which must stay byte-identical. #}
+{% if comparison %}
+{{ ev.comparison_section(comparison) }}
+{% endif %}
+{# Session R2-BUILD. Placed here deliberately: the hypothesis list sits between
+   the evidence this reading produced and the measurements recommended next, so
+   an analyst reads "what was found" -> "what could have caused it" -> "what to
+   collect to tell them apart" in that order.
+
+   The {% if %} wrapper is not redundant with the macro's own guard. `{{ ... }}`
+   is an expression, not a block tag, so trim_blocks does NOT eat the newline
+   after it -- calling the macro unconditionally left one blank line behind in
+   every report with no bearing fault. A block tag IS eaten, so wrapping the
+   call makes a report without a cause section byte-identical to the
+   pre-R2-BUILD one. #}
+{% if causes %}
+{{ ev.cause_hypotheses(causes, cause_heading) }}
+{% endif %}
+
+## Recommended Follow-up Measurements
+{% if measurements %}
+
+{% for m in measurements %}
+{{ loop.index }}. **{{ m.technique }}** ({{ m.priority }} priority) — {{ m.purpose }} _Trigger: {{ m.trigger }}_
+{% endfor %}
+{% else %}
+
+None — the available data resolved the diagnosis without further measurement.
+{% endif %}
+
+## Recommendations
+{% if recommendations %}
+
+{% for rec in recommendations %}
+{{ loop.index }}. {{ rec }}
+{% endfor %}
+{% else %}
+
+No corrective action recommended at this time.
+{% endif %}
+
+## Limitations & Confidence Notes
+{% if limitations %}
+
+{% for note in limitations %}
+- {{ note }}
+{% endfor %}
+{% else %}
+
+None.
+{% endif %}
+{# Session REPORT-NA. The {% if %} wrapper follows the R2-BUILD note above:
+   the agent-reference render (include_causes=False) nulls `coverage`, and an
+   unconditional expression call would leave a blank line behind there. #}
+{% if coverage %}
+
+{{ ev.coverage_roster(coverage) }}
+{% endif %}
+
+{{ ev.signature_block() }}
+
+---
+DRAFT — prepared by automated analysis, pending analyst review.

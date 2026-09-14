@@ -1,0 +1,10 @@
+{
+  "_comment": "ISO 20816-3:2022 broadband velocity RMS zone boundaries (mm/s). Confirmed against reference/flows.json 'Build global.pdm' node — values match verbatim.",
+  "zones": {
+    "1_rigid":    { "ab": 2.3, "bc": 4.5,  "cd": 7.1  },
+    "1_flexible": { "ab": 3.5, "bc": 7.1,  "cd": 11.0 },
+    "2_rigid":    { "ab": 1.4, "bc": 2.8,  "cd": 4.5  },
+    "2_flexible": { "ab": 2.3, "bc": 4.5,  "cd": 7.1  }
+  },
+  "factory_defaults": null
+}

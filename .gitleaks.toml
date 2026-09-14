@@ -1,0 +1,155 @@
+# gitleaks configuration — SEC-1.
+#
+# Used by all three entry points, always passed explicitly with `-c` so the
+# config in force is never a matter of discovery order:
+#   .pre-commit-config.yaml        commit time, staged changes only
+#   .github/workflows/security.yml every push and pull request, full history
+#   the operator's manual scan      docs/SECURITY.md
+#
+# `useDefault = true` inherits gitleaks' full upstream ruleset (~170 rules for
+# AWS, GCP, GitHub, Stripe, Slack, private keys, …). Everything below EXTENDS
+# that set; nothing here disables an upstream rule.
+
+[extend]
+useDefault = true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The one rule this repo cannot do without, and the measurement that put it here.
+#
+# The product's only real credential is ANTHROPIC_API_KEY (CLAUDE.md § Environment;
+# the deployed unit reads it from /etc/vibagent/env). So the question that mattered
+# at SEC-1 was not "does gitleaks work" but "does gitleaks catch OUR secret".
+#
+# Measured against the default ruleset, gitleaks 8.30.1, piping each shape through
+# `gitleaks stdin`:
+#
+#   sk-ant-api03- + 93 chars + "AA"   (the canonical 108-char key)   DETECTED
+#   sk-ant-api03- + 95 chars          (same prefix, no AA suffix)    MISSED
+#   sk-ant-       + 95 chars          (the shorter legacy prefix)    MISSED
+#
+# The upstream rule is anchored to one exact length and suffix. That is fine
+# until Anthropic issues a key a few characters longer, at which point the
+# scanner reports a confident green on a live credential — the silent-green
+# failure mode this repo already has two standing rules about.
+#
+# This rule is deliberately shape-based rather than length-based: any `sk-ant-`
+# prefix followed by a run of at least 40 key-alphabet characters. It cannot be
+# invalidated by a length change.
+#
+# False-positive check, run before this rule was committed: the two `sk-ant-`
+# strings in tracked content are documentation placeholders that truncate with
+# an ellipsis (RUNBOOK.md:48 and outputs/SESSION_V2WIRE.md:461). Neither has 40
+# following key characters, so neither matches — verified by a full-history
+# scan with this config in force returning zero findings.
+[[rules]]
+id = "anthropic-api-key-shape"
+description = "Anthropic API key (prefix-anchored, length-tolerant — see comment above)"
+regex = '''\bsk-ant-[A-Za-z0-9_\-]{40,}'''
+keywords = ["sk-ant-"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The product's SECOND real credential, and the same gap measured a second time.
+#
+# EMAIL-1 (RULED D-23) added a sender that POSTs to api.resend.com, so
+# RESEND_API_KEY now lives in /etc/vibagent/env beside the Anthropic key. The
+# question SEC-1 asked applies to it unchanged: does gitleaks catch OURS?
+#
+# Measured against gitleaks 8.30.1, piping each shape through `gitleaks stdin`
+# with the DEFAULT ruleset (EMAIL-1, re-measured at SEC-2, 2026-09-06):
+#
+#   re_<id>_<secret> bare on a line                          MISSED
+#   RESEND_API_KEY=re_… (low entropy)                        MISSED
+#   RESEND_API_KEY="re_…" / key = "re_…" (high entropy)      detected — but by
+#       `generic-api-key`, on ENTROPY plus quoted-assignment CONTEXT, not on the
+#       key's shape. Move the same key onto a bare line and it is missed again.
+#   inside `curl -H "Authorization: Bearer re_…"`            detected — `curl-auth-header`
+#
+# There is no Resend rule upstream at all; every catch above is incidental. A
+# key pasted into a commit message, a .env line, or a note-to-self file is the
+# bare form, which is the one that gets through.
+#
+# The regex is shape-based for the same reason the Anthropic one is, and two
+# details are load-bearing:
+#   * `_` is IN the alphabet. A real key reads `re_<id>_<secret>` and the first
+#     alphanumeric run is only nine characters, so an alphabet without the
+#     underscore never reaches {20,} and would miss every real key.
+#   * `\b` anchors the prefix. Without it this matches ordinary identifiers --
+#     `pre_computed_value_that_is_long` contains `re_` mid-word.
+#
+# False-positive check, measured before committing: this needle matches 0 of the
+# 697 tracked files (the two SEC-2 test files included — their canaries are built
+# from pieces for exactly this reason), and a full-history scan (`--log-opts=--all`, 243 commits,
+# all refs) with this rule in force returns zero findings. The suite carries the
+# same needle as a plain grep (tests/test_email1_egress.py) so the tracked tree
+# is covered on every run, with no Go binary; this rule adds history and
+# pre-commit coverage, which that grep cannot give.
+[[rules]]
+id = "resend-api-key-shape"
+description = "Resend API key (prefix-anchored, length-tolerant — see comment above)"
+regex = '''\bre_[A-Za-z0-9_]{20,}'''
+keywords = ["re_"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The product's THIRD real credential, and the first one gitleaks misses completely.
+#
+# BILL-1 (RULED D-25) added Stripe Checkout, so STRIPE_SECRET_KEY and
+# STRIPE_WEBHOOK_SECRET now live in /etc/vibagent/env beside the other two. The
+# question SEC-1 asked applies again, and this time the answer is worse.
+#
+# Measured at BILL-1 with gitleaks 8.30.1, four canaries in a scratch directory
+# (never in the repo), scanned with `--redact` (SESSION_BILL1.md §7):
+#
+#   sk_live_…    DETECTED by `stripe-access-token` (built in)
+#   sk_test_…    DETECTED by `stripe-access-token` (built in)
+#   whsec_…      NO RULE MATCHED — not by shape, not by entropy, not by context
+#   price_1…     no rule, and correctly so: a Price ID is configuration, not a
+#                secret, and a rule for it would train people to ignore findings
+#
+# So the secret KEY is covered by the defaults and the webhook SIGNING SECRET is
+# not — and the signing secret is the one an attacker would actually want.
+# Holding it lets them forge a `checkout.session.completed` against
+# /api/billing/webhook and grant themselves credits without paying; the secret
+# key mostly lets them spend the operator's own Stripe account. The uncovered
+# half is the half that turns into free product.
+#
+# One detail is load-bearing, and it differs from the Resend rule above:
+#   * the alphabet has NO underscore. A Stripe endpoint secret reads
+#     `whsec_` + one unbroken alphanumeric run, so `[A-Za-z0-9]` matches the
+#     whole of it. Adding `_` would also match `whsec_tooshort_but_long_overall`
+#     and every snake_case identifier that happens to start that way — wider
+#     with nothing gained. The `\b` anchor is here for the same reason it is
+#     there: without it the prefix matches mid-word.
+#
+# False-positive check, measured before committing: the needle matches 0 of the
+# tracked files. Every literal `whsec_` in this repository is followed by a
+# backtick, a quote, a space, a bracket, an ellipsis or fewer than 20 characters
+# — the canaries in tests/test_bill1_secrets.py and tests/test_secrets_hygiene.py
+# are assembled from pieces for exactly this reason, including the one in the
+# comment you are reading. A full-history scan (`--log-opts=--all`, all refs)
+# with this rule in force returns zero findings, run once on the working tree
+# and once after the commit that introduced it. The suite carries the same
+# needle as a plain grep (tests/test_bill1_secrets.py) so the tracked tree is
+# covered on every run with no Go binary; this rule adds the history and
+# pre-commit coverage that grep cannot give, and
+# tests/test_secrets_hygiene.py proves the scanner actually loads it and goes red.
+[[rules]]
+id = "stripe-webhook-secret-shape"
+description = "Stripe webhook signing secret (gitleaks 8.30.1 has no rule for this prefix — measured, BILL-1)"
+regex = '''\bwhsec_[A-Za-z0-9]{20,}'''
+keywords = ["whsec_"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Allowlist — deliberately EMPTY.
+#
+# The SEC-1 full-history scan (all refs, `--log-opts=--all`) returned zero
+# findings, so there is no false positive to excuse. An allowlist entry written
+# for a rule that has never fired is a hole in the scanner with no evidence
+# behind it, and it is invisible the day a real secret lands in the path it
+# exempts.
+#
+# When a genuine false positive does appear, add a narrowly-scoped entry HERE —
+# a specific path or a specific regex, never a whole directory — with a comment
+# naming the file and saying why the match is not a credential. Prefer, in order:
+#   1. a `gitleaks:allow` comment on the offending line (local, self-documenting)
+#   2. the .gitleaksignore fingerprint file (pins one finding, not a pattern)
+#   3. a scoped entry in this block (last resort — it is the widest instrument)
